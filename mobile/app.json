@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "InfieldHub Command",
+    "slug": "infieldhub-command",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D2B4E"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.infieldhub.command",
+      "buildNumber": "1.0.0"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0D2B4E"
+      },
+      "package": "com.infieldhub.command",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    }
+  }
+}
