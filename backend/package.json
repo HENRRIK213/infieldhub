@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "infieldhub-backend",
   "version": "1.0.0",
   "main": "src/server.js",
@@ -8,13 +8,14 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
+    "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate deploy",
-    "seed": "node seed.js",
-    "postinstall": "prisma generate"
+    "prisma:deploy": "prisma migrate deploy",
+    "seed": "node seed.js"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
+    "prisma": "^6.0.0",
     "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -32,7 +33,6 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7",
-    "prisma": "^6.0.0"
+    "nodemon": "^3.1.7"
   }
 }
