@@ -10,3 +10,6 @@ uploads/tmp/*
 uploads/products/*
 uploads/quotations/*
 !uploads/**/.gitkeep
+.env
+.env.local
+.env.production
