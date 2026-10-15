@@ -13,6 +13,9 @@ COPY . .
 
 RUN npx prisma generate
 
-EXPOSE 5000
+ENV NODE_ENV=production
+ENV PORT=10000
+
+EXPOSE 10000
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node seed.js && node src/server.js"]
