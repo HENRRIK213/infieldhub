@@ -38,10 +38,10 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         width: '240px',
         background: '#FFFFFF',
         borderRight: '1px solid #E2E8F0',
-        height: '100%',
         padding: '16px',
-        overflowY: 'auto',
         boxShadow: '2px 0 8px rgba(13,43,78,0.04)',
+        minHeight: 'calc(100vh - 64px)',
+        alignSelf: 'flex-start',
       }}
     >
       <div

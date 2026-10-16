@@ -54,12 +54,19 @@ export default function Layout({
   const isDark = theme === 'navy' || theme === 'blue' || theme === 'teal';
 
   return (
-    <div className={`min-h-screen flex flex-col ${themeClass}`}>
+    <div className={`min-h-screen ${themeClass}`}>
       <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-      {/* Row: sidebar on left, main on right */}
-      <div className="flex flex-1 relative min-h-0">
-
+      {/* Row container: sidebar left, main right, both top-aligned */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'flex-start',
+          position: 'relative',
+          width: '100%',
+        }}
+      >
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
@@ -68,20 +75,31 @@ export default function Layout({
           />
         )}
 
-        {/* Sidebar - fixed width column on desktop, drawer on mobile */}
+        {/* Sidebar */}
         <aside
-          className={`
-            z-40
-            ${sidebarOpen ? 'fixed top-14 bottom-0 left-0 w-64 block' : 'hidden'}
-            md:static md:block md:w-64 md:flex-shrink-0 md:top-0 md:bottom-auto
-          `}
+          className={`${
+            sidebarOpen
+              ? 'fixed top-14 bottom-0 left-0 w-64 block z-40'
+              : 'hidden'
+          } md:static md:block md:flex-shrink-0`}
+          style={{ alignSelf: 'flex-start' }}
         >
           <Sidebar onNavigate={() => setSidebarOpen(false)} />
         </aside>
 
-        {/* Main content - takes remaining width */}
-        <main className="flex-1 min-w-0 overflow-x-hidden">
-          <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
+        {/* Main content */}
+        <main
+          className="flex-1 min-w-0"
+          style={{
+            alignSelf: 'flex-start',
+            display: 'block',
+            width: 'auto',
+          }}
+        >
+          <div
+            className="mx-auto px-4 md:px-6"
+            style={{ maxWidth: '1200px', paddingTop: '24px', paddingBottom: '24px' }}
+          >
             {title && (
               <div className="mb-6 text-center">
                 <h1
