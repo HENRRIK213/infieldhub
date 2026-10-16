@@ -54,19 +54,13 @@ export default function Layout({
   const isDark = theme === 'navy' || theme === 'blue' || theme === 'teal';
 
   return (
-    <div className={`min-h-screen ${themeClass}`}>
+    <div
+      className={themeClass}
+      style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+    >
       <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-      {/* Row container: sidebar left, main right, both top-aligned */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'flex-start',
-          position: 'relative',
-          width: '100%',
-        }}
-      >
+      <div style={{ display: 'flex', flex: 1, minHeight: 0, position: 'relative' }}>
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
@@ -77,31 +71,21 @@ export default function Layout({
 
         {/* Sidebar */}
         <aside
-          className={`${
-            sidebarOpen
-              ? 'fixed top-14 bottom-0 left-0 w-64 block z-40'
-              : 'hidden'
-          } md:static md:block md:flex-shrink-0`}
-          style={{ alignSelf: 'flex-start' }}
+          className={`
+            z-40
+            ${sidebarOpen ? 'fixed top-14 bottom-0 left-0 w-64 block' : 'hidden'}
+            md:block md:relative md:w-64 md:flex-shrink-0 md:top-0 md:bottom-auto
+          `}
+          style={{ height: '100%', overflowY: 'auto' }}
         >
           <Sidebar onNavigate={() => setSidebarOpen(false)} />
         </aside>
 
         {/* Main content */}
-        <main
-          className="flex-1 min-w-0"
-          style={{
-            alignSelf: 'flex-start',
-            display: 'block',
-            width: 'auto',
-          }}
-        >
-          <div
-            className="mx-auto px-4 md:px-6"
-            style={{ maxWidth: '1200px', paddingTop: '24px', paddingBottom: '24px' }}
-          >
+        <main style={{ flex: 1, minWidth: 0, height: '100%', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
             {title && (
-              <div className="mb-6 text-center">
+              <div className="mb-6">
                 <h1
                   className={`text-2xl md:text-3xl font-extrabold ${
                     isDark ? 'text-white' : 'text-[#0D2B4E]'
