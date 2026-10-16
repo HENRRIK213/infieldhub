@@ -27,7 +27,6 @@ function checkCredentials() {
     transporter.verify((err) => {
       if (err) {
         console.error('SMTP VERIFY FAILED:', err.message);
-        console.error('   Host:', process.env.EMAIL_HOST || 'smtp.gmail.com');
         console.error('   User:', user);
         console.error('   Pass length:', pass.length);
       } else {
@@ -65,27 +64,29 @@ async function sendMail({ to, subject, html }) {
   }
 }
 
+function verificationEmailHtml(code) {
+  return [
+    '<div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#F7FAFF;border-radius:16px;">',
+    '  <div style="text-align:center;margin-bottom:24px;">',
+    '    <h1 style="color:#0D2B4E;font-size:22px;margin:0;">InfieldHub</h1>',
+    '    <p style="color:#64748b;font-size:12px;margin:6px 0 0;letter-spacing:0.1em;">SOLAR - ELECTRICAL - WATER</p>',
+    '  </div>',
+    '  <h2 style="color:#0D2B4E;font-size:18px;margin-bottom:8px;">Your Verification Code</h2>',
+    '  <p style="color:#475569;font-size:14px;">Use the 6-digit code below to complete your verification:</p>',
+    '  <div style="background:#fff;border:2px solid #1E88E5;border-radius:12px;padding:24px;text-align:center;margin:20px 0;">',
+    '    <div style="font-size:36px;font-weight:800;letter-spacing:0.3em;color:#0D2B4E;font-family:monospace;">' + code + '</div>',
+    '  </div>',
+    '  <p style="color:#64748b;font-size:12px;">This code expires in <b>30 minutes</b>.</p>',
+    '  <p style="color:#94a3b8;font-size:11px;margin-top:24px;text-align:center;">If you did not request this code, ignore this email.</p>',
+    '</div>',
+  ].join('\n');
+}
+
 exports.sendVerificationCode = async (to, code) => {
   return sendMail({
     to,
     subject: 'Your InfieldHub Verification Code',
-    html: 
-      <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#F7FAFF;border-radius:16px;">
-        <div style="text-align:center;margin-bottom:24px;">
-          <h1 style="color:#0D2B4E;font-size:22px;margin:0;">InfieldHub</h1>
-          <p style="color:#64748b;font-size:12px;margin:6px 0 0;letter-spacing:0.1em;">SOLAR - ELECTRICAL - WATER</p>
-        </div>
-        <h2 style="color:#0D2B4E;font-size:18px;margin-bottom:8px;">Your Verification Code</h2>
-        <p style="color:#475569;font-size:14px;">Use the 6-digit code below to complete your verification:</p>
-        <div style="background:#fff;border:2px solid #1E88E5;border-radius:12px;padding:24px;text-align:center;margin:20px 0;">
-          <div style="font-size:36px;font-weight:800;letter-spacing:0.3em;color:#0D2B4E;font-family:monospace;"></div>
-        </div>
-        <p style="color:#64748b;font-size:12px;">This code expires in <b>30 minutes</b>.</p>
-        <p style="color:#94a3b8;font-size:11px;margin-top:24px;text-align:center;">
-          If you did not request this code, please ignore this email.
-        </p>
-      </div>
-    ,
+    html: verificationEmailHtml(code),
   });
 };
 
@@ -93,7 +94,7 @@ exports.sendQuotationEmail = async (to, quotation) => {
   return sendMail({
     to,
     subject: 'Your Quotation from InfieldHub',
-    html: <h2>Your Quotation</h2><pre></pre>,
+    html: '<h2>Your Quotation</h2><pre>' + JSON.stringify(quotation, null, 2) + '</pre>',
   });
 };
 
@@ -101,8 +102,14 @@ exports.sendInviteEmail = async (to, link) => {
   return sendMail({
     to,
     subject: 'You have been invited to InfieldHub',
-    html: <p>Click the link below to register:</p><a href=""></a>,
+    html: '<p>Click the link below to register:</p><a href="' + link + '">' + link + '</a>',
   });
 };
 
-module.exports = exports;
+exports.sendPasswordResetEmail = async (to, code) => {
+  return sendMail({
+    to,
+    subject: 'InfieldHub Password Reset',
+    html: '<p>Your password reset code is <b>' + code + '</b>. Expires in 30 minutes.</p>',
+  });
+};

@@ -17,3 +17,7 @@ uploads/quotations/*
 .env
 .env.local
 .env.production
+
+*.bak-*
+
+*.backup-*
