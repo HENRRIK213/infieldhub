@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -33,8 +33,28 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const links = role === 'ADMIN' ? adminLinks : employeeLinks;
 
   return (
-    <aside style={{ width: '240px', background: '#FFFFFF', borderRight: '1px solid #E2E8F0', height: '100vh', padding: '16px', overflowY: 'auto', boxShadow: '2px 0 8px rgba(13,43,78,0.04)' }}>
-      <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '12px', paddingLeft: '12px' }}>
+    <aside
+      style={{
+        width: '240px',
+        background: '#FFFFFF',
+        borderRight: '1px solid #E2E8F0',
+        height: '100%',
+        padding: '16px',
+        overflowY: 'auto',
+        boxShadow: '2px 0 8px rgba(13,43,78,0.04)',
+      }}
+    >
+      <div
+        style={{
+          fontSize: '10px',
+          textTransform: 'uppercase',
+          color: '#94a3b8',
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+          marginBottom: '12px',
+          paddingLeft: '12px',
+        }}
+      >
         {role === 'ADMIN' ? 'Admin Menu' : 'Employee Menu'}
       </div>
       {links.map((l) => {
@@ -57,6 +77,13 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               background: active ? '#1E88E5' : 'transparent',
               textDecoration: 'none',
               marginBottom: '4px',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseOver={(e) => {
+              if (!active) e.currentTarget.style.background = '#F1F5F9';
+            }}
+            onMouseOut={(e) => {
+              if (!active) e.currentTarget.style.background = 'transparent';
             }}
           >
             <span style={{ fontSize: '16px' }}>{l.icon}</span>
