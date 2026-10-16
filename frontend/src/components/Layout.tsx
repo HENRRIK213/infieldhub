@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import { useEffect, useState } from 'react';
@@ -57,28 +57,33 @@ export default function Layout({
     <div className={`min-h-screen flex flex-col ${themeClass}`}>
       <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-      <div className="flex flex-1 relative">
-        <div
-          className={`
-            fixed md:static inset-y-0 left-0 z-40 top-14 md:top-0
-            transform transition-transform duration-300
-            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-          `}
-        >
-          <Sidebar onNavigate={() => setSidebarOpen(false)} />
-        </div>
+      {/* Row: sidebar on left, main on right */}
+      <div className="flex flex-1 relative min-h-0">
 
+        {/* Mobile overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/40 z-30 md:hidden top-14"
+            className="fixed inset-0 bg-black/40 z-30 md:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
-        <main className="flex-1 w-full">
-          <div className="max-w-5xl mx-auto px-4 md:px-6 py-8">
+        {/* Sidebar - fixed width column on desktop, drawer on mobile */}
+        <aside
+          className={`
+            z-40
+            ${sidebarOpen ? 'fixed top-14 bottom-0 left-0 w-64 block' : 'hidden'}
+            md:static md:block md:w-64 md:flex-shrink-0 md:top-0 md:bottom-auto
+          `}
+        >
+          <Sidebar onNavigate={() => setSidebarOpen(false)} />
+        </aside>
+
+        {/* Main content - takes remaining width */}
+        <main className="flex-1 min-w-0 overflow-x-hidden">
+          <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
             {title && (
-              <div className="mb-8 text-center">
+              <div className="mb-6 text-center">
                 <h1
                   className={`text-2xl md:text-3xl font-extrabold ${
                     isDark ? 'text-white' : 'text-[#0D2B4E]'
