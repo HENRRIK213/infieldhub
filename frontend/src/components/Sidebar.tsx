@@ -11,6 +11,7 @@ const adminLinks = [
   { href: '/admin/payments', label: 'Payments', icon: '💳' },
   { href: '/admin/logs', label: 'Activity Logs', icon: '📋' },
   { href: '/admin/reports', label: 'Reports', icon: '📈' },
+  { href: '/admin/projects', label: 'Projects (Gantt)', icon: '📅' },
   { href: '/admin/profile', label: 'My Profile', icon: '⚙️' },
 ];
 
@@ -66,3 +67,4 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     </div>
   );
 }
+
