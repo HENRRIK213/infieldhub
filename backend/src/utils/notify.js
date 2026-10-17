@@ -1,34 +1,41 @@
 ﻿const { sendAdminSMS } = require('./sms');
+const mailer = require('./mailer');
 
-/**
- * Notify admin: always logs, always saves to activity, and SMS-es if enabled.
- * @param {Object} prisma - Prisma client
- * @param {string} event - short event code e.g. "payment.approved"
- * @param {string} message - human-readable
- * @param {Object} meta - extra data to save
- */
-async function notifyAdmin(prisma, event, message, meta = {}) {
-  try {
-    console.log('[NOTIFY]', event, '-', message);
+async function notifyAdmin(prisma, event, message, meta) {
+  meta = meta || {};
+  const result = { log: false, sms: false, email: false };
+  console.log('[NOTIFY] ' + event + ' - ' + message);
 
-    // Persist activity log if model exists
-    if (prisma && prisma.activityLog && prisma.activityLog.create) {
-      try {
-        await prisma.activityLog.create({
-          data: { category: event, message, meta: JSON.stringify(meta) },
-        });
-      } catch (e) {
-        // ignore if schema differs
-      }
-    }
-
-    // SMS
-    const res = await sendAdminSMS(`[InfieldHub] ${message}`);
-    return { inApp: true, sms: res.ok };
-  } catch (err) {
-    console.error('[NOTIFY] failed:', err.message);
-    return { inApp: false, sms: false };
+  // 1) Activity log
+  if (prisma && prisma.activityLog && typeof prisma.activityLog.create === 'function') {
+    try {
+      await prisma.activityLog.create({
+        data: { category: event, message: message, meta: JSON.stringify(meta) },
+      });
+      result.log = true;
+    } catch (e) {}
   }
+
+  // 2) SMS
+  try {
+    const smsRes = await sendAdminSMS('[InfieldHub] ' + message);
+    result.sms = !!(smsRes && smsRes.ok);
+  } catch (e) {
+    console.error('[NOTIFY] SMS failed: ' + e.message);
+  }
+
+  // 3) Email
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+    if (adminEmail && mailer && typeof mailer.sendAdminNotification === 'function') {
+      const ok = await mailer.sendAdminNotification(adminEmail, event, message, meta);
+      result.email = !!ok;
+    }
+  } catch (e) {
+    console.error('[NOTIFY] Email failed: ' + e.message);
+  }
+
+  return result;
 }
 
-module.exports = { notifyAdmin };
+module.exports = { notifyAdmin: notifyAdmin };

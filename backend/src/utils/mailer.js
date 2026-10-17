@@ -113,3 +113,30 @@ exports.sendPasswordResetEmail = async (to, code) => {
     html: '<p>Your password reset code is <b>' + code + '</b>. Expires in 30 minutes.</p>',
   });
 };
+
+exports.sendAdminNotification = async (to, event, message, meta) => {
+  meta = meta || {};
+  const rows = Object.keys(meta).map(function (k) {
+    return '<tr><td style="padding:6px 10px;color:#64748b;font-size:12px;border-bottom:1px solid #F1F5F9;">' + k + '</td><td style="padding:6px 10px;font-size:13px;color:#0D2B4E;font-weight:600;border-bottom:1px solid #F1F5F9;">' + String(meta[k]) + '</td></tr>';
+  }).join('');
+
+  const html =
+    '<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:28px;background:#F7FAFF;border-radius:16px;">' +
+    '<div style="text-align:center;margin-bottom:20px;">' +
+    '<h1 style="color:#0D2B4E;font-size:22px;margin:0;">InfieldHub</h1>' +
+    '<p style="color:#64748b;font-size:11px;margin:4px 0 0;letter-spacing:0.1em;">ADMIN NOTIFICATION</p>' +
+    '</div>' +
+    '<div style="background:#fff;border-radius:12px;padding:20px;border-left:4px solid #1E88E5;">' +
+    '<div style="font-size:11px;color:#1E88E5;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">' + event + '</div>' +
+    '<div style="font-size:16px;color:#0D2B4E;font-weight:700;margin-top:8px;">' + message + '</div>' +
+    '</div>' +
+    '<table style="margin-top:16px;width:100%;border-collapse:collapse;">' + rows + '</table>' +
+    '<p style="color:#94a3b8;font-size:11px;margin-top:20px;text-align:center;">Sent automatically by InfieldHub at ' + new Date().toLocaleString() + '</p>' +
+    '</div>';
+
+  return sendMail({
+    to: to,
+    subject: '[InfieldHub] ' + event + ' - ' + message,
+    html: html,
+  });
+};

@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
@@ -8,6 +8,7 @@ const router = express.Router();
 const prisma = new PrismaClient();
 const { auth, requireAdmin } = require('../middleware/auth');
 const { logActivity } = require('../utils/security');
+const { notifyAdmin } = require('../utils/notify');
 
 const upload = multer({ dest: 'uploads/tmp/' });
 
@@ -16,12 +17,13 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     const { name, description, longDescription, price, vat, category, subCategory, stock } = req.body;
     let imageUrl = null;
     if (req.file) {
-      const filename = `product-${Date.now()}.jpg`;
+      const filename = 'product-' + Date.now() + '.jpg';
       const out = path.join(__dirname, '../../uploads/products', filename);
       await sharp(req.file.path).resize(800, 800, { fit: 'inside' }).jpeg({ quality: 85 }).toFile(out);
       fs.unlinkSync(req.file.path);
-      imageUrl = `/uploads/products/${filename}`;
+      imageUrl = '/uploads/products/' + filename;
     }
+
     const product = await prisma.product.create({
       data: {
         name,
@@ -37,15 +39,44 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
         createdBy: req.user.id,
       },
     });
-    req.app.get('io').to('admin-room').emit('product:new', product);
-    await logActivity({
-      userId: req.user.id,
-      action: 'PRODUCT_ADD',
-      interface: 'web',
-      details: `Added: ${name}`,
-      ip: req.ip,
-      userAgent: req.headers['user-agent'],
-    });
+
+    // Socket notify (in-app)
+    try {
+      req.app.get('io').to('admin-room').emit('product:new', product);
+    } catch (e) {}
+
+    // Activity log
+    try {
+      await logActivity({
+        userId: req.user.id,
+        action: 'PRODUCT_ADD',
+        interface: 'web',
+        details: 'Added: ' + name,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+    } catch (e) {}
+
+    // Email + SMS notification to admin
+    const actorEmail = req.user.email || 'unknown';
+    const actorRole = req.user.role || 'STAFF';
+    const statusLabel = product.status === 'APPROVED' ? 'approved' : 'pending review';
+    notifyAdmin(
+      prisma,
+      'product.created',
+      'New product by ' + actorEmail + ': ' + name + ' (KES ' + Number(product.price).toLocaleString() + ') - ' + statusLabel,
+      {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        category: product.category || 'N/A',
+        stock: product.stock,
+        status: product.status,
+        addedBy: actorEmail,
+        role: actorRole,
+      }
+    ).catch(function () {});
+
     res.json(product);
   } catch (e) {
     console.error(e);
@@ -80,14 +111,16 @@ router.put('/:id/approve', auth, requireAdmin, async (req, res) => {
     where: { id: req.params.id },
     data: { status: 'APPROVED' },
   });
-  req.app.get('io').to('admin-room').emit('product:approved', p);
-  await logActivity({
-    userId: req.user.id,
-    action: 'PRODUCT_APPROVE',
-    interface: 'web',
-    details: `Approved: ${p.name}`,
-    ip: req.ip,
-  });
+  try { req.app.get('io').to('admin-room').emit('product:approved', p); } catch (e) {}
+  try {
+    await logActivity({
+      userId: req.user.id,
+      action: 'PRODUCT_APPROVE',
+      interface: 'web',
+      details: 'Approved: ' + p.name,
+      ip: req.ip,
+    });
+  } catch (e) {}
   res.json(p);
 });
 
@@ -96,26 +129,30 @@ router.put('/:id/reject', auth, requireAdmin, async (req, res) => {
     where: { id: req.params.id },
     data: { status: 'REJECTED' },
   });
-  await logActivity({
-    userId: req.user.id,
-    action: 'PRODUCT_REJECT',
-    interface: 'web',
-    details: `Rejected: ${p.name}`,
-    ip: req.ip,
-  });
+  try {
+    await logActivity({
+      userId: req.user.id,
+      action: 'PRODUCT_REJECT',
+      interface: 'web',
+      details: 'Rejected: ' + p.name,
+      ip: req.ip,
+    });
+  } catch (e) {}
   res.json(p);
 });
 
 router.delete('/:id', auth, requireAdmin, async (req, res) => {
   const p = await prisma.product.findUnique({ where: { id: req.params.id } });
   await prisma.product.delete({ where: { id: req.params.id } });
-  await logActivity({
-    userId: req.user.id,
-    action: 'PRODUCT_DELETE',
-    interface: 'web',
-    details: `Deleted: ${p?.name}`,
-    ip: req.ip,
-  });
+  try {
+    await logActivity({
+      userId: req.user.id,
+      action: 'PRODUCT_DELETE',
+      interface: 'web',
+      details: 'Deleted: ' + (p && p.name ? p.name : 'unknown'),
+      ip: req.ip,
+    });
+  } catch (e) {}
   res.json({ success: true });
 });
 
