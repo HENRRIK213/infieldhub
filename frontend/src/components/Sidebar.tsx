@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 const adminLinks = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
+  { href: '/products', label: 'Products', icon: '📦' },
   { href: '/admin/links', label: 'Link Generator', icon: '🔗' },
   { href: '/admin/employees', label: 'Employees', icon: '👥' },
   { href: '/admin/customers', label: 'Customers', icon: '🧑‍💼' },
@@ -17,8 +18,8 @@ const adminLinks = [
 
 const employeeLinks = [
   { href: '/employee', label: 'Dashboard', icon: '📊' },
-  { href: '/employee/links', label: 'Customer Links', icon: '🔗' },
   { href: '/products', label: 'Products', icon: '📦' },
+  { href: '/employee/links', label: 'Customer Links', icon: '🔗' },
   { href: '/quotations', label: 'Quotations', icon: '📄' },
 ];
 
@@ -67,4 +68,3 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     </div>
   );
 }
-
