@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import Layout from '@/components/Layout';
 import ProductCard from '@/components/ProductCard';
 import ProductModal from '@/components/ProductModal';
@@ -31,7 +31,7 @@ export default function ProductsPage() {
         <div className="flex flex-wrap gap-2">
           <input
             className="input flex-1 sm:flex-none sm:w-56"
-            placeholder="Search products…"
+            placeholder="Search productsâ€¦"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -71,6 +71,21 @@ export default function ProductsPage() {
           }}
         />
       )}
+          {/* Floating Add Button */}
+      <a
+        href="/products/new"
+        style={{
+          position: 'fixed', bottom: 30, right: 30,
+          background: 'linear-gradient(135deg, #1E88E5, #1565C0)', color: '#fff',
+          width: 60, height: 60, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 30, fontWeight: 'bold', textDecoration: 'none',
+          boxShadow: '0 4px 12px rgba(30,136,229,0.4)', zIndex: 100
+        }}
+        title="Add Product"
+      >
+        +
+      </a>
     </Layout>
   );
 }
@@ -205,7 +220,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
               Cancel
             </button>
             <button disabled={saving} className="btn-primary">
-              {saving ? 'Saving…' : 'Submit'}
+              {saving ? 'Savingâ€¦' : 'Submit'}
             </button>
           </div>
         </form>
