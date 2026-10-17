@@ -1,9 +1,11 @@
-/** @type {import('next').NextConfig} */
-// cache-bust: 2026-10-16 11:37:41
+﻿/** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
   reactStrictMode: true,
   images: { unoptimized: true },
   devIndicators: false,
+  outputFileTracingRoot: path.join(__dirname, './'),
 };
-module.exports = nextConfig;
 
+module.exports = nextConfig;
