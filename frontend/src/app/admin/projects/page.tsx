@@ -1,7 +1,8 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
+import { useState } from 'react';
 
-const tasks = [
+const defaultTasks = [
   { id: '001', task: 'Mobilisation & Layout', dur: '2 d', start: 1, span: 1, color: '#3b82f6', stage: 1 },
   { id: '002', task: 'Trenching Works', dur: '9 d', start: 2, span: 3, color: '#f97316', stage: 1 },
   { id: '003', task: 'Pipe Position & Jointing', dur: '11 d', start: 3, span: 3, color: '#a855f7', stage: 1 },
@@ -20,28 +21,41 @@ const tasks = [
 const weeks = [1,2,3,4,5,6,7,8,9,10,11,12];
 
 export default function GanttPage() {
-  const handlePrint = () => window.print();
+  const [projectTitle, setProjectTitle] = useState('MAKUTANO - NKANGA WORK PLAN');
+
+  const handlePrint = async () => {
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const element = document.getElementById('print-area');
+      const opt: any = {
+        margin: 0.5, filename: `${projectTitle}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'a3', orientation: 'landscape' } // A3 for Gantt
+      };
+      await html2pdf().set(opt).from(element).save();
+    } catch (e) {
+      alert('Error generating PDF');
+    }
+  };
 
   return (
     <Layout requireAdmin>
-      <style dangerouslySetInnerHTML={{__html: `
-        @media print {
-          body * { visibility: hidden; }
-          .print-section, .print-section * { visibility: visible; }
-          .print-section { position: absolute; left: 0; top: 0; width: 100%; }
-          .no-print { display: none !important; }
-        }
-      `}} />
-      
-      <div className="print-section" style={{ background: '#fff', padding: 24, borderRadius: 16, overflowX: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-        <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ fontSize: 12, color: '#64748b' }}>1. P.O BOX62700-19052 Meru Township 0701243548</div>
-            <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginTop: 16 }}>MAKUTANO -NKANGA WORK PLAN</h1>
-          </div>
-          <button onClick={handlePrint} className="no-print" style={{ background: '#0D2B4E', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-            Download PDF
-          </button>
+      <div style={{ marginBottom: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
+        <input 
+          value={projectTitle} 
+          onChange={e => setProjectTitle(e.target.value)} 
+          style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, width: 400 }} 
+        />
+        <button onClick={handlePrint} style={{ background: '#0D2B4E', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+          Download PDF
+        </button>
+      </div>
+
+      <div id="print-area" style={{ background: '#fff', padding: 24, borderRadius: 16, overflowX: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 12, color: '#64748b' }}>1. P.O BOX62700-19052 Meru Township 0701243548</div>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginTop: 16, textTransform: 'uppercase' }}>{projectTitle}</h1>
         </div>
         
         <table style={{ width: '100%', minWidth: 1000, borderCollapse: 'collapse', fontSize: 13 }}>
@@ -54,8 +68,8 @@ export default function GanttPage() {
             </tr>
           </thead>
           <tbody>
-            {tasks.map((t, idx) => {
-              const prevTask = tasks[idx - 1];
+            {defaultTasks.map((t, idx) => {
+              const prevTask = defaultTasks[idx - 1];
               const isNewStage = prevTask && prevTask.stage !== t.stage;
               return (
                 <tr key={t.id} style={{ borderBottom: '1px solid #f1f5f9', background: t.stage % 2 === 0 ? '#fff' : '#f8fafc' }}>
@@ -80,16 +94,6 @@ export default function GanttPage() {
             })}
           </tbody>
         </table>
-        
-        <div style={{ display: 'flex', gap: 20, marginTop: 24, fontSize: 11, color: '#64748b', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#3b82f6', borderRadius: 2 }}></span> Mobilization</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#f97316', borderRadius: 2 }}></span> Trenching</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#a855f7', borderRadius: 2 }}></span> Pipe Works</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#eab308', borderRadius: 2 }}></span> Valve Chambers</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#14b8a6', borderRadius: 2 }}></span> Svc Connectors</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#94a3b8', borderRadius: 2 }}></span> Back fill</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#22c55e', borderRadius: 2 }}></span> Test & commission</div>
-        </div>
       </div>
     </Layout>
   );
