@@ -6,31 +6,24 @@ import { useEffect, useState } from 'react';
 const adminLinks = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
   { href: '/admin/links', label: 'Link Generator', icon: '🔗' },
+  { href: '/admin/documents', label: 'PDF Generator', icon: '📄' },
   { href: '/admin/employees', label: 'Employees', icon: '👥' },
   { href: '/admin/customers', label: 'Customers', icon: '🧑‍💼' },
   { href: '/admin/payments', label: 'Payments', icon: '💳' },
+  { href: '/admin/documents/history', label: 'Quotations & Invoices', icon: '🧾' },
   { href: '/admin/logs', label: 'Activity Logs', icon: '📋' },
   { href: '/admin/reports', label: 'Reports', icon: '📈' },
+  { href: '/admin/analytics', label: 'Analytics', icon: '📉' },
+  { href: '/admin/projects', label: 'Projects (Gantt)', icon: '📅' },
   { href: '/admin/profile', label: 'My Profile', icon: '⚙️' },
 ];
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const path = usePathname();
-  const [role, setRole] = useState<string>('');
-
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
-    setRole(user?.role || '');
-  }, []);
-
-  const links = role === 'ADMIN' ? adminLinks : adminLinks; // Defaulting to admin for now
-
   return (
     <div style={{ padding: '16px', width: 240, height: '100%', background: '#fff', borderRight: '1px solid #E2E8F0', overflowY: 'auto' }}>
-      <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12, paddingLeft: 12 }}>
-        Admin Menu
-      </div>
-      {links.map((l) => {
+      <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12, paddingLeft: 12 }}>Admin Menu</div>
+      {adminLinks.map((l) => {
         const active = path === l.href;
         return (
           <Link key={l.href} href={l.href} prefetch={false} onClick={onNavigate} style={{

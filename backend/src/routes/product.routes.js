@@ -166,3 +166,47 @@ router.put('/:id/stock', auth, async (req, res) => {
 });
 
 module.exports = router;
+const express = require('express');
+const router = express.Router();
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const { auth, requireAdmin } = require('../middleware/auth');
+const multer = require('multer');
+const sharp = require('sharp');
+const path = require('path');
+const fs = require('fs');
+
+const upload = multer({ dest: 'uploads/tmp/' });
+
+// UPDATE PRODUCT (Edit Name, Price, VAT, Image)
+router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
+  try {
+    const { name, description, price, vat, stock, category } = req.body;
+    let updateData = {
+      name,
+      description,
+      price: parseFloat(price),
+      vat: vat === 'true' || vat === true,
+      stock: parseInt(stock) || 0,
+      category
+    };
+
+    if (req.file) {
+      const filename = 'product-' + Date.now() + '.jpg';
+      const out = path.join(__dirname, '../../uploads/products', filename);
+      await sharp(req.file.path).resize(800, 800, { fit: 'inside' }).jpeg({ quality: 85 }).toFile(out);
+      fs.unlinkSync(req.file.path);
+      updateData.imageUrl = '/uploads/products/' + filename;
+    }
+
+    const updated = await prisma.product.update({
+      where: { id: req.params.id },
+      data: updateData
+    });
+    res.json(updated);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+module.exports = router;
