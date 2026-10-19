@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -74,6 +74,6 @@ setupSockets(io);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ InfieldHub backend running on port ${PORT}`);
+  console.log(`âœ… InfieldHub backend running on port ${PORT}`);
   console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
 });

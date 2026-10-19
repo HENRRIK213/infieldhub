@@ -1,175 +1,194 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
-import { api, UPLOADS_URL } from '@/lib/api';
-import { connectAdminSocket } from '@/lib/socket';
+import { api } from '@/lib/api';
 import { useEffect, useState } from 'react';
-import BarChart from '@/components/charts/BarChart';
-import DonutChart from '@/components/charts/DonutChart';
-import LineChart from '@/components/charts/LineChart';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
   const [user, setUser] = useState<any>(null);
-  const [summary, setSummary] = useState<any>(null);
-  const [pending, setPending] = useState<any[]>([]);
-  const [payments, setPayments] = useState<any[]>([]);
-  const [logs, setLogs] = useState<any[]>([]);
-  const [activities, setActivities] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem('user') || 'null');
     setUser(u);
-    api.get('/reports/summary').then(r => setSummary(r.data)).catch(() => {});
-    api.get('/products/admin/pending').then(r => setPending(r.data)).catch(() => {});
-    api.get('/payments').then(r => setPayments(r.data)).catch(() => {});
-    api.get('/admin/logs?limit=6').then(r => setLogs(r.data)).catch(() => {});
-    
-    connectAdminSocket((event: any, data: any) => {
-      setActivities(prev => [{ event, data, time: new Date().toLocaleTimeString() }, ...prev].slice(0, 10));
-    });
+    api.get('/documents/stats')
+      .then(r => setStats(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
-
-  const approvePayment = async (e: any, id: string) => {
-    e.preventDefault();
-    await api.put(`/payments/${id}/approve`);
-    setPayments(p => p.map(x => x.id === id ? { ...x, status: 'APPROVED' } : x));
-  };
-
-  const approveProduct = async (e: any, id: string) => {
-    e.preventDefault();
-    await api.put(`/products/${id}/approve`);
-    setPending(p => p.filter(x => x.id !== id));
-  };
-
-  const activeJobs = summary?.products ?? 0;
-  const users = summary?.users ?? 0;
-  const attendance = Math.min(100, Math.round((users / Math.max(users, 8)) * 100));
-  const revenue = payments.filter(p => p.status === 'APPROVED').reduce((s, p) => s + Number(p.amount || 0), 0);
-  const monthlyGoal = Math.min(100, Math.round((revenue / 500000) * 100));
-
-  const jobTrend = [8, 12, 9, 15, 11, 18, 14, 22, activeJobs];
-  const revenueTrend = [4, 8, 12, 9, 15, 18, 22, 26, 30];
-
-  const stats = summary ? [
-    { label: 'Users', value: summary.users, icon: '👥', color: '#1E88E5', href: '/admin/employees' },
-    { label: 'Products', value: summary.products, icon: '📦', color: '#2E7D32', href: '/products' },
-    { label: 'Quotations', value: summary.quotations, icon: '📄', color: '#7C3AED', href: '/quotations' },
-    { label: 'Payments', value: summary.payments, icon: '💳', color: '#0891B2', href: '/admin/payments' },
-    { label: 'Logs', value: summary.logs, icon: '📋', color: '#475569', href: '/admin/logs' },
-    { label: 'Alerts', value: summary.alerts, icon: '🚨', color: '#DC2626', href: '/admin/logs' },
-  ] : [];
 
   return (
     <Layout requireAdmin>
-      <div style={{ display: 'grid', gap: 20, maxWidth: 1400, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+        
+        {/* TOP HEADER */}
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Dashboard</h1>
+          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>Welcome back, {user?.name || 'Admin'}</p>
+        </div>
 
-        {/* ROW 1: Stats */}
-        {summary && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
-            {stats.map((c) => (
-              <Link key={c.label} href={c.href} style={{
-                background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 18,
-                textDecoration: 'none', boxShadow: '0 1px 3px rgba(13,43,78,0.05)', display: 'block'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <div style={{ width: 44, height: 44, background: `${c.color}15`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{c.icon}</div>
-                  <div style={{ width: 8, height: 8, background: c.color, borderRadius: '50%', boxShadow: `0 0 0 4px ${c.color}20` }} />
+        {/* MAIN GRID: 3 Columns */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginBottom: 20 }}>
+          
+          {/* COLUMN 1: Estimates/Quotes Dashboard */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 14, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Estimates/Quotes Dashboard</h2>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+              <Link href="/admin/documents" style={{ flex: 1, background: '#1E88E5', color: '#fff', padding: '8px 0', textAlign: 'center', borderRadius: 6, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Create Quote</Link>
+              <button style={{ flex: 1, background: '#fff', color: '#1E88E5', border: '1px solid #1E88E5', padding: '8px 0', borderRadius: 6, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Send Quote</button>
+            </div>
+            
+            <div style={{ border: '1px solid #f1f5f9', borderRadius: 8, padding: 12, background: '#f8fafc', marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#0D2B4E' }}>Client Name</div>
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>Draft: #ED451</div>
+            </div>
+
+            <div style={{ border: '1px solid #f1f5f9', borderRadius: 8, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#0D2B4E' }}>Pending Model X (a-tount)</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>Quote #1203</div>
+              </div>
+              <span style={{ color: '#94a3b8' }}>›</span>
+            </div>
+          </div>
+
+          {/* COLUMN 2: Quick Draft Builder */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#0D2B4E' }}>Save as Draft</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button style={{ background: '#1E88E5', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>Send</button>
+                <button style={{ background: '#e2e8f0', color: '#0D2B4E', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>Approve</button>
+              </div>
+            </div>
+            
+            <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#0D2B4E', marginBottom: 12 }}>Draft #ED451 for Solar Array</div>
+              <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ color: '#64748b', textAlign: 'left' }}>
+                    <th style={{ paddingBottom: 8 }}>Description</th>
+                    <th style={{ paddingBottom: 8 }}>Qty</th>
+                    <th style={{ paddingBottom: 8 }}>Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '6px 0' }}>Panel Installation</td>
+                    <td>1</td>
+                    <td>$15.00</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '6px 0' }}>Inverter Model X</td>
+                    <td>1</td>
+                    <td>$30.00</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style={{ borderTop: '1px solid #e2e8f0', marginTop: 12, paddingTop: 12, display: 'flex', justifyContent: 'space-between', fontWeight: 800, color: '#0D2B4E' }}>
+                <span>Sub-Total</span>
+                <span>$350.00</span>
+              </div>
+            </div>
+            
+            <div style={{ marginTop: 16 }}>
+              <label style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Select the Line-item Template:</label>
+              <select style={{ width: '100%', padding: 8, marginTop: 4, borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 }}>
+                <option>Select Existing Line-item Template</option>
+              </select>
+            </div>
+          </div>
+
+          {/* COLUMN 3: Invoicing Status Tracker (REAL-TIME DATA) */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }}>
+            <h2 style={{ fontSize: 14, fontWeight: 800, color: '#0D2B4E', margin: '0 0 16px 0' }}>Invoicing Status Tracker</h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B4E' }}>Estimates</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Sent and accepted</div>
                 </div>
-                <div style={{ fontSize: 30, fontWeight: 800, color: '#0D2B4E', lineHeight: 1, marginBottom: 4 }}>{c.value}</div>
-                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{c.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#1E88E5' }}>{stats?.totalQuotes || 0}</div>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B4E' }}>Approved</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Pending conversion</div>
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#10b981' }}>{stats?.approvedQuotes || 0}</div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B4E' }}>Invoices</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Sent and paid</div>
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#f59e0b' }}>{stats?.totalInvoices || 0}</div>
+              </div>
+            </div>
+            
+            <div style={{ marginTop: 16, background: '#f8fafc', borderRadius: 8, padding: 12, border: '1px solid #f1f5f9' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>Aging: Receivables Over time</div>
+              <svg viewBox="0 0 100 40" style={{ width: '100%', height: 60 }}>
+                <path d="M0,40 L10,35 L30,20 L50,25 L70,10 L100,5 L100,40 Z" fill="#DBEAFE" stroke="#1E88E5" strokeWidth="2" />
+              </svg>
+            </div>
+          </div>
+
+        </div>
+
+        {/* BOTTOM SECTION: Recent Invoices & Conversions */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 20 }}>
+          
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }}>
+            <h2 style={{ fontSize: 14, fontWeight: 800, color: '#0D2B4E', margin: '0 0 16px 0' }}>Recent Invoices & Conversions</h2>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr style={{ color: '#64748b', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ paddingBottom: 8 }}>Invoice</th>
+                  <th style={{ paddingBottom: 8 }}>Client</th>
+                  <th style={{ paddingBottom: 8 }}>Amount</th>
+                  <th style={{ paddingBottom: 8 }}>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? <tr><td colSpan={4} style={{ padding: 20, textAlign: 'center' }}>Loading...</td></tr> : 
+                 stats?.recentDocs?.length === 0 ? <tr><td colSpan={4} style={{ padding: 20, textAlign: 'center', color: '#94a3b8' }}>No documents yet</td></tr> :
+                 stats?.recentDocs?.map((d: any) => (
+                  <tr key={d.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '12px 0', fontWeight: 700, color: '#0D2B4E' }}>{d.serialNo}</td>
+                    <td>{d.clientName || 'Walk-in'}</td>
+                    <td style={{ fontWeight: 700 }}>KES {Number(d.total || 0).toLocaleString()}</td>
+                    <td style={{ color: '#64748b' }}>{new Date(d.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* QUICK ACTIONS TO GENERATOR */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <h2 style={{ fontSize: 14, fontWeight: 800, color: '#0D2B4E', margin: '0 0 16px 0' }}>Quick Generators</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <Link href="/admin/documents" style={{ background: 'linear-gradient(135deg, #1E88E5, #1565C0)', color: '#fff', padding: 16, borderRadius: 8, textAlign: 'center', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>
+                🧾 Create Quote/Invoice
               </Link>
-            ))}
-          </div>
-        )}
-
-        {/* ROW 2: Charts */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 20, boxShadow: '0 1px 3px rgba(13,43,78,0.05)' }}>
-            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Active Jobs</div>
-            <div style={{ fontSize: 42, fontWeight: 800, color: '#0D2B4E', lineHeight: 1, marginTop: 10 }}>{activeJobs}</div>
-            <div style={{ marginTop: 14 }}><BarChart data={jobTrend} color="#0D2B4E" height={80} /></div>
-            <div style={{ fontSize: 12, color: '#16A34A', fontWeight: 700, marginTop: 8 }}>▲ 5% vs last week</div>
-          </div>
-
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 20, boxShadow: '0 1px 3px rgba(13,43,78,0.05)' }}>
-            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Employee Attendance</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <DonutChart percent={attendance} size={120} color="#0D2B4E" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#0D2B4E', display: 'inline-block' }} />
-                  <span style={{ fontWeight: 700, color: '#0D2B4E' }}>Present</span> <span style={{ color: '#94a3b8' }}>{attendance}%</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#CBD5E1', display: 'inline-block' }} />
-                  <span style={{ fontWeight: 700, color: '#64748b' }}>Absent</span> <span style={{ color: '#94a3b8' }}>{100 - attendance}%</span>
-                </div>
-              </div>
+              <Link href="/admin/documents" style={{ background: 'linear-gradient(135deg, #0D2B4E, #1E3A5F)', color: '#fff', padding: 16, borderRadius: 8, textAlign: 'center', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>
+                🖼️ Generate Poster
+              </Link>
             </div>
-          </div>
-
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 20, boxShadow: '0 1px 3px rgba(13,43,78,0.05)' }}>
-            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Recent Revenue</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginTop: 8, marginBottom: 4 }}>KES {revenue.toLocaleString()}</div>
-            <LineChart data={revenueTrend} color="#1E88E5" height={90} />
-          </div>
-        </div>
-
-        {/* ROW 3: Quick Actions (Clickable) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-          {[
-            { label: 'Manage Employees', icon: '👥', href: '/admin/employees', bg: 'linear-gradient(135deg, #0D2B4E 0%, #1E3A5F 100%)', color: '#fff' },
-            { label: 'Manage Products', icon: '📦', href: '/products', bg: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', color: '#fff' },
-            { label: 'Manage Customers', icon: '🧑‍💼', href: '/admin/customers', bg: 'linear-gradient(135deg, #1E88E5 0%, #1565C0 100%)', color: '#fff' },
-            { label: 'Approve Payments', icon: '💳', href: '/admin/payments', bg: '#FFFFFF', color: '#1E88E5', border: '2px solid #1E88E5' },
-          ].map((a: any) => (
-            <Link key={a.href} href={a.href} style={{
-              background: a.bg, color: a.color, padding: '14px 18px', borderRadius: 12,
-              textDecoration: 'none', fontWeight: 700, fontSize: 14, textAlign: 'center',
-              border: a.border || 'none', boxShadow: '0 4px 12px rgba(13, 43, 78, 0.10)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            }}>
-              <span style={{ fontSize: 18 }}>{a.icon}</span>
-              <span>{a.label}</span>
+            <Link href="/admin/projects" style={{ marginTop: 12, background: '#f1f5f9', color: '#0D2B4E', padding: 16, borderRadius: 8, textAlign: 'center', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>
+              📅 View Gantt Work Plan
             </Link>
-          ))}
-        </div>
-
-        {/* ROW 4: Pending Items */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 20, boxShadow: '0 1px 3px rgba(13,43,78,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-              <h2 style={{ fontSize: 13, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>PENDING PRODUCTS</h2>
-              <span style={{ background: pending.length ? '#FEF3C7' : '#F1F5F9', color: pending.length ? '#92400E' : '#64748b', padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700 }}>{pending.length}</span>
-            </div>
-            {pending.length === 0 ? <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px 0' }}>✓ Nothing pending</div> : pending.slice(0, 4).map((p: any) => (
-              <div key={p.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F8FAFC' }}>
-                <div style={{ width: 40, height: 40, background: '#F1F5F9', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📦</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, color: '#0D2B4E', fontSize: 13 }}>{p.name}</div>
-                  <div style={{ color: '#1E88E5', fontSize: 12, fontWeight: 700 }}>KES {Number(p.price).toLocaleString()}</div>
-                </div>
-                <button onClick={(e) => approveProduct(e, p.id)} style={{ background: '#2E7D32', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Approve</button>
-              </div>
-            ))}
           </div>
 
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 20, boxShadow: '0 1px 3px rgba(13,43,78,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-              <h2 style={{ fontSize: 13, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>PENDING PAYMENTS</h2>
-              <span style={{ background: payments.filter(p => p.status !== 'APPROVED').length ? '#FEF3C7' : '#F1F5F9', color: '#92400E', padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700 }}>{payments.filter(p => p.status !== 'APPROVED').length}</span>
-            </div>
-            {payments.filter(p => p.status !== 'APPROVED').length === 0 ? <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px 0' }}>✓ Nothing pending</div> : payments.filter(p => p.status !== 'APPROVED').slice(0, 4).map((p: any) => (
-              <div key={p.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F8FAFC' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, color: '#0D2B4E', fontSize: 12, fontFamily: 'monospace' }}>{p.reference}</div>
-                  <div style={{ color: '#64748b', fontSize: 11 }}>KES {Number(p.amount).toLocaleString()}</div>
-                </div>
-                <button onClick={(e) => approvePayment(e, p.id)} style={{ background: '#2E7D32', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Approve</button>
-              </div>
-            ))}
-          </div>
         </div>
+
       </div>
     </Layout>
   );

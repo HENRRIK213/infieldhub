@@ -171,3 +171,15 @@ model SystemSetting {
   value     String
   updatedAt DateTime @updatedAt
 }
+model Document {
+  id          String   @id @default(cuid())
+  type        String
+  serialNo    String   @unique
+  title       String
+  clientName  String?
+  clientPhone String?
+  content     String
+  total       Float?
+  status      String   @default("DRAFT")
+  createdAt   DateTime @default(now())
+}
