@@ -5,14 +5,15 @@ import { useEffect, useState } from 'react';
 
 const adminLinks = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
-  { href: '/admin/documents', label: 'Estimates / Quotes', icon: '🧾' },
-  { href: '/products', label: 'Products', icon: '📦' },
   { href: '/admin/links', label: 'Link Generator', icon: '🔗' },
+  { href: '/admin/documents', label: 'PDF Generator', icon: '📄' },
   { href: '/admin/employees', label: 'Employees', icon: '👥' },
   { href: '/admin/customers', label: 'Customers', icon: '🧑‍💼' },
   { href: '/admin/payments', label: 'Payments', icon: '💳' },
+  { href: '/admin/documents/history', label: 'Quotations & Invoices', icon: '🧾' },
   { href: '/admin/logs', label: 'Activity Logs', icon: '📋' },
   { href: '/admin/reports', label: 'Reports', icon: '📈' },
+  { href: '/admin/analytics', label: 'Analytics', icon: '📉' },
   { href: '/admin/projects', label: 'Projects (Gantt)', icon: '📅' },
   { href: '/admin/profile', label: 'My Profile', icon: '⚙️' },
 ];
@@ -36,31 +37,19 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const links = role === 'ADMIN' ? adminLinks : employeeLinks;
 
   return (
-    <div style={{ padding: '16px', width: 240 }}>
-      <div style={{
-        fontSize: 10, textTransform: 'uppercase', color: '#94a3b8',
-        fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12, paddingLeft: 12,
-      }}>
+    <div style={{ padding: '16px', width: 240, height: '100%', background: '#fff', borderRight: '1px solid #E2E8F0' }}>
+      <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12, paddingLeft: 12 }}>
         {role === 'ADMIN' ? 'Admin Menu' : 'Employee Menu'}
       </div>
       {links.map((l) => {
         const active = path === l.href;
         return (
-          <Link
-            key={l.href}
-            href={l.href}
-            prefetch={false}
-            onClick={onNavigate}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '10px 12px', borderRadius: 10, fontSize: 14,
-              fontWeight: active ? 700 : 500,
-              color: active ? '#FFFFFF' : '#0D2B4E',
-              background: active ? '#1E88E5' : 'transparent',
-              textDecoration: 'none', marginBottom: 4,
-              transition: 'all 0.15s',
-            }}
-          >
+          <Link key={l.href} href={l.href} prefetch={false} onClick={onNavigate} style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
+            borderRadius: 10, fontSize: 14, fontWeight: active ? 700 : 500,
+            color: active ? '#FFFFFF' : '#0D2B4E', background: active ? '#1E88E5' : 'transparent',
+            textDecoration: 'none', marginBottom: 4, transition: 'all 0.15s',
+          }}>
             <span style={{ fontSize: 16 }}>{l.icon}</span>
             <span>{l.label}</span>
           </Link>
@@ -69,4 +58,3 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     </div>
   );
 }
-

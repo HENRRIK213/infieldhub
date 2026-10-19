@@ -20,12 +20,25 @@ const tasks = [
 const weeks = [1,2,3,4,5,6,7,8,9,10,11,12];
 
 export default function GanttPage() {
+  const handlePrint = () => window.print();
+
   return (
     <Layout requireAdmin>
-      <div style={{ background: '#fff', padding: 24, borderRadius: 16, overflowX: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+            <style>{
+        @media print {
+          body * { visibility: hidden; }
+          .gantt-container, .gantt-container * { visibility: visible; }
+          .gantt-container { position: absolute; left: 0; top: 0; width: 100%; }
+          button { display: none !important; }
+        }
+      }</style>
+      <div className="gantt-container" style={{ background: '#fff', padding: 24, borderRadius: 16, overflowX: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 12, color: '#64748b' }}>1. P.O BOX62700-19052 Meru Township 0701243548</div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginTop: 16 }}>MAKUTANO -NKANGA WORK PLAN</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+<h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginTop: 16 }}>MAKUTANO -NKANGA WORK PLAN</h1>
+<button onClick={handlePrint} style={{ background: '#0D2B4E', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Download PDF</button>
+</div>
         </div>
         <table style={{ width: '100%', minWidth: 1000, borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
@@ -76,3 +89,4 @@ export default function GanttPage() {
     </Layout>
   );
 }
+
