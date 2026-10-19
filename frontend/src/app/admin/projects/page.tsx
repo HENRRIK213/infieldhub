@@ -24,22 +24,26 @@ export default function GanttPage() {
 
   return (
     <Layout requireAdmin>
-            <style>{
+      <style dangerouslySetInnerHTML={{__html: `
         @media print {
           body * { visibility: hidden; }
-          .gantt-container, .gantt-container * { visibility: visible; }
-          .gantt-container { position: absolute; left: 0; top: 0; width: 100%; }
-          button { display: none !important; }
+          .print-section, .print-section * { visibility: visible; }
+          .print-section { position: absolute; left: 0; top: 0; width: 100%; }
+          .no-print { display: none !important; }
         }
-      }</style>
-      <div className="gantt-container" style={{ background: '#fff', padding: 24, borderRadius: 16, overflowX: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 12, color: '#64748b' }}>1. P.O BOX62700-19052 Meru Township 0701243548</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
-<h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginTop: 16 }}>MAKUTANO -NKANGA WORK PLAN</h1>
-<button onClick={handlePrint} style={{ background: '#0D2B4E', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Download PDF</button>
-</div>
+      `}} />
+      
+      <div className="print-section" style={{ background: '#fff', padding: 24, borderRadius: 16, overflowX: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+        <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ fontSize: 12, color: '#64748b' }}>1. P.O BOX62700-19052 Meru Township 0701243548</div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginTop: 16 }}>MAKUTANO -NKANGA WORK PLAN</h1>
+          </div>
+          <button onClick={handlePrint} className="no-print" style={{ background: '#0D2B4E', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+            Download PDF
+          </button>
         </div>
+        
         <table style={{ width: '100%', minWidth: 1000, borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
@@ -76,6 +80,7 @@ export default function GanttPage() {
             })}
           </tbody>
         </table>
+        
         <div style={{ display: 'flex', gap: 20, marginTop: 24, fontSize: 11, color: '#64748b', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#3b82f6', borderRadius: 2 }}></span> Mobilization</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#f97316', borderRadius: 2 }}></span> Trenching</div>
@@ -89,4 +94,3 @@ export default function GanttPage() {
     </Layout>
   );
 }
-
