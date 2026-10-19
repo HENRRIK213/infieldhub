@@ -6,23 +6,12 @@ import { useEffect, useState } from 'react';
 const adminLinks = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
   { href: '/admin/links', label: 'Link Generator', icon: '🔗' },
-  { href: '/admin/documents', label: 'PDF Generator', icon: '📄' },
   { href: '/admin/employees', label: 'Employees', icon: '👥' },
   { href: '/admin/customers', label: 'Customers', icon: '🧑‍💼' },
   { href: '/admin/payments', label: 'Payments', icon: '💳' },
-  { href: '/admin/documents/history', label: 'Quotations & Invoices', icon: '🧾' },
   { href: '/admin/logs', label: 'Activity Logs', icon: '📋' },
   { href: '/admin/reports', label: 'Reports', icon: '📈' },
-  { href: '/admin/analytics', label: 'Analytics', icon: '📉' },
-  { href: '/admin/projects', label: 'Projects (Gantt)', icon: '📅' },
   { href: '/admin/profile', label: 'My Profile', icon: '⚙️' },
-];
-
-const employeeLinks = [
-  { href: '/employee', label: 'Dashboard', icon: '📊' },
-  { href: '/products', label: 'Products', icon: '📦' },
-  { href: '/employee/links', label: 'Customer Links', icon: '🔗' },
-  { href: '/quotations', label: 'Quotations', icon: '📄' },
 ];
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -34,12 +23,12 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     setRole(user?.role || '');
   }, []);
 
-  const links = role === 'ADMIN' ? adminLinks : employeeLinks;
+  const links = role === 'ADMIN' ? adminLinks : adminLinks; // Defaulting to admin for now
 
   return (
-    <div style={{ padding: '16px', width: 240, height: '100%', background: '#fff', borderRight: '1px solid #E2E8F0' }}>
+    <div style={{ padding: '16px', width: 240, height: '100%', background: '#fff', borderRight: '1px solid #E2E8F0', overflowY: 'auto' }}>
       <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12, paddingLeft: 12 }}>
-        {role === 'ADMIN' ? 'Admin Menu' : 'Employee Menu'}
+        Admin Menu
       </div>
       {links.map((l) => {
         const active = path === l.href;

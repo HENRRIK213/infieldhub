@@ -1,96 +1,221 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
-import { api } from '@/lib/api';
-import { useEffect, useState } from 'react';
-import BarChart from '@/components/charts/BarChart';
-import DonutChart from '@/components/charts/DonutChart';
-import LineChart from '@/components/charts/LineChart';
+import Link from 'next/link';
 
 export default function AdminDashboard() {
-  const [user, setUser] = useState<any>(null);
-  const [summary, setSummary] = useState<any>(null);
-
-  useEffect(() => {
-    const u = JSON.parse(localStorage.getItem('user') || 'null');
-    setUser(u);
-    api.get('/reports/summary').then(r => setSummary(r.data)).catch(() => {});
-  }, []);
-
-  const activeJobs = summary?.products ?? 28;
-  const users = summary?.users ?? 2;
-  const attendance = Math.min(100, Math.round((users / Math.max(users, 8)) * 100));
-  const revenue = summary?.payments ?? 45000;
-  const monthlyGoal = Math.min(100, Math.round((revenue / 500000) * 100));
-
   return (
     <Layout requireAdmin>
-      <div style={{ maxWidth: 1400, margin: '0 auto', display: 'grid', gap: 20 }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 10px' }}>
         
-        {/* TOP ROW: 3 Charts */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
-          {/* Active Jobs */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 20, boxShadow: '0 1px 3px rgba(13,43,78,0.05)' }}>
-            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Active Jobs</div>
-            <div style={{ fontSize: 42, fontWeight: 800, color: '#0D2B4E', lineHeight: 1, marginTop: 10 }}>{activeJobs}</div>
-            <div style={{ marginTop: 14 }}><BarChart data={[8, 12, 9, 15, 11, 18, 14, 22, activeJobs]} color="#0D2B4E" height={80} /></div>
-            <div style={{ fontSize: 12, color: '#16A34A', fontWeight: 700, marginTop: 8 }}>▲ 5% vs last week</div>
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Dashboard</h1>
+        </div>
 
-          {/* Employee Attendance */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 20, boxShadow: '0 1px 3px rgba(13,43,78,0.05)' }}>
-            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Employee Attendance</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <DonutChart percent={attendance} size={130} color="#0D2B4E" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#0D2B4E', display: 'inline-block' }} />
-                  <span style={{ fontWeight: 700, color: '#0D2B4E' }}>Present</span> <span style={{ color: '#94a3b8' }}>{attendance}%</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#CBD5E1', display: 'inline-block' }} />
-                  <span style={{ fontWeight: 700, color: '#64748b' }}>Absent</span> <span style={{ color: '#94a3b8' }}>{100 - attendance}%</span>
-                </div>
+        {/* TOP GRID: 3 Panels */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginBottom: 20 }}>
+          
+          {/* Panel 1: Estimates Dashboard */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }}>
+            <h2 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', margin: '0 0 16px 0' }}>Estimates/Quotes Dashboard</h2>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+              <Link href="/admin/documents" style={{ flex: 1, background: '#1E88E5', color: '#fff', padding: '10px 0', textAlign: 'center', borderRadius: 6, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Create Quote</Link>
+              <button style={{ flex: 1, background: '#fff', color: '#1E88E5', border: '1px solid #1E88E5', padding: '10px 0', borderRadius: 6, fontSize: 13, fontWeight: 700 }}>Send Quote</button>
+            </div>
+            
+            <div style={{ background: '#f8fafc', borderRadius: 8, padding: 16, marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B4E' }}>Client Name</div>
+              <div style={{ fontSize: 11, color: '#64748b' }}>Draft: #ED451</div>
+            </div>
+
+            <div style={{ border: '1px solid #f1f5f9', borderRadius: 8, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B4E' }}>Pending Model X (a-tount)</div>
+                <div style={{ fontSize: 11, color: '#64748b' }}>Quote #1203</div>
               </div>
+              <span style={{ color: '#94a3b8', fontSize: 18 }}>›</span>
             </div>
           </div>
 
-          {/* Recent Revenue */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 20, boxShadow: '0 1px 3px rgba(13,43,78,0.05)' }}>
-            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Recent Revenue</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginTop: 8, marginBottom: 4 }}>KSH {revenue.toLocaleString()}</div>
-            <LineChart data={[4, 8, 12, 9, 15, 18, 22, 26, 30]} color="#1E88E5" height={90} />
+          {/* Panel 2: Save as Draft */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#0D2B4E' }}>Save as Draft</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button style={{ background: '#1E88E5', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700 }}>Send</button>
+                <button style={{ background: '#e2e8f0', color: '#0D2B4E', border: 'none', padding: '6px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700 }}>Approve</button>
+              </div>
+            </div>
+            
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 16 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#0D2B4E', marginBottom: 16 }}>Draft #ED451 for Solar Array</div>
+              <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse', marginBottom: 16 }}>
+                <thead>
+                  <tr style={{ color: '#64748b', textAlign: 'left', borderBottom: '1px solid #f1f5f9' }}>
+                    <th style={{ paddingBottom: 8 }}>Description</th>
+                    <th style={{ paddingBottom: 8 }}>Qty</th>
+                    <th style={{ paddingBottom: 8 }}>Price</th>
+                    <th style={{ paddingBottom: 8, textAlign: 'right' }}>Sub-Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '8px 0' }}>Panel Installation</td>
+                    <td>1</td>
+                    <td>$15.00</td>
+                    <td style={{ textAlign: 'right' }}>$250.00</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '8px 0' }}>Inverter Model X</td>
+                    <td>1</td>
+                    <td>$30.00</td>
+                    <td style={{ textAlign: 'right' }}>$450.00</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 12, display: 'flex', justifyContent: 'space-between', fontWeight: 800, color: '#0D2B4E' }}>
+                <span>Sub-Total</span>
+                <span>$350.00</span>
+              </div>
+            </div>
+            
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Select the Line-item Template:</div>
+              <select style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13, background: '#fff' }}>
+                <option>Select Existing Line-item Template</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Panel 3: Invoicing Status Tracker */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }}>
+            <h2 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', margin: '0 0 16px 0' }}>Invoicing Status Tracker</h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B4E' }}>Estimates</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Sent and accepted</div>
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#1E88E5' }}>18</div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B4E' }}>Approved</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Pending conversion</div>
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#10b981' }}>10</div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B4E' }}>Invoices</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Sent and paid</div>
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#f59e0b' }}>5</div>
+              </div>
+            </div>
+            
+            <div style={{ marginTop: 24, border: '1px solid #e2e8f0', borderRadius: 8, padding: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 12 }}>Aging: Receivables Over time</div>
+              <svg viewBox="0 0 100 40" style={{ width: '100%', height: 60 }}>
+                <path d="M0,40 L10,35 L30,20 L50,25 L70,10 L100,5 L100,40 Z" fill="#DBEAFE" stroke="#1E88E5" strokeWidth="2" />
+              </svg>
+            </div>
           </div>
         </div>
 
-        {/* BOTTOM ROW: Project Activity & Monthly Goal */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, 1fr)', gap: 20 }}>
+        {/* BOTTOM GRID: 3 Panels */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
           
-          {/* Recent Project Activity */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 20, boxShadow: '0 1px 3px rgba(13,43,78,0.05)' }}>
-            <h2 style={{ fontSize: 13, fontWeight: 800, color: '#0D2B4E', margin: 0, marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Recent Project Activity</h2>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          {/* Panel 4: Estimates Table */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Estimates/Quotes Dashboard</h2>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button style={{ background: '#1E88E5', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>Create Quote</button>
+                <button style={{ background: '#fff', color: '#1E88E5', border: '1px solid #1E88E5', padding: '4px 12px', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>Send Quote</button>
+              </div>
+            </div>
+            <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ color: '#64748b', fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #EEF2F6', textAlign: 'left' }}>
-                  <th style={{ padding: '8px 4px' }}>Project ID</th>
-                  <th style={{ padding: '8px 4px' }}>Customer Name</th>
-                  <th style={{ padding: '8px 4px' }}>Status</th>
-                  <th style={{ padding: '8px 4px' }}>Location</th>
-                  <th style={{ padding: '8px 4px' }}>Date</th>
+                <tr style={{ color: '#64748b', textAlign: 'left', borderBottom: '1px solid #f1f5f9' }}>
+                  <th style={{ paddingBottom: 8 }}>Client Name</th>
+                  <th style={{ paddingBottom: 8 }}>Quote ID</th>
+                  <th style={{ paddingBottom: 8 }}>Date</th>
+                  <th style={{ paddingBottom: 8 }}>Amount</th>
+                  <th style={{ paddingBottom: 8 }}>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td style={{ padding: 10, fontWeight: 700 }}>Solar</td><td>Solar Installation: 10kW</td><td><span style={{ background: '#DCFCE7', color: '#166534', padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 700 }}>Complete</span></td><td style={{ color: '#64748b' }}>Meru</td><td style={{ color: '#64748b' }}>08/16/2023</td></tr>
-                <tr><td style={{ padding: 10, fontWeight: 700 }}>Electrical</td><td>Panel Upgrade - In Progress</td><td><span style={{ background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 700 }}>Pending</span></td><td style={{ color: '#64748b' }}>Nairobi</td><td style={{ color: '#64748b' }}>08/16/2023</td></tr>
-                <tr><td style={{ padding: 10, fontWeight: 700 }}>Water</td><td>Pump Service - Scheduled</td><td><span style={{ background: '#FEE2E2', color: '#991B1B', padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 700 }}>Issue</span></td><td style={{ color: '#64748b' }}>Nkanga</td><td style={{ color: '#64748b' }}>09/10/2023</td></tr>
+                <tr><td style={{ padding: '8px 0' }}>Client Name</td><td>#ED451</td><td>06/2022</td><td>$250.00</td><td><span style={{ color: '#f59e0b', background: '#fef3c7', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>Draft</span></td></tr>
+                <tr><td style={{ padding: '8px 0' }}>Client Name</td><td>#ED452</td><td>06/2022</td><td>$250.00</td><td><span style={{ color: '#f59e0b', background: '#fef3c7', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>Draft</span></td></tr>
+                <tr><td style={{ padding: '8px 0' }}>Client Name</td><td>#ED453</td><td>06/2022</td><td>$250.00</td><td><span style={{ color: '#1E88E5', background: '#dbeafe', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>Sent</span></td></tr>
+                <tr><td style={{ padding: '8px 0' }}>Jotan Alex</td><td>#ED454</td><td>06/2022</td><td>$250.00</td><td><span style={{ color: '#8b5cf6', background: '#ede9fe', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>Viewed</span></td></tr>
+                <tr><td style={{ padding: '8px 0' }}>Jotan Haven</td><td>#ED450</td><td>06/2022</td><td>$280.00</td><td><span style={{ color: '#10b981', background: '#d1fae5', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>Accepted</span></td></tr>
               </tbody>
             </table>
           </div>
 
-          {/* Monthly Goal */}
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EEF2F6', padding: 20, boxShadow: '0 1px 3px rgba(13,43,78,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <h2 style={{ fontSize: 13, fontWeight: 800, color: '#0D2B4E', margin: 0, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Monthly Goal</h2>
-            <DonutChart percent={monthlyGoal} size={140} color="#0D2B4E" />
-            <div style={{ fontSize: 12, color: '#64748b', marginTop: 12, textAlign: 'center' }}>KSH {revenue.toLocaleString()} of 500,000</div>
+          {/* Panel 5: Client Signature */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }}>
+            <h2 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', margin: '0 0 16px 0' }}>Client Signature & Acceptance</h2>
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>View accepted quotes of accepted estimate and T&Cs.</div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>📄</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0D2B4E' }}>Job Completion Form</div>
+                    <div style={{ fontSize: 11, color: '#1E88E5' }}>Create: Completion Form</div>
+                  </div>
+                </div>
+                <span style={{ color: '#94a3b8' }}>›</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>📸</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0D2B4E' }}>Photolinks</div>
+                    <div style={{ fontSize: 11, color: '#1E88E5' }}>Create: Completion Form</div>
+                  </div>
+                </div>
+                <span style={{ color: '#94a3b8' }}>›</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>🖋️</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0D2B4E' }}>Client Signature</div>
+                  </div>
+                </div>
+                <span style={{ color: '#94a3b8' }}>›</span>
+              </div>
+            </div>
+            
+            <div style={{ marginTop: 20, border: '1px dashed #cbd5e1', borderRadius: 8, padding: 20, textAlign: 'center' }}>
+              <div style={{ fontFamily: 'cursive', fontSize: 24, color: '#0D2B4E' }}>Alex Juma</div>
+            </div>
+          </div>
+
+          {/* Panel 6: Recent Invoices */}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }}>
+            <h2 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', margin: '0 0 16px 0' }}>Recent Invoices & Conversions</h2>
+            <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ color: '#64748b', textAlign: 'left', borderBottom: '1px solid #f1f5f9' }}>
+                  <th style={{ paddingBottom: 8 }}>Invoice</th>
+                  <th style={{ paddingBottom: 8 }}>Date</th>
+                  <th style={{ paddingBottom: 8 }}>Paid</th>
+                  <th style={{ paddingBottom: 8 }}>Due</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td style={{ padding: '8px 0', color: '#1E88E5', fontWeight: 700 }}>#ED451</td><td>06/2022</td><td>$280.00</td><td><span style={{ color: '#10b981', background: '#d1fae5', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>Feb 03</span></td></tr>
+                <tr><td style={{ padding: '8px 0', color: '#1E88E5', fontWeight: 700 }}>#ED450</td><td>06/2022</td><td>$250.00</td><td><span style={{ color: '#10b981', background: '#d1fae5', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>Feb 03</span></td></tr>
+                <tr><td style={{ padding: '8px 0', color: '#1E88E5', fontWeight: 700 }}>#ED453</td><td>06/2022</td><td>$250.00</td><td><span style={{ color: '#10b981', background: '#d1fae5', padding: '2px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>Feb 03</span></td></tr>
+                <tr><td style={{ padding: '8px 0', color: '#1E88E5', fontWeight: 700 }}>#ED452</td><td>06/2022</td><td>$290.00</td><td style={{ color: '#64748b', fontSize: 11 }}>Record Payment</td></tr>
+              </tbody>
+            </table>
           </div>
 
         </div>
