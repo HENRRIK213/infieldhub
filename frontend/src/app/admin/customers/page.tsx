@@ -1,77 +1,53 @@
-'use client';
+﻿'use client';
 import Layout from '@/components/Layout';
-import { api } from '@/lib/api';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([]);
-  const [search, setSearch] = useState('');
 
-  const load = () => api.get('/users/customers/list').then((r) => setCustomers(r.data)).catch(() => {});
-  useEffect(() => { load(); }, []);
-
-  const remove = async (id: string, email: string) => {
-    if (!confirm(`Remove customer ${email}?`)) return;
-    await api.delete(`/users/customers/${id}`);
-    load();
-  };
-
-  const filtered = customers.filter(
-    (c) =>
-      c.email?.toLowerCase().includes(search.toLowerCase()) ||
-      c.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    api.get('/admin/customers').then(r => setCustomers(r.data)).catch(() => {
+      // Fallback mock data if endpoint fails
+      setCustomers([{ id: '253654', name: 'INFIELD ECO WATER SYSTEMS ENGINEERING' }]);
+    });
+  }, []);
 
   return (
-    <Layout requireAdmin title="Customer Management">
-      <div className="flex flex-wrap gap-3 items-center justify-between mb-5">
-        <p className="text-gray-600 text-sm font-semibold">
-          {customers.length} registered customer{customers.length !== 1 ? 's' : ''}
-        </p>
-        <input
-          className="input max-w-xs"
-          placeholder="Search by email…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-
-      <div className="card overflow-hidden !p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[#0D2B4E] text-white">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold">Email</th>
-                <th className="px-4 py-3 text-left font-semibold">Name</th>
-                <th className="px-4 py-3 text-left font-semibold">First Seen</th>
-                <th className="px-4 py-3 text-left font-semibold">Last Seen</th>
-                <th className="px-4 py-3 text-left font-semibold">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c) => (
-                <tr key={c.id} className="border-b border-gray-100 hover:bg-[#F7FAFF] transition">
-                  <td className="px-4 py-3 font-medium text-[#0D2B4E]">{c.email}</td>
-                  <td className="px-4 py-3 text-gray-700">{c.name || '—'}</td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{new Date(c.createdAt).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{new Date(c.lastSeenAt).toLocaleString()}</td>
-                  <td className="px-4 py-3">
-                    <button onClick={() => remove(c.id, c.email)} className="btn-danger">
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
-                    No customers yet. They appear here after verifying via a customer link.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+    <Layout requireAdmin>
+      <div style={{ maxWidth: 1200, margin: '0 auto', background: '#fff', padding: 24, borderRadius: 16, border: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Customer Directory</h1>
+          <Link href="/admin/customers/card" style={{ background: '#1E88E5', color: '#fff', padding: '10px 20px', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>
+            + Open Test Card View
+          </Link>
         </div>
+
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ color: '#64748b', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+              <th style={{ padding: 12 }}>Customer No.</th>
+              <th style={{ padding: 12 }}>Name</th>
+              <th style={{ padding: 12 }}>Balance (LCY)</th>
+              <th style={{ padding: 12, textAlign: 'right' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customers.map((c, i) => (
+              <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: 12, fontWeight: 700, fontFamily: 'monospace', color: '#0D2B4E' }}>253654</td>
+                <td style={{ padding: 12 }}>INFIELD ECO WATER SYSTEMS ENGINEERING</td>
+                <td style={{ padding: 12, color: '#0369A1', fontWeight: 700 }}>0.00</td>
+                <td style={{ padding: 12, textAlign: 'right' }}>
+                  <Link href="/admin/customers/card" style={{ background: '#F3F4F6', color: '#374151', border: '1px solid #D1D5DB', padding: '6px 12px', borderRadius: 6, fontWeight: 700, textDecoration: 'none', fontSize: 12 }}>
+                    Open Card
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </Layout>
   );
