@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+// Alphabetical order
 const adminLinks = [
   { href: '/admin/logs', label: 'Activity Logs', icon: '📋' },
   { href: '/admin/analytics', label: 'Analytics', icon: '📉' },
@@ -20,6 +21,13 @@ const adminLinks = [
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const path = usePathname();
+  const [role, setRole] = useState<string>('');
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    setRole(user?.role || '');
+  }, []);
+
   return (
     <div style={{ padding: '16px', width: 240, height: '100%', background: '#fff', borderRight: '1px solid #E2E8F0', overflowY: 'auto' }}>
       <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12, paddingLeft: 12 }}>Admin Menu</div>

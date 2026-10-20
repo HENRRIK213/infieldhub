@@ -1,6 +1,6 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
-import { api } from '@/lib/api';
+import { api, UPLOADS_URL } from '@/lib/api';
 import { useState, useEffect, useRef } from 'react';
 
 export default function DocumentsPage() {
@@ -10,6 +10,7 @@ export default function DocumentsPage() {
   
   const [products, setProducts] = useState<any[]>([]);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [adProducts, setAdProducts] = useState<any[]>([]);
   
   const [posterTitle, setPosterTitle] = useState('Power Your Home\nThe Smart Way');
   const [posterSub, setPosterSub] = useState('Clean Solar Energy • Zero Noise • Zero Stress');
@@ -19,12 +20,16 @@ export default function DocumentsPage() {
   
   const [paperSize, setPaperSize] = useState('A4');
   const [orientation, setOrientation] = useState('portrait');
-  
   const [isGenerating, setIsGenerating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    api.get('/products').then(r => setProducts(r.data)).catch(() => {});
+    api.get('/products').then(r => {
+      setProducts(r.data);
+      // Pick random products for advert
+      const shuffled = [...r.data].sort(() => 0.5 - Math.random());
+      setAdProducts(shuffled.slice(0, 3));
+    }).catch(() => {});
   }, []);
 
   const addItem = (prod: any) => setSelectedItems([...selectedItems, { ...prod, qty: 1 }]);
@@ -54,6 +59,7 @@ export default function DocumentsPage() {
       const html2pdf = (await import('html2pdf.js')).default;
       const element = document.getElementById('print-area');
       const formatMap: any = { 'A4': 'a4', 'A3': 'a3', 'A5': 'a5', 'Letter': 'letter', 'Square': [8, 8] };
+
       const opt: any = {
         margin: activeTab === 'BUSINESS' ? 0.5 : 0, 
         filename: `${activeTab === 'BUSINESS' ? type : 'Poster'}-${Date.now()}.pdf`,
@@ -132,7 +138,7 @@ export default function DocumentsPage() {
               <input value={posterSub} onChange={e => setPosterSub(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #cbd5e1', marginBottom: 16, fontFamily: posterFont }} />
               
               <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Background Image</label>
-              <div onClick={() => fileInputRef.current?.click()} style={{ border: '2px dashed #cbd5e1', borderRadius: 8, padding: 24, textAlign: 'center', cursor: 'pointer', background: '#f8fafc', marginBottom: 16 }}>
+              <div onClick={() => fileInputRef.current?.click()} style={{ border: '2px dashed #cbd5e1', borderRadius: 8, padding: 24, textAlign: 'center', cursor: 'pointer', background: '#f8fafc', marginBottom: 16, transition: 'all 0.2s' }}>
                 <div style={{ fontSize: 24, marginBottom: 8 }}>📸</div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#1E88E5' }}>Click to Upload Image</div>
                 <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} style={{ display: 'none' }} />
@@ -148,26 +154,27 @@ export default function DocumentsPage() {
                   <select value={posterFont} onChange={e => setPosterFont(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #cbd5e1' }}>
                     <option value="Inter">Inter</option>
                     <option value="Georgia">Georgia</option>
-                    <option value="Courier">Courier</option>
                     <option value="Impact">Impact</option>
                   </select>
                 </div>
               </div>
 
               <div style={{ background: '#f1f5f9', padding: 12, borderRadius: 8, marginBottom: 20 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, display: 'block' }}>Print Settings (Size)</label>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, display: 'block' }}>Print Settings</label>
                 <select value={paperSize} onChange={e => setPaperSize(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #cbd5e1', marginBottom: 8 }}>
-                  <option value="A4">A4 (Standard Document)</option>
+                  <option value="A4">A4 (Standard)</option>
                   <option value="A3">A3 (Large Poster)</option>
-                  <option value="A5">A5 (Small Flyer)</option>
-                  <option value="Letter">Letter (US Standard)</option>
-                  <option value="Square">Square (Social Media / Instagram)</option>
+                  <option value="Square">Square (Social Media)</option>
                 </select>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={() => setOrientation('portrait')} style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #cbd5e1', background: orientation === 'portrait' ? '#1E88E5' : '#fff', color: orientation === 'portrait' ? '#fff' : '#0D2B4E', fontWeight: 600 }}>Portrait</button>
+                  <button onClick={() => setOrientation('landscape')} style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #cbd5e1', background: orientation === 'landscape' ? '#1E88E5' : '#fff', color: orientation === 'landscape' ? '#fff' : '#0D2B4E', fontWeight: 600 }}>Landscape</button>
+                </div>
               </div>
             </>
           )}
 
-          <button onClick={handleDownloadPDF} disabled={isGenerating} style={{ width: '100%', background: '#0D2B4E', color: '#fff', padding: 14, borderRadius: 8, border: 'none', marginTop: 10, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={handleDownloadPDF} disabled={isGenerating} style={{ width: '100%', background: '#0D2B4E', color: '#fff', padding: 14, borderRadius: 8, border: 'none', fontWeight: 700, cursor: 'pointer' }}>
             {isGenerating ? 'Generating...' : '⬇ Download PDF'}
           </button>
         </div>
@@ -175,40 +182,40 @@ export default function DocumentsPage() {
         {/* RIGHT: Preview */}
         <div style={{ background: '#e2e8f0', padding: 20, borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', overflow: 'auto' }}>
           
-          <div id="print-area" style={{ 
-            background: activeTab === 'POSTER' ? `url(${posterImage}) center/cover` : '#fff',
-            width: activeTab === 'POSTER' ? finalWidth : '210mm', 
-            height: activeTab === 'POSTER' ? finalHeight : 'auto', 
-            minHeight: activeTab === 'POSTER' ? finalHeight : '297mm',
-            padding: activeTab === 'POSTER' ? 0 : 40, 
-            fontFamily: activeTab === 'POSTER' ? posterFont : 'Arial, sans-serif',
-            fontSize: 11, color: '#000', position: 'relative', overflow: 'hidden',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
-          }}>
+          <div id="print-area" style={{ background: activeTab === 'POSTER' ? `url(${posterImage}) center/cover` : '#fff', width: activeTab === 'POSTER' ? finalWidth : '210mm', height: activeTab === 'POSTER' ? finalHeight : 'auto', minHeight: activeTab === 'POSTER' ? finalHeight : '297mm', padding: activeTab === 'POSTER' ? 0 : 40, fontFamily: activeTab === 'POSTER' ? posterFont : 'Arial, sans-serif', fontSize: 11, color: '#000', position: 'relative', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', transition: 'all 0.3s ease' }}>
             
             {activeTab === 'BUSINESS' ? (
               <>
-                {/* HEADER (No QUOTATION title) */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #000', paddingBottom: 10, marginBottom: 20 }}>
-                  <div>
+                {/* HEADER WITH AD IMAGES */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #ccc', paddingBottom: 15, marginBottom: 20 }}>
+                  <div style={{ flex: 1 }}>
                     <img src={logoSrc} alt="Logo" style={{ height: 60 }} crossOrigin="anonymous" />
-                    <div style={{ marginTop: 10, fontSize: 10 }}>
+                    <div style={{ marginTop: 10, fontSize: 10, color: '#555' }}>
                       <strong>InfieldHub Engineering</strong><br/>P.O BOX 62700-19052<br/>Meru Township<br/>Tel: 0701243548
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right', marginTop: 20 }}>
-                    <div style={{ fontSize: 10 }}>
-                      Date: <strong>{new Date().toLocaleDateString('en-GB')}</strong><br/>
-                      Ref: <strong>INV-{Date.now().toString().slice(-6)}</strong>
+                  
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, textAlign: 'right' }}>
+                      Date: {new Date().toLocaleDateString('en-GB')}<br/>
+                      Serial: {type.slice(0,2)}-{Date.now().toString().slice(-6)}
+                    </div>
+                    {/* RANDOM PRODUCT IMAGES FOR ADVERT */}
+                    <div style={{ display: 'flex', gap: 10, marginTop: 15 }}>
+                      {adProducts.map((p: any, i: number) => (
+                        p.imageUrl && (
+                          <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <img 
+                              src={p.imageUrl.startsWith('http') ? p.imageUrl : `${UPLOADS_URL}${p.imageUrl}`} 
+                              style={{ height: 55, objectFit: 'contain' }} 
+                              crossOrigin="anonymous" 
+                            />
+                            <div style={{ fontSize: 8, fontWeight: 700, marginTop: 4, color: '#1E88E5' }}>KSH {p.price.toLocaleString()}</div>
+                          </div>
+                        )
+                      ))}
                     </div>
                   </div>
-                </div>
-
-                {/* PROFESSIONAL IMAGE BANNER (As requested) */}
-                <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-                  <img src="https://images.unsplash.com/photo-1592833159155-c62df1b65634?auto=format&fit=crop&q=80&w=300" style={{ width: '33%', height: 80, objectFit: 'cover', borderRadius: 4 }} crossOrigin="anonymous" />
-                  <img src="https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&q=80&w=300" style={{ width: '33%', height: 80, objectFit: 'cover', borderRadius: 4 }} crossOrigin="anonymous" />
-                  <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&q=80&w=300" style={{ width: '34%', height: 80, objectFit: 'cover', borderRadius: 4 }} crossOrigin="anonymous" />
                 </div>
 
                 <div style={{ marginBottom: 20 }}>
@@ -254,7 +261,7 @@ export default function DocumentsPage() {
                   Payment: IN FULL PRIOR TO SUPPLY.
                 </div>
 
-                {/* PAYMENT OPTIONS (All 4 gateways) */}
+                {/* ALL PAYMENT METHODS */}
                 <div style={{ border: '1px solid #000', padding: 12, marginBottom: 20 }}>
                   <div style={{ fontWeight: 700, marginBottom: 12, textAlign: 'center', fontSize: 11, background: '#f1f5f9', padding: 4 }}>PAYMENT OPTIONS</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, fontSize: 9 }}>
@@ -279,25 +286,15 @@ export default function DocumentsPage() {
                     </div>
                   </div>
                 </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20 }}>
-                  <div>Name _______________________<br/><br/>Date _______________________</div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontStyle: 'italic', fontFamily: 'cursive', fontSize: 16 }}>Alphone Juma</div>
-                    <div style={{ borderTop: '1px solid #000', paddingTop: 4, marginTop: 4 }}>Authorized Signatory</div>
-                  </div>
-                </div>
               </>
             ) : (
               <div style={{ width: '100%', height: '100%', position: 'relative', background: `linear-gradient(to bottom, ${posterTheme}dd 0%, ${posterTheme}00 40%, ${posterTheme}00 60%, ${posterTheme}ee 100%)` }}>
                 <div style={{ position: 'absolute', inset: 0, padding: isLandscape ? 40 : 60, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
                   <img src={logoSrc} alt="Logo" style={{ height: isLandscape ? 60 : 80, objectFit: 'contain', background: 'white', padding: 10, borderRadius: 10 }} crossOrigin="anonymous" />
-                  
                   <div style={{ width: '100%' }}>
                     <h1 style={{ fontSize: isLandscape ? 60 : 80, fontWeight: 900, lineHeight: 1.1, margin: 0, color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'pre-line' }}>{posterTitle}</h1>
                     <p style={{ fontSize: isLandscape ? 20 : 26, fontWeight: 700, marginTop: 20, color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.6)', background: 'rgba(0,0,0,0.4)', padding: '12px 24px', borderRadius: 12, display: 'inline-block' }}>{posterSub}</p>
                   </div>
-
                   <div style={{ background: '#fff', color: posterTheme, padding: '16px 40px', borderRadius: 999, fontSize: 24, fontWeight: 900, boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>Call: 0701243548</div>
                 </div>
               </div>
