@@ -4,18 +4,18 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const adminLinks = [
-  { href: '/admin', label: 'Dashboard', icon: '📊' },
-  { href: '/admin/links', label: 'Link Generator', icon: '🔗' },
-  { href: '/admin/documents', label: 'PDF Generator', icon: '📄' },
-  { href: '/admin/employees', label: 'Employees', icon: '👥' },
-  { href: '/admin/customers', label: 'Customers', icon: '🧑‍💼' },
-  { href: '/admin/payments', label: 'Payments', icon: '💳' },
-  { href: '/admin/documents/history', label: 'Quotations & Invoices', icon: '🧾' },
   { href: '/admin/logs', label: 'Activity Logs', icon: '📋' },
-  { href: '/admin/reports', label: 'Reports', icon: '📈' },
   { href: '/admin/analytics', label: 'Analytics', icon: '📉' },
-  { href: '/admin/projects', label: 'Projects (Gantt)', icon: '📅' },
+  { href: '/admin/customers', label: 'Customers', icon: '🧑‍💼' },
+  { href: '/admin', label: 'Dashboard', icon: '📊' },
+  { href: '/admin/employees', label: 'Employees', icon: '👥' },
+  { href: '/admin/links', label: 'Link Generator', icon: '🔗' },
   { href: '/admin/profile', label: 'My Profile', icon: '⚙️' },
+  { href: '/admin/payments', label: 'Payments', icon: '💳' },
+  { href: '/admin/documents', label: 'PDF Generator', icon: '📄' },
+  { href: '/admin/projects', label: 'Projects (Gantt)', icon: '📅' },
+  { href: '/admin/documents/history', label: 'Quotations & Invoices', icon: '🧾' },
+  { href: '/admin/reports', label: 'Reports', icon: '📈' },
 ];
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {

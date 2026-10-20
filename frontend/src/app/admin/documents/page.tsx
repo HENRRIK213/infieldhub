@@ -1,34 +1,30 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
 import { api } from '@/lib/api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<'BUSINESS' | 'POSTER'>('BUSINESS');
   const [type, setType] = useState('QUOTATION');
   const [clientName, setClientName] = useState('THE CLIENT');
   
-  // Business Doc State
   const [products, setProducts] = useState<any[]>([]);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
-  const [adProducts, setAdProducts] = useState<any[]>([]);
   
-  // Poster State
   const [posterTitle, setPosterTitle] = useState('Power Your Home\nThe Smart Way');
   const [posterSub, setPosterSub] = useState('Clean Solar Energy • Zero Noise • Zero Stress');
   const [posterImage, setPosterImage] = useState('https://images.unsplash.com/photo-1592833159155-c62df1b65634?auto=format&fit=crop&q=80&w=1000');
   const [posterTheme, setPosterTheme] = useState('#10b981');
   const [posterFont, setPosterFont] = useState('Inter');
-
+  
+  const [paperSize, setPaperSize] = useState('A4');
+  const [orientation, setOrientation] = useState('portrait');
+  
   const [isGenerating, setIsGenerating] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    api.get('/products').then(r => {
-      setProducts(r.data);
-      // Pick 3 random products for advertisement
-      const shuffled = [...r.data].sort(() => 0.5 - Math.random());
-      setAdProducts(shuffled.slice(0, 3));
-    }).catch(() => {});
+    api.get('/products').then(r => setProducts(r.data)).catch(() => {});
   }, []);
 
   const addItem = (prod: any) => setSelectedItems([...selectedItems, { ...prod, qty: 1 }]);
@@ -39,6 +35,15 @@ export default function DocumentsPage() {
   };
   const removeItem = (index: number) => setSelectedItems(selectedItems.filter((_, i) => i !== index));
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPosterImage(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const subtotal = selectedItems.reduce((s, i) => s + (i.qty * i.price), 0);
   const vatTotal = selectedItems.reduce((s, i) => s + (i.vat ? (i.qty * i.price * 0.16) : 0), 0);
   const grandTotal = subtotal + vatTotal;
@@ -48,16 +53,16 @@ export default function DocumentsPage() {
     try {
       const html2pdf = (await import('html2pdf.js')).default;
       const element = document.getElementById('print-area');
+      const formatMap: any = { 'A4': 'a4', 'A3': 'a3', 'A5': 'a5', 'Letter': 'letter', 'Square': [8, 8] };
       const opt: any = {
         margin: activeTab === 'BUSINESS' ? 0.5 : 0, 
         filename: `${activeTab === 'BUSINESS' ? type : 'Poster'}-${Date.now()}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'in', format: formatMap[paperSize] || 'a4', orientation: activeTab === 'BUSINESS' ? 'portrait' : orientation }
       };
       await html2pdf().set(opt).from(element).save();
       
-      // Save to database
       await api.post('/documents', {
         type: activeTab === 'BUSINESS' ? type : 'POSTER',
         title: activeTab === 'BUSINESS' ? `${type} for ${clientName}` : posterTitle,
@@ -72,6 +77,10 @@ export default function DocumentsPage() {
   };
 
   const logoSrc = typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '/logo.png';
+  const previewDimensions = { 'A4': { width: '210mm', height: '297mm' }, 'A3': { width: '297mm', height: '420mm' }, 'A5': { width: '148mm', height: '210mm' }, 'Letter': { width: '8.5in', height: '11in' }, 'Square': { width: '8in', height: '8in' } }[paperSize] || { width: '210mm', height: '297mm' };
+  const isLandscape = orientation === 'landscape' && paperSize !== 'Square';
+  const finalWidth = isLandscape ? previewDimensions.height : previewDimensions.width;
+  const finalHeight = isLandscape ? previewDimensions.width : previewDimensions.height;
 
   return (
     <Layout requireAdmin>
@@ -115,22 +124,26 @@ export default function DocumentsPage() {
             </>
           ) : (
             <>
-              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Poster Customization</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Poster Designer</h2>
               <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Headline</label>
-              <textarea value={posterTitle} onChange={e => setPosterTitle(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, minHeight: 60, border: '1px solid #cbd5e1', marginBottom: 16 }} />
+              <textarea value={posterTitle} onChange={e => setPosterTitle(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, minHeight: 60, border: '1px solid #cbd5e1', marginBottom: 16, fontFamily: posterFont }} />
               
               <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Subheadline</label>
-              <input value={posterSub} onChange={e => setPosterSub(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #cbd5e1', marginBottom: 16 }} />
+              <input value={posterSub} onChange={e => setPosterSub(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #cbd5e1', marginBottom: 16, fontFamily: posterFont }} />
               
-              <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Background Image URL</label>
-              <input value={posterImage} onChange={e => setPosterImage(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #cbd5e1', marginBottom: 16 }} />
+              <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Background Image</label>
+              <div onClick={() => fileInputRef.current?.click()} style={{ border: '2px dashed #cbd5e1', borderRadius: 8, padding: 24, textAlign: 'center', cursor: 'pointer', background: '#f8fafc', marginBottom: 16 }}>
+                <div style={{ fontSize: 24, marginBottom: 8 }}>📸</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#1E88E5' }}>Click to Upload Image</div>
+                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} style={{ display: 'none' }} />
+              </div>
               
-              <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                <div>
                   <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Theme Color</label>
-                  <input type="color" value={posterTheme} onChange={e => setPosterTheme(e.target.value)} style={{ width: '100%', height: 40, padding: 2, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+                  <input type="color" value={posterTheme} onChange={e => setPosterTheme(e.target.value)} style={{ width: '100%', height: 40, padding: 2, border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }} />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div>
                   <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Font Style</label>
                   <select value={posterFont} onChange={e => setPosterFont(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #cbd5e1' }}>
                     <option value="Inter">Inter</option>
@@ -140,26 +153,42 @@ export default function DocumentsPage() {
                   </select>
                 </div>
               </div>
+
+              <div style={{ background: '#f1f5f9', padding: 12, borderRadius: 8, marginBottom: 20 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, display: 'block' }}>Print Settings (Size)</label>
+                <select value={paperSize} onChange={e => setPaperSize(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #cbd5e1', marginBottom: 8 }}>
+                  <option value="A4">A4 (Standard Document)</option>
+                  <option value="A3">A3 (Large Poster)</option>
+                  <option value="A5">A5 (Small Flyer)</option>
+                  <option value="Letter">Letter (US Standard)</option>
+                  <option value="Square">Square (Social Media / Instagram)</option>
+                </select>
+              </div>
             </>
           )}
 
-          <button onClick={handleDownloadPDF} disabled={isGenerating} style={{ width: '100%', background: '#0D2B4E', color: '#fff', padding: 14, borderRadius: 8, border: 'none', marginTop: 20, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={handleDownloadPDF} disabled={isGenerating} style={{ width: '100%', background: '#0D2B4E', color: '#fff', padding: 14, borderRadius: 8, border: 'none', marginTop: 10, fontWeight: 700, cursor: 'pointer' }}>
             {isGenerating ? 'Generating...' : '⬇ Download PDF'}
           </button>
         </div>
 
         {/* RIGHT: Preview */}
-        <div style={{ background: '#e2e8f0', padding: 20, borderRadius: 12, display: 'flex', justifyContent: 'center', overflow: 'auto' }}>
+        <div style={{ background: '#e2e8f0', padding: 20, borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', overflow: 'auto' }}>
           
           <div id="print-area" style={{ 
             background: activeTab === 'POSTER' ? `url(${posterImage}) center/cover` : '#fff',
-            width: '210mm', minHeight: '297mm', padding: activeTab === 'POSTER' ? 0 : 40, 
+            width: activeTab === 'POSTER' ? finalWidth : '210mm', 
+            height: activeTab === 'POSTER' ? finalHeight : 'auto', 
+            minHeight: activeTab === 'POSTER' ? finalHeight : '297mm',
+            padding: activeTab === 'POSTER' ? 0 : 40, 
             fontFamily: activeTab === 'POSTER' ? posterFont : 'Arial, sans-serif',
-            fontSize: 11, color: '#000', position: 'relative', overflow: 'hidden'
+            fontSize: 11, color: '#000', position: 'relative', overflow: 'hidden',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
           }}>
             
             {activeTab === 'BUSINESS' ? (
               <>
+                {/* HEADER (No QUOTATION title) */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #000', paddingBottom: 10, marginBottom: 20 }}>
                   <div>
                     <img src={logoSrc} alt="Logo" style={{ height: 60 }} crossOrigin="anonymous" />
@@ -167,13 +196,19 @@ export default function DocumentsPage() {
                       <strong>InfieldHub Engineering</strong><br/>P.O BOX 62700-19052<br/>Meru Township<br/>Tel: 0701243548
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, textTransform: 'uppercase' }}>{type}</h1>
-                    <div style={{ marginTop: 10, fontSize: 10 }}>
+                  <div style={{ textAlign: 'right', marginTop: 20 }}>
+                    <div style={{ fontSize: 10 }}>
                       Date: <strong>{new Date().toLocaleDateString('en-GB')}</strong><br/>
                       Ref: <strong>INV-{Date.now().toString().slice(-6)}</strong>
                     </div>
                   </div>
+                </div>
+
+                {/* PROFESSIONAL IMAGE BANNER (As requested) */}
+                <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+                  <img src="https://images.unsplash.com/photo-1592833159155-c62df1b65634?auto=format&fit=crop&q=80&w=300" style={{ width: '33%', height: 80, objectFit: 'cover', borderRadius: 4 }} crossOrigin="anonymous" />
+                  <img src="https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&q=80&w=300" style={{ width: '33%', height: 80, objectFit: 'cover', borderRadius: 4 }} crossOrigin="anonymous" />
+                  <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&q=80&w=300" style={{ width: '34%', height: 80, objectFit: 'cover', borderRadius: 4 }} crossOrigin="anonymous" />
                 </div>
 
                 <div style={{ marginBottom: 20 }}>
@@ -212,24 +247,6 @@ export default function DocumentsPage() {
                   </div>
                 </div>
 
-                {/* RANDOM AD PRODUCTS */}
-                {adProducts.length > 0 && (
-                  <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: 15, marginBottom: 20 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#0ea5e9', marginBottom: 8, textTransform: 'uppercase' }}>Featured Products</div>
-                    <div style={{ display: 'flex', gap: 10 }}>
-                      {adProducts.map(p => (
-                        <div key={p.id} style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 6, padding: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
-                          {p.imageUrl ? <img src={p.imageUrl} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} /> : <div style={{width: 40, height: 40, background: '#f1f5f9', borderRadius: 4}}></div>}
-                          <div style={{ fontSize: 9 }}>
-                            <strong>{p.name}</strong><br/>
-                            KSH {p.price.toLocaleString()}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 <div style={{ borderTop: '1px solid #000', paddingTop: 10, fontSize: 10, marginBottom: 20 }}>
                   <strong>TERMS & CONDITIONS:</strong><br/>
                   Delivery: EX STOCK SUBJECT TO PRIOR SALES.<br/>
@@ -237,24 +254,33 @@ export default function DocumentsPage() {
                   Payment: IN FULL PRIOR TO SUPPLY.
                 </div>
 
-                <div style={{ border: '1px solid #000', padding: 10, marginBottom: 20 }}>
-                  <div style={{ fontWeight: 700, marginBottom: 8, textAlign: 'center' }}>PAYMENT OPTIONS</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 9 }}>
+                {/* PAYMENT OPTIONS (All 4 gateways) */}
+                <div style={{ border: '1px solid #000', padding: 12, marginBottom: 20 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 12, textAlign: 'center', fontSize: 11, background: '#f1f5f9', padding: 4 }}>PAYMENT OPTIONS</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, fontSize: 9 }}>
                     <div>
-                      <strong>OPTION 1: KINGDOM BANK</strong><br/>
-                      Account Name: InfieldHub Ltd<br/>
-                      Branch: Meru<br/>
-                      Account No: 5021964795002<br/>
+                      <strong>KINGDOM BANK</strong><br/>
+                      Name: InfieldHub Ltd<br/>
+                      Acc No: 5021964795002<br/>
                       Bank Code: 01103043639002
                     </div>
                     <div>
-                      <strong>OPTION 2: VISA / ONLINE</strong><br/>
-                      Click to pay online at infieldhub.vercel.app
+                      <strong>CO-OPERATIVE BANK (CoopTill)</strong><br/>
+                      Business Name: 1170535<br/>
+                      Acc No: 400200
+                    </div>
+                    <div>
+                      <strong>M-PESA</strong><br/>
+                      Paybill: 247247<br/>
+                      Acc: 0701243548<br/>
+                      <br/>
+                      <strong>VISA / ONLINE</strong><br/>
+                      infieldhub.vercel.app
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 40 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20 }}>
                   <div>Name _______________________<br/><br/>Date _______________________</div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontStyle: 'italic', fontFamily: 'cursive', fontSize: 16 }}>Alphone Juma</div>
@@ -263,13 +289,15 @@ export default function DocumentsPage() {
                 </div>
               </>
             ) : (
-              <div style={{ width: '100%', height: '100%', minHeight: 1000, position: 'relative', background: `linear-gradient(to bottom, ${posterTheme}dd 0%, ${posterTheme}00 40%, ${posterTheme}00 60%, ${posterTheme}ee 100%)` }}>
-                <div style={{ position: 'absolute', inset: 0, padding: 60, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
-                  <img src={logoSrc} alt="Logo" style={{ height: 80, objectFit: 'contain', background: 'white', padding: 10, borderRadius: 10 }} crossOrigin="anonymous" />
-                  <div>
-                    <h1 style={{ fontSize: 80, fontWeight: 900, lineHeight: 1.1, margin: 0, color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'pre-line' }}>{posterTitle}</h1>
-                    <p style={{ fontSize: 26, fontWeight: 700, marginTop: 20, color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.6)', background: 'rgba(0,0,0,0.4)', padding: '12px 24px', borderRadius: 12, display: 'inline-block' }}>{posterSub}</p>
+              <div style={{ width: '100%', height: '100%', position: 'relative', background: `linear-gradient(to bottom, ${posterTheme}dd 0%, ${posterTheme}00 40%, ${posterTheme}00 60%, ${posterTheme}ee 100%)` }}>
+                <div style={{ position: 'absolute', inset: 0, padding: isLandscape ? 40 : 60, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
+                  <img src={logoSrc} alt="Logo" style={{ height: isLandscape ? 60 : 80, objectFit: 'contain', background: 'white', padding: 10, borderRadius: 10 }} crossOrigin="anonymous" />
+                  
+                  <div style={{ width: '100%' }}>
+                    <h1 style={{ fontSize: isLandscape ? 60 : 80, fontWeight: 900, lineHeight: 1.1, margin: 0, color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'pre-line' }}>{posterTitle}</h1>
+                    <p style={{ fontSize: isLandscape ? 20 : 26, fontWeight: 700, marginTop: 20, color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.6)', background: 'rgba(0,0,0,0.4)', padding: '12px 24px', borderRadius: 12, display: 'inline-block' }}>{posterSub}</p>
                   </div>
+
                   <div style={{ background: '#fff', color: posterTheme, padding: '16px 40px', borderRadius: 999, fontSize: 24, fontWeight: 900, boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>Call: 0701243548</div>
                 </div>
               </div>
