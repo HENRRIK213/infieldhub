@@ -54,3 +54,22 @@ router.get('/', auth, async (req, res) => {
 });
 
 module.exports = router;
+const express = require('express');
+const router = express.Router();
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const { auth, requireAdmin } = require('../middleware/auth');
+const { notifyAdmin } = require('../utils/notify');
+
+// DELETE DOCUMENT
+router.delete('/:id', auth, requireAdmin, async (req, res) => {
+  try {
+    const doc = await prisma.document.delete({ where: { id: req.params.id } });
+    notifyAdmin(prisma, 'document.deleted', `Document ${doc.serialNo} was deleted by admin`, { serialNo: doc.serialNo }).catch(()=>{});
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+module.exports = router;
