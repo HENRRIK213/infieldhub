@@ -11,6 +11,7 @@ export default function DocumentsPage() {
   // Business Doc State
   const [products, setProducts] = useState<any[]>([]);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [adProducts, setAdProducts] = useState<any[]>([]);
   
   // Poster State
   const [posterTitle, setPosterTitle] = useState('Power Your Home\nThe Smart Way');
@@ -22,7 +23,12 @@ export default function DocumentsPage() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
-    api.get('/products').then(r => setProducts(r.data)).catch(() => {});
+    api.get('/products').then(r => {
+      setProducts(r.data);
+      // Pick 3 random products for advertisement
+      const shuffled = [...r.data].sort(() => 0.5 - Math.random());
+      setAdProducts(shuffled.slice(0, 3));
+    }).catch(() => {});
   }, []);
 
   const addItem = (prod: any) => setSelectedItems([...selectedItems, { ...prod, qty: 1 }]);
@@ -109,7 +115,7 @@ export default function DocumentsPage() {
             </>
           ) : (
             <>
-              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Poster Settings</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Poster Customization</h2>
               <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Headline</label>
               <textarea value={posterTitle} onChange={e => setPosterTitle(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, minHeight: 60, border: '1px solid #cbd5e1', marginBottom: 16 }} />
               
@@ -125,7 +131,7 @@ export default function DocumentsPage() {
                   <input type="color" value={posterTheme} onChange={e => setPosterTheme(e.target.value)} style={{ width: '100%', height: 40, padding: 2, border: '1px solid #cbd5e1', borderRadius: 6 }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Font</label>
+                  <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Font Style</label>
                   <select value={posterFont} onChange={e => setPosterFont(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #cbd5e1' }}>
                     <option value="Inter">Inter</option>
                     <option value="Georgia">Georgia</option>
@@ -206,31 +212,43 @@ export default function DocumentsPage() {
                   </div>
                 </div>
 
+                {/* RANDOM AD PRODUCTS */}
+                {adProducts.length > 0 && (
+                  <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: 15, marginBottom: 20 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#0ea5e9', marginBottom: 8, textTransform: 'uppercase' }}>Featured Products</div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      {adProducts.map(p => (
+                        <div key={p.id} style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 6, padding: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+                          {p.imageUrl ? <img src={p.imageUrl} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} /> : <div style={{width: 40, height: 40, background: '#f1f5f9', borderRadius: 4}}></div>}
+                          <div style={{ fontSize: 9 }}>
+                            <strong>{p.name}</strong><br/>
+                            KSH {p.price.toLocaleString()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div style={{ borderTop: '1px solid #000', paddingTop: 10, fontSize: 10, marginBottom: 20 }}>
                   <strong>TERMS & CONDITIONS:</strong><br/>
                   Delivery: EX STOCK SUBJECT TO PRIOR SALES.<br/>
                   Validity: THIS PRICE VALID FOR 1 WEEK.<br/>
-                  Payment: IN FULL PRIOR TO SUPPLY.<br/>
-                  Warranty: AS PER THE INFIELDHUB WARRANTY TERMS.
+                  Payment: IN FULL PRIOR TO SUPPLY.
                 </div>
 
                 <div style={{ border: '1px solid #000', padding: 10, marginBottom: 20 }}>
                   <div style={{ fontWeight: 700, marginBottom: 8, textAlign: 'center' }}>PAYMENT OPTIONS</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, fontSize: 9 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 9 }}>
                     <div>
-                      <strong>OPTION 1: BANK</strong><br/>
+                      <strong>OPTION 1: KINGDOM BANK</strong><br/>
                       Account Name: InfieldHub Ltd<br/>
-                      Bank: Equity Bank<br/>
                       Branch: Meru<br/>
-                      Account No: 010403363770002
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <strong>OPTION 2: MPESA</strong><br/>
-                      Paybill: 247247<br/>
-                      Account: 0701243548
+                      Account No: 5021964795002<br/>
+                      Bank Code: 01103043639002
                     </div>
                     <div>
-                      <strong>OPTION 3: VISA</strong><br/>
+                      <strong>OPTION 2: VISA / ONLINE</strong><br/>
                       Click to pay online at infieldhub.vercel.app
                     </div>
                   </div>
@@ -247,10 +265,10 @@ export default function DocumentsPage() {
             ) : (
               <div style={{ width: '100%', height: '100%', minHeight: 1000, position: 'relative', background: `linear-gradient(to bottom, ${posterTheme}dd 0%, ${posterTheme}00 40%, ${posterTheme}00 60%, ${posterTheme}ee 100%)` }}>
                 <div style={{ position: 'absolute', inset: 0, padding: 60, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
-                  <img src={logoSrc} alt="Logo" style={{ height: 60, objectFit: 'contain', background: 'white', padding: 10, borderRadius: 10 }} crossOrigin="anonymous" />
+                  <img src={logoSrc} alt="Logo" style={{ height: 80, objectFit: 'contain', background: 'white', padding: 10, borderRadius: 10 }} crossOrigin="anonymous" />
                   <div>
-                    <h1 style={{ fontSize: 72, fontWeight: 900, lineHeight: 1.1, margin: 0, color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'pre-line' }}>{posterTitle}</h1>
-                    <p style={{ fontSize: 24, fontWeight: 700, marginTop: 20, color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.6)', background: 'rgba(0,0,0,0.4)', padding: '12px 24px', borderRadius: 12, display: 'inline-block' }}>{posterSub}</p>
+                    <h1 style={{ fontSize: 80, fontWeight: 900, lineHeight: 1.1, margin: 0, color: '#fff', textShadow: '0 4px 20px rgba(0,0,0,0.6)', whiteSpace: 'pre-line' }}>{posterTitle}</h1>
+                    <p style={{ fontSize: 26, fontWeight: 700, marginTop: 20, color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.6)', background: 'rgba(0,0,0,0.4)', padding: '12px 24px', borderRadius: 12, display: 'inline-block' }}>{posterSub}</p>
                   </div>
                   <div style={{ background: '#fff', color: posterTheme, padding: '16px 40px', borderRadius: 999, fontSize: 24, fontWeight: 900, boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>Call: 0701243548</div>
                 </div>

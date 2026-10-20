@@ -31,7 +31,7 @@ export default function GanttPage() {
         margin: 0.5, filename: `${projectTitle}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'a3', orientation: 'landscape' } // A3 for Gantt
+        jsPDF: { unit: 'in', format: 'a3', orientation: 'landscape' }
       };
       await html2pdf().set(opt).from(element).save();
     } catch (e) {

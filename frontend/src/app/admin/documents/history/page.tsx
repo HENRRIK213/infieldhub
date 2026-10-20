@@ -13,7 +13,7 @@ export default function HistoryPage() {
   return (
     <Layout requireAdmin>
       <div style={{ maxWidth: 1200, margin: '0 auto', background: '#fff', padding: 24, borderRadius: 16, border: '1px solid #e2e8f0' }}>
-        <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', marginBottom: 20 }}>All Quotations, Invoices & Reports</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', marginBottom: 20 }}>All Generated Documents</h1>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ color: '#64748b', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
