@@ -11,35 +11,47 @@ export default function PublicProductsPage() {
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const router = useRouter();
 
-  // Bulletproof image URL formatter
+  // BULLETPROOF IMAGE URL RESOLVER
   const getImageUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    // Clean up the URL to prevent double slashes
-    const base = UPLOADS_URL.endsWith('/') ? UPLOADS_URL.slice(0, -1) : UPLOADS_URL;
+    
+    // Hardcode the production backend URL as a fail-safe
+    const BASE_URL = 'https://infieldhub-backend.onrender.com';
     const path = url.startsWith('/') ? url : `/${url}`;
-    return `${base}${path}`;
+    
+    // If UPLOADS_URL is broken or pointing to localhost, use the hardcoded BASE_URL
+    const finalBase = (UPLOADS_URL && !UPLOADS_URL.includes('localhost')) 
+      ? UPLOADS_URL.replace(/\/$/, '') 
+      : BASE_URL;
+      
+    return `${finalBase}${path}`;
   };
 
   useEffect(() => {
     api.get('/products').then(r => {
       setProducts(r.data);
       setFiltered(r.data);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err) => {
+      console.error("Failed to load products", err);
+    }).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (!search) setFiltered(products);
-    else setFiltered(products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.category.toLowerCase().includes(search.toLowerCase())));
+    else setFiltered(products.filter(p => 
+      p.name.toLowerCase().includes(search.toLowerCase()) || 
+      (p.category && p.category.toLowerCase().includes(search.toLowerCase()))
+    ));
   }, [search, products]);
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif', background: '#F8FAFC', minHeight: '100vh', paddingBottom: 60 }}>
+    <div style={{ fontFamily: 'Inter, sans-serif', background: '#F8FAFC', minHeight: '100vh', paddingBottom: 80 }}>
       
-      {/* HERO SECTION */}
-      <div style={{ background: 'linear-gradient(135deg, #0D2B4E 0%, #1E88E5 100%)', padding: '80px 20px 100px', textAlign: 'center', color: '#fff' }}>
-        <h1 style={{ fontSize: 46, fontWeight: 800, margin: '0 0 16px 0', letterSpacing: '-0.02em' }}>Premium Energy Solutions</h1>
-        <p style={{ fontSize: 18, opacity: 0.9, maxWidth: 600, margin: '0 auto 40px', lineHeight: 1.6 }}>
+      {/* CLEAN HERO SECTION (No overlapping) */}
+      <div style={{ background: 'linear-gradient(135deg, #0D2B4E 0%, #1E88E5 100%)', padding: '60px 20px 80px', textAlign: 'center', color: '#fff' }}>
+        <h1 style={{ fontSize: 42, fontWeight: 800, margin: '0 0 16px 0', letterSpacing: '-0.02em' }}>Premium Energy Solutions</h1>
+        <p style={{ fontSize: 16, opacity: 0.9, maxWidth: 600, margin: '0 auto 40px', lineHeight: 1.6 }}>
           Explore our range of high-quality solar panels, water pumps, electrical components, and more.
         </p>
         
@@ -56,10 +68,10 @@ export default function PublicProductsPage() {
         </div>
       </div>
 
-      {/* PRODUCTS GRID */}
-      <div style={{ maxWidth: 1300, margin: '-50px auto 0', padding: '0 20px', position: 'relative', zIndex: 10 }}>
+      {/* PRODUCTS GRID (Cleanly positioned below hero) */}
+      <div style={{ maxWidth: 1300, margin: '0 auto', padding: '40px 20px 0' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 60, fontSize: 18, color: '#64748b', background: '#fff', borderRadius: 16 }}>Loading products...</div>
+          <div style={{ textAlign: 'center', padding: 60, fontSize: 18, color: '#64748b' }}>Loading products...</div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60, fontSize: 18, color: '#64748b', background: '#fff', borderRadius: 16 }}>No products found matching your search.</div>
         ) : (
@@ -69,55 +81,56 @@ export default function PublicProductsPage() {
                 key={p.id} 
                 onClick={() => router.push(`/products/${p.id}`)}
                 style={{ 
-                  background: '#fff', borderRadius: 20, overflow: 'hidden', 
+                  background: '#fff', borderRadius: 16, overflow: 'hidden', 
                   boxShadow: '0 4px 20px rgba(13, 43, 78, 0.05)', 
                   cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column'
+                  border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column',
+                  height: '100%'
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-8px)';
-                  e.currentTarget.style.boxShadow = '0 15px 35px rgba(13, 43, 78, 0.15)';
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 12px 30px rgba(13, 43, 78, 0.12)';
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 4px 20px rgba(13, 43, 78, 0.05)';
                 }}
               >
-                {/* Image Container with Fallback */}
-                <div style={{ height: 240, background: '#F8FAFC', position: 'relative', overflow: 'hidden', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
+                {/* Image Container */}
+                <div style={{ height: 220, background: '#F8FAFC', position: 'relative', overflow: 'hidden', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
                   {p.imageUrl && !imageErrors[p.id] ? (
                     <img 
                       src={getImageUrl(p.imageUrl)} 
                       alt={p.name}
                       onError={() => setImageErrors(prev => ({ ...prev, [p.id]: true }))}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} 
-                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.08)'}
                       onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60, opacity: 0.5 }}>📦</div>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60, opacity: 0.4 }}>📦</div>
                   )}
-                  <span style={{ position: 'absolute', top: 16, right: 16, background: '#DBEAFE', color: '#1E40AF', padding: '4px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-                    {p.category}
+                  <span style={{ position: 'absolute', top: 16, right: 16, background: '#DBEAFE', color: '#1E40AF', padding: '4px 12px', borderRadius: 999, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {p.category || 'Product'}
                   </span>
                 </div>
 
                 {/* Content */}
-                <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0', lineHeight: 1.3 }}>{p.name}</h3>
-                  <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 20px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1, lineHeight: 1.5 }}>
-                    {p.description || 'Explore different types and specifications for this product.'}
+                <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0', lineHeight: 1.3 }}>{p.name}</h3>
+                  <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1, lineHeight: 1.5 }}>
+                    {p.description || 'No description available for this product.'}
                   </p>
                   
                   {/* Footer */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: '1px solid #F1F5F9', paddingTop: 16, marginTop: 'auto' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: 16, marginTop: 'auto' }}>
                     <div>
-                      <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>From</div>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: '#1E88E5', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: 10, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>From</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: '#1E88E5', whiteSpace: 'nowrap' }}>
                         KSH {Number(p.price).toLocaleString()}
                       </div>
                     </div>
-                    <button style={{ background: '#0D2B4E', color: '#fff', padding: '10px 16px', borderRadius: 8, fontWeight: 700, border: 'none', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#1E88E5'} onMouseOut={(e) => e.currentTarget.style.background = '#0D2B4E'}>
+                    <button style={{ background: '#0D2B4E', color: '#fff', padding: '8px 14px', borderRadius: 8, fontWeight: 700, border: 'none', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#1E88E5'} onMouseOut={(e) => e.currentTarget.style.background = '#0D2B4E'}>
                       View Types <span>→</span>
                     </button>
                   </div>
