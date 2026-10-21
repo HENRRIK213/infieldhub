@@ -2,7 +2,6 @@
 import Layout from '@/components/Layout';
 import { api, UPLOADS_URL } from '@/lib/api';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -45,8 +44,8 @@ export default function AdminProductsPage() {
     setEditProduct(p);
     setParentId(p.parentId);
     setFormData({ 
-      name: p.name, description: p.description, price: p.price, 
-      vat: p.vat.toString(), stock: p.stock, category: p.category 
+      name: p.name, description: p.description || '', price: p.price, 
+      vat: p.vat ? 'true' : 'false', stock: p.stock, category: p.category 
     });
     setImageFile(null);
     setShowModal(true);
@@ -56,7 +55,8 @@ export default function AdminProductsPage() {
     e.preventDefault();
     const fd = new FormData();
     fd.append('name', formData.name);
-    fd.append('description', formData.description);
+    // Description is now optional
+    fd.append('description', formData.description || ''); 
     fd.append('price', formData.price);
     fd.append('vat', formData.vat);
     fd.append('stock', formData.stock);
@@ -66,6 +66,7 @@ export default function AdminProductsPage() {
 
     try {
       if (editProduct) {
+        // If editing and no new image is selected, the backend keeps the old one automatically
         await api.put(`/products/${editProduct.id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       } else {
         await api.post('/products', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -105,7 +106,7 @@ export default function AdminProductsPage() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0' }}>{main.name}</h2>
-                    <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 12px 0' }}>{main.description}</p>
+                    <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 12px 0' }}>{main.description || 'No description added yet.'}</p>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                       <span style={{ fontSize: 16, fontWeight: 800, color: '#1E88E5' }}>Base Price: KSH {main.price.toLocaleString()}</span>
                       <span style={{ fontSize: 11, background: '#DCFCE7', color: '#166534', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>{main.category}</span>
@@ -120,7 +121,7 @@ export default function AdminProductsPage() {
 
                 {/* Sub-products Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16, paddingLeft: 20, borderLeft: '3px solid #e2e8f0' }}>
-                  {main.children?.length === 0 && <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>No sub-types added yet. Click "+ Add Type" to add variations (e.g., 300W Panel, 450W Panel).</div>}
+                  {main.children?.length === 0 && <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>No sub-types added yet. Click "+ Add Type" to add variations.</div>}
                   
                   {main.children?.map((sub: any) => (
                     <div key={sub.id} style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #e2e8f0', padding: 12, display: 'flex', flexDirection: 'column' }}>
@@ -131,7 +132,7 @@ export default function AdminProductsPage() {
                       </div>
                       <div style={{ flex: 1 }}>
                         <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0D2B4E', margin: '0 0 4px 0' }}>{sub.name}</h3>
-                        <p style={{ fontSize: 11, color: '#64748b', margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sub.description}</p>
+                        <p style={{ fontSize: 11, color: '#64748b', margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{sub.description || 'No description'}</p>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
                         <span style={{ fontSize: 13, fontWeight: 800, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
@@ -156,14 +157,25 @@ export default function AdminProductsPage() {
             <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>{editProduct ? 'Edit Product' : (parentId ? 'Add Sub-type' : 'Add Main Product')}</h2>
             
             <form onSubmit={submitForm} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              
+              {/* Show current image if editing */}
+              {editProduct && editProduct.imageUrl && (
+                <div style={{ textAlign: 'center', marginBottom: 10 }}>
+                  <img src={editProduct.imageUrl.startsWith('http') ? editProduct.imageUrl : `${UPLOADS_URL}${editProduct.imageUrl}`} style={{ height: 80, borderRadius: 6 }} />
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>Current Image</div>
+                </div>
+              )}
+
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Name</label>
                 <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
+              
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700 }}>Description</label>
-                <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, minHeight: 60 }} />
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Description (Optional)</label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, minHeight: 60 }} placeholder="You can leave this blank and add it later..." />
               </div>
+              
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 12, fontWeight: 700 }}>Price (KSH)</label>
@@ -174,6 +186,7 @@ export default function AdminProductsPage() {
                   <input type="number" required value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
                 </div>
               </div>
+              
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>VAT (16%?)</label>
                 <select value={formData.vat} onChange={e => setFormData({...formData, vat: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }}>
@@ -181,6 +194,7 @@ export default function AdminProductsPage() {
                   <option value="false">No VAT (0%)</option>
                 </select>
               </div>
+
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Image {editProduct && '(Leave blank to keep existing)'}</label>
                 <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
