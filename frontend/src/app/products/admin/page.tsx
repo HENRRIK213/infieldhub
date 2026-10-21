@@ -7,7 +7,6 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Modal State
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
   const [parentId, setParentId] = useState<string | null>(null);
@@ -29,18 +28,23 @@ export default function AdminProductsPage() {
     } catch (e) { alert('Failed to delete'); }
   };
 
-  const openAddModal = (parent: any = null) => {
+  const openAddMain = () => {
     setEditProduct(null);
-    setParentId(parent ? parent.id : null);
-    setFormData({ 
-      name: '', description: '', price: '', vat: 'true', stock: '1', 
-      category: parent ? parent.category : 'Solar' 
-    });
+    setParentId(null);
+    setFormData({ name: '', description: '', price: '', vat: 'true', stock: '1', category: 'Solar' });
     setImageFile(null);
     setShowModal(true);
   };
 
-  const openEditModal = (p: any) => {
+  const openAddSub = (parent: any) => {
+    setEditProduct(null);
+    setParentId(parent.id);
+    setFormData({ name: '', description: '', price: '', vat: 'true', stock: '1', category: parent.category });
+    setImageFile(null);
+    setShowModal(true);
+  };
+
+  const openEdit = (p: any) => {
     setEditProduct(p);
     setParentId(p.parentId);
     setFormData({ 
@@ -55,7 +59,6 @@ export default function AdminProductsPage() {
     e.preventDefault();
     const fd = new FormData();
     fd.append('name', formData.name);
-    // Description is now optional
     fd.append('description', formData.description || ''); 
     fd.append('price', formData.price);
     fd.append('vat', formData.vat);
@@ -66,7 +69,6 @@ export default function AdminProductsPage() {
 
     try {
       if (editProduct) {
-        // If editing and no new image is selected, the backend keeps the old one automatically
         await api.put(`/products/${editProduct.id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       } else {
         await api.post('/products', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -87,7 +89,7 @@ export default function AdminProductsPage() {
             <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Product Management</h1>
             <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Manage Main Products and their Sub-types.</p>
           </div>
-          <button onClick={() => openAddModal(null)} style={{ background: '#1E88E5', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+          <button onClick={openAddMain} style={{ background: '#1E88E5', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
             + Add Main Product
           </button>
         </div>
@@ -113,9 +115,9 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                    <button onClick={() => openAddModal(main)} style={{ background: '#E0F2FE', color: '#0369A1', border: 'none', padding: '8px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>+ Add Type</button>
-                    <button onClick={() => openEditModal(main)} style={{ background: '#F1F5F9', color: '#475569', border: 'none', padding: '8px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>✏️ Edit</button>
-                    <button onClick={() => handleDelete(main.id)} style={{ background: '#FEE2E2', color: '#991B1B', border: 'none', padding: '8px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>🗑️</button>
+                    <button onClick={() => openAddSub(main)} style={{ background: '#E0F2FE', color: '#0369A1', border: 'none', padding: '8px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>+ Add Type</button>
+                    <button onClick={() => openEdit(main)} style={{ background: '#F1F5F9', color: '#475569', border: 'none', padding: '8px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>✏️ Edit</button>
+                    <button onClick={() => handleDelete(main.id)} style={{ background: '#FEE2E2', color: '#991B1B', border: 'none', padding: '8px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>🗑️ Delete</button>
                   </div>
                 </div>
 
@@ -137,8 +139,8 @@ export default function AdminProductsPage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
                         <span style={{ fontSize: 13, fontWeight: 800, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
                         <div style={{ display: 'flex', gap: 4 }}>
-                          <button onClick={() => openEditModal(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: 4, borderRadius: 4, cursor: 'pointer' }}>✏️</button>
-                          <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', border: 'none', padding: 4, borderRadius: 4, cursor: 'pointer' }}>🗑️</button>
+                          <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>✏️ Edit</button>
+                          <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', border: 'none', padding: '6px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11, fontWeight: 700, color: '#991B1B' }}>🗑️</button>
                         </div>
                       </div>
                     </div>
@@ -150,15 +152,15 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* Add / Edit Modal */}
+      {/* Modal */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', width: 500, borderRadius: 12, padding: 24, maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>{editProduct ? 'Edit Product' : (parentId ? 'Add Sub-type' : 'Add Main Product')}</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>
+              {editProduct ? 'Edit Product' : (parentId ? 'Add Sub-type' : 'Add Main Product')}
+            </h2>
             
             <form onSubmit={submitForm} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              
-              {/* Show current image if editing */}
               {editProduct && editProduct.imageUrl && (
                 <div style={{ textAlign: 'center', marginBottom: 10 }}>
                   <img src={editProduct.imageUrl.startsWith('http') ? editProduct.imageUrl : `${UPLOADS_URL}${editProduct.imageUrl}`} style={{ height: 80, borderRadius: 6 }} />
@@ -170,12 +172,10 @@ export default function AdminProductsPage() {
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Name</label>
                 <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
-              
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Description (Optional)</label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, minHeight: 60 }} placeholder="You can leave this blank and add it later..." />
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, minHeight: 60 }} />
               </div>
-              
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 12, fontWeight: 700 }}>Price (KSH)</label>
@@ -186,7 +186,6 @@ export default function AdminProductsPage() {
                   <input type="number" required value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
                 </div>
               </div>
-              
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>VAT (16%?)</label>
                 <select value={formData.vat} onChange={e => setFormData({...formData, vat: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }}>
@@ -194,7 +193,6 @@ export default function AdminProductsPage() {
                   <option value="false">No VAT (0%)</option>
                 </select>
               </div>
-
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Image {editProduct && '(Leave blank to keep existing)'}</label>
                 <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
