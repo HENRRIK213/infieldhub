@@ -26,11 +26,27 @@ export default function DocumentsPage() {
   useEffect(() => {
     api.get('/products').then(r => {
       setProducts(r.data);
-      // Filter for products with images and pick 4 random ones for the banner
-      const withImages = r.data.filter((p: any) => p.imageUrl);
-      const shuffled = [...withImages].sort(() => 0.5 - Math.random());
-      setAdProducts(shuffled.slice(0, 4));
-    }).catch(() => {});
+      
+      // Filter for products that HAVE images
+      const withImages = r.data.filter((p: any) => p.imageUrl && p.imageUrl.trim() !== '');
+      
+      if (withImages.length > 0) {
+        const shuffled = [...withImages].sort(() => 0.5 - Math.random());
+        setAdProducts(shuffled.slice(0, 4));
+      } else {
+        // Fallback if no products have images in the DB
+        setAdProducts([
+          { id: '1', imageUrl: 'https://images.unsplash.com/photo-1592833159155-c62df1b65634?auto=format&fit=crop&q=80&w=400' },
+          { id: '2', imageUrl: 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&q=80&w=400' },
+          { id: '3', imageUrl: 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&q=80&w=400' }
+        ]);
+      }
+    }).catch(() => {
+      // Catch fallback
+      setAdProducts([
+        { id: '1', imageUrl: 'https://images.unsplash.com/photo-1592833159155-c62df1b65634?auto=format&fit=crop&q=80&w=400' }
+      ]);
+    });
   }, []);
 
   const addItem = (prod: any) => setSelectedItems([...selectedItems, { ...prod, qty: 1 }]);
@@ -189,8 +205,8 @@ export default function DocumentsPage() {
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                 
                 <div>
-                  {/* Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #0D2B4E', paddingBottom: 15, marginBottom: 20 }}>
+                  {/* Header with Random Ad Images */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                     <div>
                       <img src={logoSrc} alt="Logo" style={{ height: 60 }} crossOrigin="anonymous" />
                       <div style={{ marginTop: 10, fontSize: 10, color: '#475569', lineHeight: 1.4 }}>
@@ -200,14 +216,30 @@ export default function DocumentsPage() {
                         Tel: 0701243548
                       </div>
                     </div>
+                    
                     <div style={{ textAlign: 'right' }}>
                       <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{type}</h1>
                       <div style={{ fontSize: 11, color: '#475569', marginTop: 8, lineHeight: 1.6 }}>
                         Date: <strong>{new Date().toLocaleDateString('en-GB')}</strong><br/>
                         Ref: <strong>{type.slice(0,2)}-{Date.now().toString().slice(-6)}</strong>
                       </div>
+
+                      {/* THE AD IMAGES SECTION (Right below the date, matching your sample) */}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 15 }}>
+                        {adProducts.map((p: any, i: number) => (
+                          <img 
+                            key={i}
+                            src={p.imageUrl.startsWith('http') ? p.imageUrl : `${UPLOADS_URL}${p.imageUrl}`} 
+                            style={{ height: 55, objectFit: 'contain' }} 
+                            crossOrigin="anonymous" 
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Divider */}
+                  <div style={{ borderBottom: '2px solid #0D2B4E', marginBottom: 20 }}></div>
 
                   {/* Client Info */}
                   <div style={{ marginBottom: 24, fontSize: 12, lineHeight: 1.6 }}>
@@ -219,7 +251,7 @@ export default function DocumentsPage() {
                   {/* Table */}
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 20 }}>
                     <thead>
-                      <tr style={{ background: '#F8FAFC', borderTop: '2px solid #0D2B4E', borderBottom: '1px solid #0D2B4E', textAlign: 'left', color: '#0D2B4E', fontSize: 11 }}>
+                      <tr style={{ background: '#F8FAFC', borderTop: '1px solid #0D2B4E', borderBottom: '1px solid #0D2B4E', textAlign: 'left', color: '#0D2B4E', fontSize: 11 }}>
                         <th style={{ padding: '10px 8px', fontWeight: 800 }}>DESCRIPTION</th>
                         <th style={{ padding: '10px 8px', width: 40, textAlign: 'center', fontWeight: 800 }}>QTY</th>
                         <th style={{ padding: '10px 8px', width: 50, textAlign: 'center', fontWeight: 800 }}>VAT</th>
@@ -251,20 +283,6 @@ export default function DocumentsPage() {
                 </div>
 
                 <div>
-                  {/* FEATURED PRODUCT BANNER (Images Only) */}
-                  {adProducts.length > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC', padding: 15, borderRadius: 8, marginBottom: 20, border: '1px solid #E2E8F0' }}>
-                      {adProducts.map((p: any, i: number) => (
-                        <img 
-                          key={i}
-                          src={p.imageUrl.startsWith('http') ? p.imageUrl : `${UPLOADS_URL}${p.imageUrl}`} 
-                          style={{ height: 65, objectFit: 'contain', flex: 1, margin: '0 5px' }} 
-                          crossOrigin="anonymous" 
-                        />
-                      ))}
-                    </div>
-                  )}
-
                   {/* Terms */}
                   <div style={{ borderTop: '1px solid #0D2B4E', paddingTop: 12, fontSize: 10, color: '#475569', marginBottom: 16, lineHeight: 1.5 }}>
                     <strong style={{ color: '#0D2B4E', fontSize: 11 }}>TERMS & CONDITIONS:</strong><br/>
