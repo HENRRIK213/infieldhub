@@ -13,6 +13,8 @@ export default function AdminProductsPage() {
   const [formData, setFormData] = useState({ name: '', description: '', price: '', vat: 'true', stock: '1', category: 'Solar' });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  const categories = ['Solar', 'Electrical', 'Water', 'Accessories', 'Services'];
+
   const fetchProducts = () => {
     setLoading(true);
     api.get('/products').then(r => setProducts(r.data)).catch(() => {}).finally(() => setLoading(false));
@@ -39,7 +41,8 @@ export default function AdminProductsPage() {
   const openAddSub = (parent: any) => {
     setEditProduct(null);
     setParentId(parent.id);
-    setFormData({ name: '', description: '', price: '', vat: 'true', stock: '1', category: parent.category });
+    // Inherit the parent's category by default
+    setFormData({ name: '', description: '', price: '', vat: 'true', stock: '1', category: parent.category || 'Solar' });
     setImageFile(null);
     setShowModal(true);
   };
@@ -48,8 +51,12 @@ export default function AdminProductsPage() {
     setEditProduct(p);
     setParentId(p.parentId);
     setFormData({ 
-      name: p.name, description: p.description || '', price: p.price, 
-      vat: p.vat ? 'true' : 'false', stock: p.stock, category: p.category 
+      name: p.name, 
+      description: p.description || '', 
+      price: p.price, 
+      vat: p.vat ? 'true' : 'false', 
+      stock: p.stock, 
+      category: p.category || 'Solar' 
     });
     setImageFile(null);
     setShowModal(true);
@@ -111,7 +118,7 @@ export default function AdminProductsPage() {
                     <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 12px 0' }}>{main.description || 'No description added yet.'}</p>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                       <span style={{ fontSize: 16, fontWeight: 800, color: '#1E88E5' }}>Base Price: KSH {main.price.toLocaleString()}</span>
-                      <span style={{ fontSize: 11, background: '#DCFCE7', color: '#166534', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>{main.category}</span>
+                      <span style={{ fontSize: 11, background: '#DBEAFE', color: '#1E40AF', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>{main.category}</span>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
@@ -172,10 +179,19 @@ export default function AdminProductsPage() {
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Name</label>
                 <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Category</label>
+                <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }}>
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Description (Optional)</label>
                 <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, minHeight: 60 }} />
               </div>
+              
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 12, fontWeight: 700 }}>Price (KSH)</label>
