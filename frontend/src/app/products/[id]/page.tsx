@@ -1,6 +1,6 @@
 ﻿'use client';
 import { api, UPLOADS_URL } from '@/lib/api';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
 export default function ProductDetailPage() {
@@ -19,6 +19,9 @@ export default function ProductDetailPage() {
   const [payLoading, setPayLoading] = useState(false);
   const [paySuccess, setPaySuccess] = useState(false);
 
+  // Ref for scrolling
+  const step2Ref = useRef<HTMLDivElement>(null);
+
   const getImageUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
@@ -33,15 +36,14 @@ export default function ProductDetailPage() {
           const p = r.data;
           setProduct(p);
           
-          // Extract sizes from the children names (e.g., 1.1KW, 1.5MM2, etc.)
+          // Extract sizes from the children names
           if (p.children && p.children.length > 0) {
             const uniqueSizes = new Set<string>();
             p.children.forEach((c: any) => {
-              // Regex to find things like 1.1KW, 1.5MM2, 4SP
-              const match = c.name.match(/(\d+(\.\d+)?)\s?(KW|MM2|SP|MFF|RFF|PH|BAR)/i);
+              // Look for numbers followed by KW, MM2, W, etc.
+              const match = c.name.match(/(\d+(\.\d+)?)\s?(KW|MM2|SP|MFF|RFF|PH|BAR|W|A)/i);
               if (match) uniqueSizes.add(match[0].toUpperCase());
               else {
-                // Fallback: just grab the first 3 words
                 const words = c.name.split(' ');
                 uniqueSizes.add(words.slice(0, 3).join(' ').toUpperCase());
               }
@@ -55,6 +57,14 @@ export default function ProductDetailPage() {
         .finally(() => setLoading(false));
     }
   }, [params.id]);
+
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+    // Smoothly scroll down to Step 2
+    setTimeout(() => {
+      step2Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   const handlePay = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,50 +116,59 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* TWO-STEP SELECTION FLOW */}
+        {/* Step 1: Size Selection */}
         <div style={{ background: '#fff', padding: 30, borderRadius: 16, border: '1px solid #e2e8f0', marginBottom: 40 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0D2B4E', marginBottom: 8 }}>Step 1: Select Size / Type</h2>
+          <p style={{ color: '#64748b', marginBottom: 24 }}>Choose the specification you need.</p>
           
-          {/* Step 1: Size Tabs */}
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', marginBottom: 16 }}>Step 1: Select Size / Type</h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 30 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             {sizes.map(size => (
               <button 
                 key={size} 
-                onClick={() => setSelectedSize(size)}
+                onClick={() => handleSizeSelect(size)}
                 style={{ 
-                  padding: '10px 20px', borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                  padding: '12px 24px', borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: 'pointer',
                   background: selectedSize === size ? '#1E88E5' : '#F1F5F9',
                   color: selectedSize === size ? '#fff' : '#0D2B4E',
                   border: selectedSize === size ? '1px solid #1E88E5' : '1px solid #cbd5e1',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s', boxShadow: selectedSize === size ? '0 4px 12px rgba(30,136,229,0.3)' : 'none'
                 }}
               >
                 {size}
               </button>
             ))}
-            {sizes.length === 0 && <span style={{color: '#64748b'}}>Select from the models below.</span>}
+            {sizes.length === 0 && <span style={{color: '#64748b', fontStyle: 'italic'}}>No specific sizes listed. See brands below.</span>}
           </div>
+        </div>
 
-          {/* Step 2: Brand/Model Cards */}
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', marginBottom: 16 }}>Step 2: Select Brand / Model</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+        {/* Step 2: Brand Selection (Scrolls into view) */}
+        <div ref={step2Ref} style={{ background: '#fff', padding: 30, borderRadius: 16, border: '1px solid #e2e8f0', marginBottom: 40 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0D2B4E', marginBottom: 8 }}>Step 2: Select Brand / Model</h2>
+          <p style={{ color: '#64748b', marginBottom: 24 }}>
+            {selectedSize ? `Showing brands available for ${selectedSize}` : 'Showing all available brands.'}
+          </p>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
             {filteredChildren.map((sub: any) => (
               <div 
                 key={sub.id} 
                 onClick={() => setSelectedModel(sub)}
-                style={{ background: '#F8FAFC', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, cursor: 'pointer', transition: 'transform 0.2s', display: 'flex', flexDirection: 'column' }}
-                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-4px)'} 
-                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                style={{ background: '#F8FAFC', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', flexDirection: 'column' }}
+                onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.05)'; }} 
+                onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
               >
-                <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
                    {sub.imageUrl ? (
                       <img src={getImageUrl(sub.imageUrl)} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
-                    ) : <span style={{ fontSize: 40, opacity: 0.3 }}>⚙️</span>}
+                    ) : <span style={{ fontSize: 48, opacity: 0.3 }}>⚙️</span>}
                 </div>
-                <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0', flex: 1 }}>{sub.name}</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #cbd5e1', paddingTop: 12, marginTop: 12 }}>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: '#1E88E5' }}>KSH {Number(sub.price).toLocaleString()}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#0D2B4E', background: '#E2E8F0', padding: '4px 8px', borderRadius: 4 }}>Select</span>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0', flex: 1, lineHeight: 1.4 }}>{sub.name}</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #cbd5e1', paddingTop: 16, marginTop: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Price</div>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: '#1E88E5' }}>KSH {Number(sub.price).toLocaleString()}</span>
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', background: '#0D2B4E', padding: '8px 16px', borderRadius: 6 }}>View</span>
                 </div>
               </div>
             ))}
@@ -158,55 +177,55 @@ export default function ProductDetailPage() {
 
       </div>
 
-      {/* EXACT PRODUCT CARD MODAL */}
+      {/* Step 3: EXACT PRODUCT CARD MODAL */}
       {selectedModel && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(13, 43, 78, 0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#fff', width: '100%', maxWidth: 800, borderRadius: 20, overflow: 'hidden', display: 'flex', flexWrap: 'wrap' }}>
+          <div style={{ background: '#fff', width: '100%', maxWidth: 850, borderRadius: 24, overflow: 'hidden', display: 'flex', flexWrap: 'wrap', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
             
             {/* Left: Image */}
             <div style={{ width: '50%', minWidth: 300, background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
                {selectedModel.imageUrl ? (
-                  <img src={getImageUrl(selectedModel.imageUrl)} style={{ maxHeight: 300, maxWidth: '100%', objectFit: 'contain' }} />
-                ) : <span style={{ fontSize: 80, opacity: 0.3 }}>📦</span>}
+                  <img src={getImageUrl(selectedModel.imageUrl)} style={{ maxHeight: 350, maxWidth: '100%', objectFit: 'contain' }} />
+                ) : <span style={{ fontSize: 100, opacity: 0.2 }}>📦</span>}
             </div>
 
             {/* Right: Details & Actions */}
             <div style={{ width: '50%', minWidth: 300, padding: 40, display: 'flex', flexDirection: 'column' }}>
-              <button onClick={() => setSelectedModel(null)} style={{ alignSelf: 'flex-end', background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', marginBottom: 10 }}>×</button>
+              <button onClick={() => setSelectedModel(null)} style={{ alignSelf: 'flex-end', background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', marginBottom: 10, color: '#64748b' }}>×</button>
               
-              <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', margin: '0 0 10px 0', lineHeight: 1.3 }}>{selectedModel.name}</h2>
-              <p style={{ fontSize: 14, color: '#64748b', marginBottom: 20, lineHeight: 1.6 }}>{selectedModel.description || 'Genuine high-quality product from InfieldHub.'}</p>
+              <h2 style={{ fontSize: 26, fontWeight: 800, color: '#0D2B4E', margin: '0 0 12px 0', lineHeight: 1.3 }}>{selectedModel.name}</h2>
+              <p style={{ fontSize: 14, color: '#64748b', marginBottom: 24, lineHeight: 1.6 }}>{selectedModel.description || 'Genuine high-quality product from InfieldHub.'}</p>
               
-              <div style={{ fontSize: 32, fontWeight: 800, color: '#1E88E5', marginBottom: 30 }}>
+              <div style={{ fontSize: 36, fontWeight: 800, color: '#1E88E5', marginBottom: 30 }}>
                 KSH {Number(selectedModel.price).toLocaleString()}
               </div>
 
               {/* ACTION BUTTONS */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 
                 {/* PAYMENT FORM */}
-                <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', padding: 16, borderRadius: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#166534', marginBottom: 8 }}>Pay via M-Pesa (Till: 400200)</div>
+                <div style={{ background: '#F0FDF4', border: '2px solid #BBF7D0', padding: 20, borderRadius: 16 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#166534', marginBottom: 12 }}>Pay via M-Pesa (Till: 400200)</div>
                   {paySuccess ? (
-                    <div style={{ color: '#15803D', fontWeight: 700, fontSize: 14 }}>✅ STK Push sent! Check your phone.</div>
+                    <div style={{ color: '#15803D', fontWeight: 800, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>✅ STK Push sent! Check your phone.</div>
                   ) : (
-                    <form onSubmit={handlePay} style={{ display: 'flex', gap: 8 }}>
+                    <form onSubmit={handlePay} style={{ display: 'flex', gap: 10 }}>
                       <input 
                         type="tel" placeholder="07XX XXX XXX" value={phone} onChange={e => setPhone(e.target.value)}
-                        style={{ flex: 1, padding: '12px', border: '1px solid #86EFAC', borderRadius: 8, outline: 'none' }} 
+                        style={{ flex: 1, padding: '14px', border: '1px solid #86EFAC', borderRadius: 8, outline: 'none', fontSize: 15 }} 
                       />
-                      <button type="submit" disabled={payLoading} style={{ background: '#166534', color: '#fff', padding: '0 20px', borderRadius: 8, border: 'none', fontWeight: 700, cursor: 'pointer' }}>
-                        {payLoading ? 'Sending...' : 'Pay'}
+                      <button type="submit" disabled={payLoading} style={{ background: '#166534', color: '#fff', padding: '0 24px', borderRadius: 8, border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>
+                        {payLoading ? 'Sending...' : 'Pay Now'}
                       </button>
                     </form>
                   )}
                 </div>
 
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <button style={{ flex: 1, background: '#1E88E5', color: '#fff', padding: '14px', borderRadius: 8, border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
+                  <button style={{ flex: 1, background: '#1E88E5', color: '#fff', padding: '16px', borderRadius: 8, border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>
                     🛒 Add to Cart
                   </button>
-                  <button style={{ flex: 1, background: '#0D2B4E', color: '#fff', padding: '14px', borderRadius: 8, border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
+                  <button style={{ flex: 1, background: '#0D2B4E', color: '#fff', padding: '16px', borderRadius: 8, border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>
                     🧾 Get Quote
                   </button>
                 </div>

@@ -17,18 +17,16 @@ const catalog = {
     { name: "EMPOWER DP4RFF 08/25 4KW", price: 100000 }, { name: "EMPOWER DP4RFF 08/30 5.5KW", price: 120000 },
     { name: "EMPOWER DP4RFF 08/37 5.5KW", price: 141000 }, { name: "EMPOWER DP4RFF 08/44 7.5KW", price: 156600 },
     { name: "EMPOWER DP4RFF 08/50 4\" 7.5KW", price: 208000 }, { name: "EMPOWER DP4RFF 08/50 6\" 7.5KW", price: 224000 },
-    { name: "EMPOWER DP4RFF 08/66 11KW (4\"x6\")", price: 340000 }, { name: "EMPOWER DP4RFF 08/73 11KW (4\"x6\")", price: 364000 },
+    { name: "EMPOWER DP4RFF 08/66 11KW", price: 340000 }, { name: "EMPOWER DP4RFF 08/73 11KW", price: 364000 },
     { name: "EMPOWER DP4RFF 14/13 4KW", price: 90000 }, { name: "EMPOWER DP4RFF 14/15 5.5KW", price: 104000 },
-    { name: "EMPOWER DP4RFF 14/25 7.5KW", price: 150000 }, { name: "EMPOWER DP6MFF 17/7 4KW (6\"4)", price: 92000 },
-    { name: "EMPOWER DP6MFF 17/7 4KW (6\"6)", price: 92000 }, { name: "EMPOWER DP6MFF 17/10 5.5KW (6\"4)", price: 80000 },
-    { name: "EMPOWER DP6MFF 17/10 5.5KW (6\"6)", price: 80000 }, { name: "EMPOWER DP6MFF 17/13 7.5KW (6\"4)", price: 114600 },
-    { name: "EMPOWER DP6MFF 17/13 7.5KW (6\"6)", price: 114600 }, { name: "EMPOWER DP6MFF 17/19 9.2KW", price: 154600 },
-    { name: "EMPOWER DP6MFF 17/20 6\" 11KW", price: 202000 }, { name: "EMPOWER DP6MFF 17/24 6\" 13KW", price: 210000 },
-    { name: "EMPOWER DP6MFF 17/27 6\" 15KW", price: 220000 }, { name: "EMPOWER DP6MFF 17/33 18.5KW", price: 260000 },
-    { name: "EMPOWER DP6MFF 17/40 22KW", price: 270000 }, { name: "EMPOWER DP6MFF 30/8 7.5KW (6\"4)", price: 132000 },
-    { name: "EMPOWER DP6MFF 30/8 7.5KW (6\"6)", price: 132000 }, { name: "EMPOWER DP6MFF 30/13 11KW", price: 180000 },
+    { name: "EMPOWER DP4RFF 14/25 7.5KW", price: 150000 }, { name: "EMPOWER DP6MFF 17/7 4KW", price: 92000 },
+    { name: "EMPOWER DP6MFF 17/10 5.5KW", price: 80000 }, { name: "EMPOWER DP6MFF 17/13 7.5KW", price: 114600 },
+    { name: "EMPOWER DP6MFF 17/19 9.2KW", price: 154600 }, { name: "EMPOWER DP6MFF 17/20 11KW", price: 202000 },
+    { name: "EMPOWER DP6MFF 17/24 13KW", price: 210000 }, { name: "EMPOWER DP6MFF 17/27 15KW", price: 220000 },
+    { name: "EMPOWER DP6MFF 17/33 18.5KW", price: 260000 }, { name: "EMPOWER DP6MFF 17/40 22KW", price: 270000 },
+    { name: "EMPOWER DP6MFF 30/8 7.5KW", price: 132000 }, { name: "EMPOWER DP6MFF 30/13 11KW", price: 180000 },
     { name: "EMPOWER DP6MFF 30/17 15KW", price: 225000 }, { name: "EMPOWER DP6MFF 30/21 18.5KW", price: 280000 },
-    { name: "EMPOWER DP6MFF 30/26 22KW", price: 290000 }, { name: "EMPOWER DP6MFF 46/5 7.5KW (6\"4)", price: 140000 },
+    { name: "EMPOWER DP6MFF 30/26 22KW", price: 290000 }, { name: "EMPOWER DP6MFF 46/5 7.5KW", price: 140000 },
     { name: "EMPOWER DP6MFF 46/7 11KW", price: 170000 }, { name: "EMPOWER DP6MFF 46/10 15KW", price: 200000 },
     { name: "EMPOWER DP6MFF 46/15 22KW", price: 220000 }, { name: "EMPOWER DP6MFF 46/19 30KW", price: 280000 }
   ],
@@ -40,8 +38,8 @@ const catalog = {
     { name: "EMPOWER DSMO4 1.5KW 3PH", price: 58000 }, { name: "EMPOWER DSMO4 2.2KW 3PH", price: 70000 },
     { name: "EMPOWER DSMO4 3KW 3PH", price: 78000 }, { name: "EMPOWER DSMO4 4KW 3PH", price: 93000 },
     { name: "EMPOWER DSMO4 5.5KW 3PH", price: 104000 }, { name: "EMPOWER DSMO4 7.5KW 3PH", price: 132000 },
-    { name: "EMPOWER DSMO5 7.5KW 3PH (6\" JOINING)", price: 154000 }, { name: "EMPOWER DSMO5 9.3KW 3PH (6\" JOINING)", price: 194000 },
-    { name: "EMPOWER DSMO5 11KW 3PH (6\" JOINING)", price: 204000 }, { name: "EMPOWER DSMO6 7.5KW 3PH", price: 154000 },
+    { name: "EMPOWER DSMO5 7.5KW 3PH", price: 154000 }, { name: "EMPOWER DSMO5 9.3KW 3PH", price: 194000 },
+    { name: "EMPOWER DSMO5 11KW 3PH", price: 204000 }, { name: "EMPOWER DSMO6 7.5KW 3PH", price: 154000 },
     { name: "EMPOWER DSMO6 9.3KW 3PH", price: 194000 }, { name: "EMPOWER DSMO6 11KW 3PH", price: 204000 },
     { name: "EMPOWER DSMO6 13KW 3PH", price: 220600 }, { name: "EMPOWER DSMO6 15KW 3PH", price: 256800 },
     { name: "EMPOWER DSMO6 18.5KW 3PH W/F", price: 270000 }, { name: "EMPOWER DSMO6 22KW 3PH W/F", price: 300000 },
@@ -53,8 +51,8 @@ const catalog = {
     { name: "VINCO 7.5KW 4\" 3PH", price: 108000 }, { name: "VINCO 7.5KW 6\" 3PH", price: 130000 }
   ],
   "Digital Control Panels": [
-    { name: "EMPOWER EMP3SP 2.2KW DIGITAL CONTROL PANEL", price: 36000 }, { name: "EMPOWER EMP7.5DOL 5.5KW DIGITAL CONTROL PANEL", price: 44000 },
-    { name: "EMPOWER EMP10DOL 7.5KW DIGITAL CONTROL PANEL", price: 50000 }, { name: "EMPOWER EMP20DOL 15KW DIGITAL CONTROL PANEL", price: 64000 }
+    { name: "EMPOWER EMP3SP 2.2KW DIGITAL PANEL", price: 36000 }, { name: "EMPOWER EMP7.5DOL 5.5KW DIGITAL PANEL", price: 44000 },
+    { name: "EMPOWER EMP10DOL 7.5KW DIGITAL PANEL", price: 50000 }, { name: "EMPOWER EMP20DOL 15KW DIGITAL PANEL", price: 64000 }
   ],
   "UPVC Borehole Pipes": [
     { name: "1.25\" UPVC 3M DROP PIPES - 26BAR", price: 2000 }, { name: "1.5\" UPVC 3M DROP PIPES - 26BAR", price: 2400 },
@@ -141,7 +139,7 @@ async function main() {
       });
     }
   }
-  console.log('✅ ALL products successfully added!');
+  console.log('✅ ALL products successfully added to the database!');
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
