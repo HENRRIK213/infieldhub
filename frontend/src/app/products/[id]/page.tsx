@@ -40,12 +40,14 @@ export default function ProductDetailPage() {
           if (p.children && p.children.length > 0) {
             const uniqueSizes = new Set<string>();
             p.children.forEach((c: any) => {
-              // Look for numbers followed by KW, MM2, W, etc.
-              const match = c.name.match(/(\d+(\.\d+)?)\s?(KW|MM2|SP|MFF|RFF|PH|BAR|W|A)/i);
-              if (match) uniqueSizes.add(match[0].toUpperCase());
-              else {
+              // Improved regex for cables, pumps, etc.
+              const match = c.name.match(/(\d+(\.\d+)?)\s?(KW|MM2|SP|MFF|RFF|PH|BAR|W|A|INCH|MM)/i);
+              if (match) {
+                uniqueSizes.add(match[0].toUpperCase().replace(' ', ''));
+              } else {
+                // If no size found, group by the first few words
                 const words = c.name.split(' ');
-                uniqueSizes.add(words.slice(0, 3).join(' ').toUpperCase());
+                uniqueSizes.add(words.slice(0, 4).join(' ').toUpperCase());
               }
             });
             setSizes(Array.from(uniqueSizes));
@@ -83,7 +85,10 @@ export default function ProductDetailPage() {
   // Filter children based on selected size
   const filteredChildren = product.children?.filter((sub: any) => {
     if (!selectedSize) return true;
-    return sub.name.toLowerCase().includes(selectedSize.toLowerCase());
+    // Remove spaces from both for a looser match
+    const subNameClean = sub.name.replace(/\s+/g, '').toLowerCase();
+    const selectedSizeClean = selectedSize.replace(/\s+/g, '').toLowerCase();
+    return subNameClean.includes(selectedSizeClean);
   }) || [];
 
   return (
@@ -122,7 +127,7 @@ export default function ProductDetailPage() {
           <p style={{ color: '#64748b', marginBottom: 24 }}>Choose the specification you need.</p>
           
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            {sizes.map(size => (
+            {sizes.length > 0 ? sizes.map(size => (
               <button 
                 key={size} 
                 onClick={() => handleSizeSelect(size)}
@@ -136,8 +141,7 @@ export default function ProductDetailPage() {
               >
                 {size}
               </button>
-            ))}
-            {sizes.length === 0 && <span style={{color: '#64748b', fontStyle: 'italic'}}>No specific sizes listed. See brands below.</span>}
+            )) : <span style={{color: '#64748b', fontStyle: 'italic'}}>No specific sizes listed. See brands below.</span>}
           </div>
         </div>
 
@@ -148,31 +152,37 @@ export default function ProductDetailPage() {
             {selectedSize ? `Showing brands available for ${selectedSize}` : 'Showing all available brands.'}
           </p>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-            {filteredChildren.map((sub: any) => (
-              <div 
-                key={sub.id} 
-                onClick={() => setSelectedModel(sub)}
-                style={{ background: '#F8FAFC', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', flexDirection: 'column' }}
-                onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.05)'; }} 
-                onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-              >
-                <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                   {sub.imageUrl ? (
-                      <img src={getImageUrl(sub.imageUrl)} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
-                    ) : <span style={{ fontSize: 48, opacity: 0.3 }}>⚙️</span>}
-                </div>
-                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0', flex: 1, lineHeight: 1.4 }}>{sub.name}</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #cbd5e1', paddingTop: 16, marginTop: 16 }}>
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Price</div>
-                    <span style={{ fontSize: 20, fontWeight: 800, color: '#1E88E5' }}>KSH {Number(sub.price).toLocaleString()}</span>
+          {filteredChildren.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center', background: '#F8FAFC', borderRadius: 12, color: '#64748b' }}>
+              No brands found for this selection. Please try a different size or go back.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+              {filteredChildren.map((sub: any) => (
+                <div 
+                  key={sub.id} 
+                  onClick={() => setSelectedModel(sub)}
+                  style={{ background: '#F8FAFC', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', flexDirection: 'column' }}
+                  onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.05)'; }} 
+                  onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                >
+                  <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                     {sub.imageUrl ? (
+                        <img src={getImageUrl(sub.imageUrl)} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                      ) : <span style={{ fontSize: 48, opacity: 0.3 }}>⚙️</span>}
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', background: '#0D2B4E', padding: '8px 16px', borderRadius: 6 }}>View</span>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0', flex: 1, lineHeight: 1.4 }}>{sub.name}</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #cbd5e1', paddingTop: 16, marginTop: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Price</div>
+                      <span style={{ fontSize: 20, fontWeight: 800, color: '#1E88E5' }}>KSH {Number(sub.price).toLocaleString()}</span>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', background: '#0D2B4E', padding: '8px 16px', borderRadius: 6 }}>View</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

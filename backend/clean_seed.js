@@ -16,19 +16,16 @@ const catalog = {
     { name: "EMPOWER DP4RFF 08/10 1.5KW", price: 52000 }, { name: "EMPOWER DP4RFF 08/15 2.2KW", price: 72000 },
     { name: "EMPOWER DP4RFF 08/25 4KW", price: 100000 }, { name: "EMPOWER DP4RFF 08/30 5.5KW", price: 120000 },
     { name: "EMPOWER DP4RFF 08/37 5.5KW", price: 141000 }, { name: "EMPOWER DP4RFF 08/44 7.5KW", price: 156600 },
-    { name: "EMPOWER DP4RFF 08/50 4\" 7.5KW", price: 208000 }, { name: "EMPOWER DP4RFF 08/50 6\" 7.5KW", price: 224000 },
-    { name: "EMPOWER DP4RFF 08/66 11KW", price: 340000 }, { name: "EMPOWER DP4RFF 08/73 11KW", price: 364000 },
-    { name: "EMPOWER DP4RFF 14/13 4KW", price: 90000 }, { name: "EMPOWER DP4RFF 14/15 5.5KW", price: 104000 },
-    { name: "EMPOWER DP4RFF 14/25 7.5KW", price: 150000 }, { name: "EMPOWER DP6MFF 17/7 4KW", price: 92000 },
-    { name: "EMPOWER DP6MFF 17/10 5.5KW", price: 80000 }, { name: "EMPOWER DP6MFF 17/13 7.5KW", price: 114600 },
-    { name: "EMPOWER DP6MFF 17/19 9.2KW", price: 154600 }, { name: "EMPOWER DP6MFF 17/20 11KW", price: 202000 },
-    { name: "EMPOWER DP6MFF 17/24 13KW", price: 210000 }, { name: "EMPOWER DP6MFF 17/27 15KW", price: 220000 },
-    { name: "EMPOWER DP6MFF 17/33 18.5KW", price: 260000 }, { name: "EMPOWER DP6MFF 17/40 22KW", price: 270000 },
-    { name: "EMPOWER DP6MFF 30/8 7.5KW", price: 132000 }, { name: "EMPOWER DP6MFF 30/13 11KW", price: 180000 },
-    { name: "EMPOWER DP6MFF 30/17 15KW", price: 225000 }, { name: "EMPOWER DP6MFF 30/21 18.5KW", price: 280000 },
-    { name: "EMPOWER DP6MFF 30/26 22KW", price: 290000 }, { name: "EMPOWER DP6MFF 46/5 7.5KW", price: 140000 },
-    { name: "EMPOWER DP6MFF 46/7 11KW", price: 170000 }, { name: "EMPOWER DP6MFF 46/10 15KW", price: 200000 },
-    { name: "EMPOWER DP6MFF 46/15 22KW", price: 220000 }, { name: "EMPOWER DP6MFF 46/19 30KW", price: 280000 }
+    { name: "EMPOWER DP6MFF 17/7 4KW", price: 92000 }, { name: "EMPOWER DP6MFF 17/10 5.5KW", price: 80000 },
+    { name: "EMPOWER DP6MFF 17/13 7.5KW", price: 114600 }, { name: "EMPOWER DP6MFF 17/19 9.2KW", price: 154600 },
+    { name: "EMPOWER DP6MFF 17/20 11KW", price: 202000 }, { name: "EMPOWER DP6MFF 17/24 13KW", price: 210000 },
+    { name: "EMPOWER DP6MFF 17/27 15KW", price: 220000 }, { name: "EMPOWER DP6MFF 17/33 18.5KW", price: 260000 },
+    { name: "EMPOWER DP6MFF 17/40 22KW", price: 270000 }, { name: "EMPOWER DP6MFF 30/8 7.5KW", price: 132000 },
+    { name: "EMPOWER DP6MFF 30/13 11KW", price: 180000 }, { name: "EMPOWER DP6MFF 30/17 15KW", price: 225000 },
+    { name: "EMPOWER DP6MFF 30/21 18.5KW", price: 280000 }, { name: "EMPOWER DP6MFF 30/26 22KW", price: 290000 },
+    { name: "EMPOWER DP6MFF 46/5 7.5KW", price: 140000 }, { name: "EMPOWER DP6MFF 46/7 11KW", price: 170000 },
+    { name: "EMPOWER DP6MFF 46/10 15KW", price: 200000 }, { name: "EMPOWER DP6MFF 46/15 22KW", price: 220000 },
+    { name: "EMPOWER DP6MFF 46/19 30KW", price: 280000 }
   ],
   "Sub-Motors": [
     { name: "EMPOWER DSMO4 1.1KW 1PH O/F", price: 44000 }, { name: "EMPOWER DSMO4 1.5KW 1PH O/F", price: 50000 },
@@ -51,14 +48,14 @@ const catalog = {
     { name: "VINCO 7.5KW 4\" 3PH", price: 108000 }, { name: "VINCO 7.5KW 6\" 3PH", price: 130000 }
   ],
   "Digital Control Panels": [
-    { name: "EMPOWER EMP3SP 2.2KW DIGITAL PANEL", price: 36000 }, { name: "EMPOWER EMP7.5DOL 5.5KW DIGITAL PANEL", price: 44000 },
-    { name: "EMPOWER EMP10DOL 7.5KW DIGITAL PANEL", price: 50000 }, { name: "EMPOWER EMP20DOL 15KW DIGITAL PANEL", price: 64000 }
+    { name: "EMPOWER EMP3SP 2.2KW PANEL", price: 36000 }, { name: "EMPOWER EMP7.5DOL 5.5KW PANEL", price: 44000 },
+    { name: "EMPOWER EMP10DOL 7.5KW PANEL", price: 50000 }, { name: "EMPOWER EMP20DOL 15KW PANEL", price: 64000 }
   ],
   "UPVC Borehole Pipes": [
-    { name: "1.25\" UPVC 3M DROP PIPES - 26BAR", price: 2000 }, { name: "1.5\" UPVC 3M DROP PIPES - 26BAR", price: 2400 },
-    { name: "2\" UPVC 3M DROP PIPES - 21 BAR", price: 3600 }, { name: "2\" UPVC 3M DROP PIPES - 27 BAR", price: 4600 },
-    { name: "2.5\" UPVC 3M DROP PIPES - 18 BAR", price: 4600 }, { name: "2.5\" UPVC 3M DROP PIPES - 27 BAR", price: 5500 },
-    { name: "3\" UPVC 3M DROP PIPES - 18 BAR", price: 5800 }, { name: "3\" UPVC 3M DROP PIPES - 35 BAR", price: 7600 }
+    { name: "1.25\" UPVC 3M DROP PIPE - 26BAR", price: 2000 }, { name: "1.5\" UPVC 3M DROP PIPE - 26BAR", price: 2400 },
+    { name: "2\" UPVC 3M DROP PIPE - 21 BAR", price: 3600 }, { name: "2\" UPVC 3M DROP PIPE - 27 BAR", price: 4600 },
+    { name: "2.5\" UPVC 3M DROP PIPE - 18 BAR", price: 4600 }, { name: "2.5\" UPVC 3M DROP PIPE - 27 BAR", price: 5500 },
+    { name: "3\" UPVC 3M DROP PIPE - 18 BAR", price: 5800 }, { name: "3\" UPVC 3M DROP PIPE - 35 BAR", price: 7600 }
   ],
   "Adapter Sets": [
     { name: "HEAVY DUTY C.I TOP/BOTTOM 1.25\"", price: 3200 }, { name: "HEAVY DUTY C.I TOP/BOTTOM 1.5\"", price: 4000 },
@@ -118,28 +115,37 @@ const catalog = {
 };
 
 async function main() {
-  console.log('Wiping old products to remove duplicates...');
+  console.log('Wiping old products...');
   await prisma.product.deleteMany({});
   
   console.log('Seeding fresh catalog with ALL products...');
   for (const [category, items] of Object.entries(catalog)) {
     const mainProduct = await prisma.product.create({
       data: {
-        name: category, description: `Explore our complete range of ${category.toLowerCase()}.`,
-        price: Math.min(...items.map(i => i.price)), category: "Equipment", status: 'APPROVED', createdBy: 'system',
+        name: category, 
+        description: `Explore our complete range of ${category.toLowerCase()}. Select a type below.`,
+        price: Math.min(...items.map(i => i.price)), 
+        category: "Equipment", 
+        status: 'APPROVED', 
+        createdBy: 'system',
       },
     });
 
     for (const item of items) {
       await prisma.product.create({
         data: {
-          name: item.name, description: `Genuine ${item.name} from authorized partners.`,
-          price: item.price, category: "Equipment", status: 'APPROVED', createdBy: 'system', parentId: mainProduct.id,
+          name: item.name, 
+          description: `Genuine ${item.name} from authorized partners.`,
+          price: item.price, 
+          category: "Equipment", 
+          status: 'APPROVED', 
+          createdBy: 'system', 
+          parentId: mainProduct.id, // Links directly to the Main Product
         },
       });
     }
   }
-  console.log('✅ ALL products successfully added to the database!');
+  console.log('✅ ALL products successfully added and linked!');
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
