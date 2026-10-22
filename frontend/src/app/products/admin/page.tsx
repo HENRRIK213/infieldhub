@@ -13,7 +13,6 @@ export default function AdminProductsPage() {
   const [formData, setFormData] = useState({ name: '', description: '', price: '', vat: 'true', stock: '1', category: 'Solar' });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // ADDED NEW CATEGORIES HERE
   const categories = ['Solar', 'Electrical', 'Water', 'Accessories', 'All Accessories', 'Borehole Accessories', 'Services'];
 
   const fetchProducts = () => {
@@ -76,7 +75,6 @@ export default function AdminProductsPage() {
 
     try {
       if (editProduct) {
-        // REMOVED manual headers so Axios handles the boundaries correctly
         await api.put(`/products/${editProduct.id}`, fd);
       } else {
         await api.post('/products', fd);

@@ -141,7 +141,7 @@ async function main() {
       });
     }
   }
-  console.log('✅ ALL 175 products successfully added to the database!');
+  console.log('✅ ALL products successfully added!');
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
