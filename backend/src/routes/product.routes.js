@@ -11,7 +11,6 @@ const { logActivity } = require('../utils/security');
 
 const upload = multer({ dest: 'uploads/tmp/' });
 
-// Helper to process images
 async function processImage(file) {
   if (!file) return null;
   const filename = 'product-' + Date.now() + '.jpg';
@@ -21,40 +20,7 @@ async function processImage(file) {
   return '/uploads/products/' + filename;
 }
 
-// GET ALL MAIN PRODUCTS (with their sub-products)
-router.get('/', async (req, res) => {
-  try {
-    const { category, search } = req.query;
-    const where = { parentId: null }; // Only get main products
-    if (category) where.category = category;
-    if (search) where.name = { contains: search, mode: 'insensitive' };
-
-    const products = await prisma.product.findMany({
-      where,
-      include: { children: true },
-      orderBy: { createdAt: 'desc' }
-    });
-    res.json(products);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// GET SINGLE PRODUCT (with sub-products)
-router.get('/:id', async (req, res) => {
-  try {
-    const product = await prisma.product.findUnique({
-      where: { id: req.params.id },
-      include: { children: true, parent: true }
-    });
-    if (!product) return res.status(404).json({ error: 'Not found' });
-    res.json(product);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// CREATE PRODUCT (Main or Sub)
+// CREATE
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, vat, category, subCategory, stock, parentId } = req.body;
@@ -62,12 +28,12 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
 
     const product = await prisma.product.create({
       data: {
-        name,
-        description,
-        price: parseFloat(price),
+        name: name || 'Unnamed',
+        description: description || '',
+        price: parseFloat(price) || 0,
         vat: vat === 'true' || vat === true,
-        category,
-        subCategory,
+        category: category || 'General',
+        subCategory: subCategory || null,
         stock: parseInt(stock) || 0,
         status: req.user.role === 'ADMIN' ? 'APPROVED' : 'PENDING',
         imageUrl,
@@ -75,32 +41,25 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
         parentId: parentId || null
       },
     });
-
-    try {
-      req.app.get('io').to('admin-room').emit('product:new', product);
-      await logActivity({ userId: req.user.id, action: 'PRODUCT_ADD', interface: 'web', details: 'Added: ' + name, ip: req.ip });
-    } catch (e) {}
-
     res.json(product);
   } catch (e) {
-    console.error(e);
     res.status(500).json({ error: e.message });
   }
 });
 
-// UPDATE PRODUCT (Edit)
+// UPDATE (Bulletproof Edit)
 router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, vat, category, subCategory, stock } = req.body;
     
     let updateData = {
-      name,
-      description,
-      price: parseFloat(price),
+      name: name || 'Unnamed',
+      description: description || '',
+      price: parseFloat(price) || 0,
       vat: vat === 'true' || vat === true,
       stock: parseInt(stock) || 0,
-      category,
-      subCategory
+      category: category || 'General',
+      subCategory: subCategory || null
     };
 
     if (req.file) {
@@ -111,27 +70,44 @@ router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) 
       where: { id: req.params.id },
       data: updateData
     });
+    res.json(product);
+  } catch (e) {
+    console.error('UPDATE ERROR:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
-    try {
-      await logActivity({ userId: req.user.id, action: 'PRODUCT_EDIT', interface: 'web', details: 'Edited: ' + name, ip: req.ip });
-    } catch (e) {}
+// GET ALL
+router.get('/', async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      where: { parentId: null },
+      include: { children: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(products);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
+// GET ONE
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id: req.params.id },
+      include: { children: true, parent: true }
+    });
     res.json(product);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// DELETE PRODUCT (Cascades to children)
+// DELETE
 router.delete('/:id', auth, requireAdmin, async (req, res) => {
   try {
-    const product = await prisma.product.findUnique({ where: { id: req.params.id } });
     await prisma.product.delete({ where: { id: req.params.id } });
-    
-    try {
-      await logActivity({ userId: req.user.id, action: 'PRODUCT_DELETE', interface: 'web', details: 'Deleted: ' + (product?.name || 'Unknown'), ip: req.ip });
-    } catch (e) {}
-    
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

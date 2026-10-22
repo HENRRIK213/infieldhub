@@ -13,7 +13,8 @@ export default function AdminProductsPage() {
   const [formData, setFormData] = useState({ name: '', description: '', price: '', vat: 'true', stock: '1', category: 'Solar' });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const categories = ['Solar', 'Electrical', 'Water', 'Accessories', 'Services'];
+  // ADDED NEW CATEGORIES HERE
+  const categories = ['Solar', 'Electrical', 'Water', 'Accessories', 'All Accessories', 'Borehole Accessories', 'Services'];
 
   const fetchProducts = () => {
     setLoading(true);
@@ -41,7 +42,6 @@ export default function AdminProductsPage() {
   const openAddSub = (parent: any) => {
     setEditProduct(null);
     setParentId(parent.id);
-    // Inherit the parent's category by default
     setFormData({ name: '', description: '', price: '', vat: 'true', stock: '1', category: parent.category || 'Solar' });
     setImageFile(null);
     setShowModal(true);
@@ -76,14 +76,15 @@ export default function AdminProductsPage() {
 
     try {
       if (editProduct) {
-        await api.put(`/products/${editProduct.id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        // REMOVED manual headers so Axios handles the boundaries correctly
+        await api.put(`/products/${editProduct.id}`, fd);
       } else {
-        await api.post('/products', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.post('/products', fd);
       }
       setShowModal(false);
       fetchProducts();
-    } catch (err) {
-      alert('Failed to save product');
+    } catch (err: any) {
+      alert('Failed to save product: ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -106,7 +107,6 @@ export default function AdminProductsPage() {
             {products.map((main: any) => (
               <div key={main.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
                 
-                {/* Main Product Header */}
                 <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid #f1f5f9', paddingBottom: 16, marginBottom: 16 }}>
                   <div style={{ width: 100, height: 100, background: '#f8fafc', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {main.imageUrl ? (
@@ -128,7 +128,6 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
-                {/* Sub-products Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16, paddingLeft: 20, borderLeft: '3px solid #e2e8f0' }}>
                   {main.children?.length === 0 && <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>No sub-types added yet. Click "+ Add Type" to add variations.</div>}
                   
@@ -159,7 +158,6 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', width: 500, borderRadius: 12, padding: 24, maxHeight: '90vh', overflowY: 'auto' }}>
