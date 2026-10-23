@@ -7,7 +7,6 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 const { auth, requireAdmin } = require('../middleware/auth');
-const { logActivity } = require('../utils/security');
 
 const upload = multer({ dest: 'uploads/tmp/' });
 
@@ -19,63 +18,6 @@ async function processImage(file) {
   fs.unlinkSync(file.path);
   return '/uploads/products/' + filename;
 }
-
-// CREATE
-router.post('/', auth, upload.single('image'), async (req, res) => {
-  try {
-    const { name, description, price, vat, category, subCategory, stock, parentId } = req.body;
-    const imageUrl = await processImage(req.file);
-
-    const product = await prisma.product.create({
-      data: {
-        name: name || 'Unnamed',
-        description: description || '',
-        price: parseFloat(price) || 0,
-        vat: vat === 'true' || vat === true,
-        category: category || 'General',
-        subCategory: subCategory || null,
-        stock: parseInt(stock) || 0,
-        status: req.user.role === 'ADMIN' ? 'APPROVED' : 'PENDING',
-        imageUrl,
-        createdBy: req.user.id,
-        parentId: parentId || null
-      },
-    });
-    res.json(product);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// UPDATE (Bulletproof Edit)
-router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
-  try {
-    const { name, description, price, vat, category, subCategory, stock } = req.body;
-    
-    let updateData = {
-      name: name || 'Unnamed',
-      description: description || '',
-      price: parseFloat(price) || 0,
-      vat: vat === 'true' || vat === true,
-      stock: parseInt(stock) || 0,
-      category: category || 'General',
-      subCategory: subCategory || null
-    };
-
-    if (req.file) {
-      updateData.imageUrl = await processImage(req.file);
-    }
-
-    const product = await prisma.product.update({
-      where: { id: req.params.id },
-      data: updateData
-    });
-    res.json(product);
-  } catch (e) {
-    console.error('UPDATE ERROR:', e);
-    res.status(500).json({ error: e.message });
-  }
-});
 
 // GET ALL
 router.get('/', async (req, res) => {
@@ -91,15 +33,76 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET ONE
+// GET ONE (With parent and children)
 router.get('/:id', async (req, res) => {
   try {
     const product = await prisma.product.findUnique({
       where: { id: req.params.id },
       include: { children: true, parent: true }
     });
+    if (!product) return res.status(404).json({ error: 'Not found' });
     res.json(product);
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// CREATE
+router.post('/', auth, upload.single('image'), async (req, res) => {
+  try {
+    const { name, description, price, vat, category, stock, parentId, size, brand } = req.body;
+    const imageUrl = await processImage(req.file);
+
+    const product = await prisma.product.create({
+      data: {
+        name: name || 'Unnamed',
+        description: description || '',
+        price: parseFloat(price) || 0,
+        vat: vat === 'true' || vat === true,
+        category: category || 'Equipment',
+        stock: parseInt(stock) || 0,
+        status: 'APPROVED',
+        imageUrl,
+        createdBy: req.user.id,
+        parentId: parentId || null,
+        size: size || null,
+        brand: brand || null
+      },
+    });
+    res.json(product);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// UPDATE (This was missing on Render)
+router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
+  try {
+    const { name, description, price, vat, category, stock, size, brand } = req.body;
+    
+    let updateData = {
+      name: name || 'Unnamed',
+      description: description || '',
+      price: parseFloat(price) || 0,
+      vat: vat === 'true' || vat === true,
+      stock: parseInt(stock) || 0,
+      category: category || 'Equipment',
+      size: size || null,
+      brand: brand || null
+    };
+
+    if (req.file) {
+      updateData.imageUrl = await processImage(req.file);
+    }
+
+    const product = await prisma.product.update({
+      where: { id: req.params.id },
+      data: updateData
+    });
+    res.json(product);
+  } catch (e) {
+    console.error('UPDATE ERROR:', e);
     res.status(500).json({ error: e.message });
   }
 });
