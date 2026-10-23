@@ -2,7 +2,6 @@
 import Layout from '@/components/Layout';
 import { api, UPLOADS_URL } from '@/lib/api';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -12,7 +11,6 @@ export default function AdminProductsPage() {
   const [parentId, setParentId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '', price: '', size: '', brand: '' });
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const router = useRouter();
 
   const fetchProducts = () => {
     setLoading(true);
@@ -23,23 +21,23 @@ export default function AdminProductsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this product?')) return;
-    try { await api.delete(`/products/${id}`); fetchProducts(); } catch (e) { alert('Failed'); }
+    try { await api.delete(`/products/${id}`); fetchProducts(); } catch (e) { alert('Failed to delete'); }
   };
 
   const openEdit = (p: any) => {
     setEditProduct(p); setParentId(p.parentId);
-    setFormData({ 
-      name: p.name, 
-      description: p.description || '', 
-      price: p.price, 
-      size: p.size || '', 
-      brand: p.brand || '' 
-    });
+    setFormData({ name: p.name, description: p.description || '', price: p.price, size: p.size || '', brand: p.brand || '' });
     setImageFile(null); setShowModal(true);
   };
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (editProduct && !editProduct.id) {
+      alert("Error: Product ID is missing.");
+      return;
+    }
+
     const fd = new FormData();
     fd.append('name', formData.name); 
     fd.append('description', formData.description || ''); 
@@ -51,13 +49,12 @@ export default function AdminProductsPage() {
 
     try {
       if (editProduct) {
-        // IMPORTANT: Do NOT set Content-Type header manually
+        // Submit update request
         await api.put(`/products/${editProduct.id}`, fd);
       } else {
         await api.post('/products', fd);
       }
       setShowModal(false); 
-      router.push('/products/admin'); 
       fetchProducts();
       alert('Product saved successfully!');
     } catch (err: any) { 

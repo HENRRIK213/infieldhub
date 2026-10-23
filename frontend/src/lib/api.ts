@@ -1,13 +1,17 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+// HARDCODED FALLBACK: Guarantees the frontend always hits the live backend
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://infieldhub-backend.onrender.com/api';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://infieldhub-backend.onrender.com';
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL: API_URL,
   timeout: 15000,
 });
 
 api.interceptors.request.use((config) => {
+  config.headers['ngrok-skip-browser-warning'] = 'true';
+  config.headers['bypass-tunnel-reminder'] = 'true';
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -18,7 +22,6 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Auto-logout only for ADMIN/EMPLOYEE 401s, not customer requests
     const isCustomerRoute = error.config?.url?.includes('/customers/');
     if (
       typeof window !== 'undefined' &&
@@ -35,5 +38,5 @@ api.interceptors.response.use(
   }
 );
 
-export const UPLOADS_URL = BACKEND;
-export const BACKEND_URL = BACKEND;
+export const UPLOADS_URL = BACKEND_URL;
+export const BACKEND_URL = BACKEND_URL;
