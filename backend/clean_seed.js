@@ -42,7 +42,7 @@ const catalog = {
   ],
   "Accessories": [
     { name: "PV DISCONNECT SISO SWITCH", size: "32A", brand: "Generic", price: 12000 },
-    { name: "AC SURGE PROTECTOR - 1PH", size: "275V", brand: "Generic", price: 6000 },
+    { name: "AC SURGE PROTECTOR", size: "275V", brand: "Generic", price: 6000 },
     { name: "LIGHTNING ARRESTOR", size: "2FT", brand: "Generic", price: 4400 },
     { name: "WELL PROBE SENSORS", size: "Standard", brand: "Generic", price: 6000 }
   ]
@@ -54,11 +54,10 @@ async function main() {
   
   console.log('Seeding fresh catalog...');
   for (const [category, items] of Object.entries(catalog)) {
-    // 1. Create Main Parent Product
     const mainProduct = await prisma.product.create({
       data: {
         name: category, 
-        description: `Select a specification and brand for our ${category.toLowerCase()}.`,
+        description: `Explore our complete range of ${category.toLowerCase()}.`,
         price: Math.min(...items.map(i => i.price)), 
         category: "Equipment", 
         status: 'APPROVED', 
@@ -66,12 +65,11 @@ async function main() {
       },
     });
 
-    // 2. Create Children with size and brand
     for (const item of items) {
       await prisma.product.create({
         data: {
           name: item.name, 
-          description: `Genuine ${item.brand} ${category}. Model: ${item.size}.`,
+          description: `Genuine ${item.brand} ${category}.`,
           price: item.price, 
           brand: item.brand,
           size: item.size,
@@ -83,7 +81,7 @@ async function main() {
       });
     }
   }
-  console.log('✅ Database seeded successfully with sizes and brands!');
+  console.log('✅ Database seeded perfectly!');
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
