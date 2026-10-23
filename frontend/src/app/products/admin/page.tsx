@@ -1,7 +1,6 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
 import { api, UPLOADS_URL } from '@/lib/api';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 
 export default function AdminProductsPage() {
@@ -34,6 +33,11 @@ export default function AdminProductsPage() {
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (editProduct && !editProduct.id) {
+      alert("Error: Product ID is missing. Please refresh and try again.");
+      return;
+    }
+
     const fd = new FormData();
     fd.append('name', formData.name); 
     fd.append('description', formData.description || ''); 
@@ -43,21 +47,9 @@ export default function AdminProductsPage() {
     if (parentId) fd.append('parentId', parentId);
     if (imageFile) fd.append('image', imageFile);
 
-    // GET THE TOKEN
-    const token = localStorage.getItem('token');
-
     try {
       if (editProduct) {
-        // FORCE ABSOLUTE URL DIRECTLY TO RENDER
-        const url = `https://infieldhub-backend.onrender.com/api/products/${editProduct.id}`;
-        console.log("Attempting to save to:", url);
-        
-        await axios.put(url, fd, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        });
+        await api.put(`/products/${editProduct.id}`, fd);
       } else {
         await api.post('/products', fd);
       }
@@ -65,7 +57,7 @@ export default function AdminProductsPage() {
       fetchProducts();
       alert('Product saved successfully!');
     } catch (err: any) { 
-      console.error("SAVE ERROR:", err.response?.data || err.message);
+      console.error("Save Error:", err.response || err);
       alert('Failed to save: ' + (err.response?.data?.error || err.message)); 
     }
   };
