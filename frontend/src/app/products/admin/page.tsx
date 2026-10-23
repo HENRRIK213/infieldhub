@@ -10,8 +10,9 @@ function AdminProductsContent() {
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
   const [parentId, setParentId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ name: '', description: '', price: '', size: '', brand: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', price: '', vat: 'true', stock: '1', category: 'Solar', size: '', brand: '' });
   const [imageFile, setImageFile] = useState<File | null>(null);
+  
   const searchParams = useSearchParams();
   const router = useRouter();
   const editId = searchParams.get('edit');
@@ -21,7 +22,6 @@ function AdminProductsContent() {
     api.get('/products').then(r => {
       setProducts(r.data);
       if (editId) {
-        // Find product to edit from query param
         let found = null;
         for (const main of r.data) {
           if (main.id === editId) found = main;
@@ -42,38 +42,60 @@ function AdminProductsContent() {
 
   const openAddMain = () => {
     setEditProduct(null); setParentId(null);
-    setFormData({ name: '', description: '', price: '', size: '', brand: '' });
+    setFormData({ name: '', description: '', price: '', vat: 'true', stock: '1', category: 'Solar', size: '', brand: '' });
     setImageFile(null); setShowModal(true);
   };
 
   const openAddSub = (parent: any) => {
     setEditProduct(null); setParentId(parent.id);
-    setFormData({ name: '', description: '', price: '', size: '', brand: '' });
+    setFormData({ name: '', description: '', price: '', vat: 'true', stock: '1', category: parent.category, size: '', brand: '' });
     setImageFile(null); setShowModal(true);
   };
 
   const openEdit = (p: any) => {
     setEditProduct(p); setParentId(p.parentId);
-    setFormData({ name: p.name, description: p.description || '', price: p.price, size: p.size || '', brand: p.brand || '' });
+    setFormData({ 
+      name: p.name, 
+      description: p.description || '', 
+      price: p.price, 
+      vat: p.vat ? 'true' : 'false', 
+      stock: p.stock, 
+      category: p.category, 
+      size: p.size || '', 
+      brand: p.brand || '' 
+    });
     setImageFile(null); setShowModal(true);
   };
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     const fd = new FormData();
-    fd.append('name', formData.name); fd.append('description', formData.description); 
-    fd.append('price', formData.price); fd.append('size', formData.size); fd.append('brand', formData.brand);
+    fd.append('name', formData.name); 
+    fd.append('description', formData.description || ''); 
+    fd.append('price', formData.price); 
+    fd.append('vat', formData.vat); 
+    fd.append('stock', formData.stock);
+    fd.append('category', formData.category); 
+    fd.append('size', formData.size); 
+    fd.append('brand', formData.brand);
     if (parentId) fd.append('parentId', parentId);
     if (imageFile) fd.append('image', imageFile);
-    
-    // Default values for other fields
-    fd.append('vat', 'true'); fd.append('stock', '1'); fd.append('category', 'Solar');
 
     try {
-      if (editProduct) await api.put(`/products/${editProduct.id}`, fd);
-      else await api.post('/products', fd);
-      setShowModal(false); router.push('/products/admin'); fetchProducts();
-    } catch (err: any) { alert('Failed: ' + (err.response?.data?.error || err.message)); }
+      // IMPORTANT: Do NOT set Content-Type header manually. Axios will set the correct boundary.
+      if (editProduct) {
+        await api.put(`/products/${editProduct.id}`, fd);
+      } else {
+        await api.post('/products', fd);
+      }
+      setShowModal(false); 
+      router.push('/products/admin'); 
+      fetchProducts();
+      alert('Product saved successfully!');
+    } catch (err: any) { 
+      console.error(err);
+      alert('Failed to save: ' + (err.response?.data?.error || err.message)); 
+    }
   };
 
   return (
@@ -129,11 +151,13 @@ function AdminProductsContent() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', width: 500, borderRadius: 12, padding: 24, maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>{editProduct ? 'Edit Product' : (parentId ? 'Add Sub-type' : 'Add Main Product')}</h2>
+            
             <form onSubmit={submitForm} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Name</label>
                 <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
+              
               {parentId && (
                 <div style={{ display: 'flex', gap: 12 }}>
                   <div style={{ flex: 1 }}>
@@ -146,6 +170,7 @@ function AdminProductsContent() {
                   </div>
                 </div>
               )}
+
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Price</label>
                 <input type="number" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
