@@ -50,6 +50,9 @@ model Product {
   parentId    String?
   parent      Product?  @relation("ProductHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children    Product[] @relation("ProductHierarchy")
+
+  brand       String?
+  size        String?
 }
 
 // ============================================================
@@ -187,4 +190,5 @@ model Document {
   status      String   @default("DRAFT")
   createdAt   DateTime @default(now())
 }
+
 

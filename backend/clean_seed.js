@@ -3,114 +3,48 @@ const prisma = new PrismaClient();
 
 const catalog = {
   "Submersible Pumps": [
-    { name: "BENAX 4SP 1/42 1.1KW PUMP END", price: 96600 }, { name: "BENAX 4SP 1/57 1.5KW PUMP END", price: 124600 },
-    { name: "EMPOWER DP4RFF 02/18 0.75KW", price: 44000 }, { name: "EMPOWER DP4RFF 02/23 1.1KW", price: 56000 },
-    { name: "EMPOWER DP4RFF 02/33 1.5KW", price: 72000 }, { name: "EMPOWER DP4RFF 02/48 2.2KW", price: 102000 },
-    { name: "EMPOWER DP4RFF 02/65 3KW", price: 142000 }, { name: "EMPOWER DP4RFF 03/18 1.1KW", price: 44000 },
-    { name: "EMPOWER DP4RFF 03/25 1.5KW", price: 56000 }, { name: "EMPOWER DP4RFF 03/33 2.2KW", price: 80000 },
-    { name: "EMPOWER DP4RFF 03/45 3KW", price: 100000 }, { name: "EMPOWER DP4RFF 03/60 4KW", price: 126600 },
-    { name: "EMPOWER DP4RFF 05/12 1.1KW", price: 36000 }, { name: "EMPOWER DP4RFF 05/17 1.5KW", price: 41000 },
-    { name: "EMPOWER DP4RFF 05/25 2.2KW", price: 60500 }, { name: "EMPOWER DP4RFF 05/33 3KW", price: 80000 },
-    { name: "EMPOWER DP4RFF 05/44 4KW", price: 98000 }, { name: "EMPOWER DP4RFF 05/50 5.5KW", price: 120000 },
-    { name: "EMPOWER DP4RFF 05/75 7.5KW", price: 194000 }, { name: "EMPOWER DP4RFF 05/85 7.5KW", price: 208000 },
-    { name: "EMPOWER DP4RFF 08/10 1.5KW", price: 52000 }, { name: "EMPOWER DP4RFF 08/15 2.2KW", price: 72000 },
-    { name: "EMPOWER DP4RFF 08/25 4KW", price: 100000 }, { name: "EMPOWER DP4RFF 08/30 5.5KW", price: 120000 },
-    { name: "EMPOWER DP4RFF 08/37 5.5KW", price: 141000 }, { name: "EMPOWER DP4RFF 08/44 7.5KW", price: 156600 },
-    { name: "EMPOWER DP6MFF 17/7 4KW", price: 92000 }, { name: "EMPOWER DP6MFF 17/10 5.5KW", price: 80000 },
-    { name: "EMPOWER DP6MFF 17/13 7.5KW", price: 114600 }, { name: "EMPOWER DP6MFF 17/19 9.2KW", price: 154600 },
-    { name: "EMPOWER DP6MFF 17/20 11KW", price: 202000 }, { name: "EMPOWER DP6MFF 17/24 13KW", price: 210000 },
-    { name: "EMPOWER DP6MFF 17/27 15KW", price: 220000 }, { name: "EMPOWER DP6MFF 17/33 18.5KW", price: 260000 },
-    { name: "EMPOWER DP6MFF 17/40 22KW", price: 270000 }, { name: "EMPOWER DP6MFF 30/8 7.5KW", price: 132000 },
-    { name: "EMPOWER DP6MFF 30/13 11KW", price: 180000 }, { name: "EMPOWER DP6MFF 30/17 15KW", price: 225000 },
-    { name: "EMPOWER DP6MFF 30/21 18.5KW", price: 280000 }, { name: "EMPOWER DP6MFF 30/26 22KW", price: 290000 },
-    { name: "EMPOWER DP6MFF 46/5 7.5KW", price: 140000 }, { name: "EMPOWER DP6MFF 46/7 11KW", price: 170000 },
-    { name: "EMPOWER DP6MFF 46/10 15KW", price: 200000 }, { name: "EMPOWER DP6MFF 46/15 22KW", price: 220000 },
-    { name: "EMPOWER DP6MFF 46/19 30KW", price: 280000 }
+    { name: "BENAX 4SP 1/42 PUMP END", size: "1.1KW", brand: "BENAX", price: 96600 },
+    { name: "BENAX 4SP 1/57 PUMP END", size: "1.5KW", brand: "BENAX", price: 124600 },
+    { name: "EMPOWER DP4RFF 02/18", size: "0.75KW", brand: "EMPOWER", price: 44000 },
+    { name: "EMPOWER DP4RFF 02/23", size: "1.1KW", brand: "EMPOWER", price: 56000 },
+    { name: "EMPOWER DP4RFF 02/33", size: "1.5KW", brand: "EMPOWER", price: 72000 },
+    { name: "EMPOWER DP4RFF 02/48", size: "2.2KW", brand: "EMPOWER", price: 102000 },
+    { name: "EMPOWER DP4RFF 02/65", size: "3KW", brand: "EMPOWER", price: 142000 },
+    { name: "EMPOWER DP6MFF 46/7", size: "11KW", brand: "EMPOWER", price: 170000 },
+    { name: "EMPOWER DP6MFF 46/10", size: "15KW", brand: "EMPOWER", price: 200000 }
   ],
   "Sub-Motors": [
-    { name: "EMPOWER DSMO4 1.1KW 1PH O/F", price: 44000 }, { name: "EMPOWER DSMO4 1.5KW 1PH O/F", price: 50000 },
-    { name: "EMPOWER DSMO4 2.2KW 1PH O/F", price: 62000 }, { name: "EMPOWER DSMO4 0.75KW 1PH W/F", price: 42000 },
-    { name: "EMPOWER DSMO4 1.1KW 1PH W/F", price: 48000 }, { name: "EMPOWER DSMO4 1.5KW 1PH W/F", price: 52000 },
-    { name: "EMPOWER DSMO4 2.2KW 1PH W/F", price: 72000 }, { name: "EMPOWER DSMO4 1.1KW 3PH", price: 56000 },
-    { name: "EMPOWER DSMO4 1.5KW 3PH", price: 58000 }, { name: "EMPOWER DSMO4 2.2KW 3PH", price: 70000 },
-    { name: "EMPOWER DSMO4 3KW 3PH", price: 78000 }, { name: "EMPOWER DSMO4 4KW 3PH", price: 93000 },
-    { name: "EMPOWER DSMO4 5.5KW 3PH", price: 104000 }, { name: "EMPOWER DSMO4 7.5KW 3PH", price: 132000 },
-    { name: "EMPOWER DSMO5 7.5KW 3PH", price: 154000 }, { name: "EMPOWER DSMO5 9.3KW 3PH", price: 194000 },
-    { name: "EMPOWER DSMO5 11KW 3PH", price: 204000 }, { name: "EMPOWER DSMO6 7.5KW 3PH", price: 154000 },
-    { name: "EMPOWER DSMO6 9.3KW 3PH", price: 194000 }, { name: "EMPOWER DSMO6 11KW 3PH", price: 204000 },
-    { name: "EMPOWER DSMO6 13KW 3PH", price: 220600 }, { name: "EMPOWER DSMO6 15KW 3PH", price: 256800 },
-    { name: "EMPOWER DSMO6 18.5KW 3PH W/F", price: 270000 }, { name: "EMPOWER DSMO6 22KW 3PH W/F", price: 300000 },
-    { name: "EMPOWER DSMO6 30KW 3PH W/F", price: 320000 }, { name: "VINCO 1.1KW 1PH", price: 38000 },
-    { name: "VINCO 1.5KW 1PH", price: 42000 }, { name: "VINCO 2.2KW 1PH", price: 48000 },
-    { name: "VINCO 1.1KW 3PH", price: 38000 }, { name: "VINCO 1.5KW 3PH", price: 43500 },
-    { name: "VINCO 2.2KW 3PH", price: 48000 }, { name: "VINCO 3KW 3PH", price: 60000 },
-    { name: "VINCO 4KW 3PH", price: 72000 }, { name: "VINCO 5.5KW 3PH", price: 84000 },
-    { name: "VINCO 7.5KW 4\" 3PH", price: 108000 }, { name: "VINCO 7.5KW 6\" 3PH", price: 130000 }
+    { name: "EMPOWER DSMO4 1PH O/F", size: "1.1KW", brand: "EMPOWER", price: 44000 },
+    { name: "EMPOWER DSMO4 1PH O/F", size: "1.5KW", brand: "EMPOWER", price: 50000 },
+    { name: "EMPOWER DSMO4 1PH O/F", size: "2.2KW", brand: "EMPOWER", price: 62000 },
+    { name: "EMPOWER DSMO4 3PH", size: "3KW", brand: "EMPOWER", price: 78000 },
+    { name: "VINCO 1PH SUB-MOTOR", size: "1.1KW", brand: "VINCO", price: 38000 },
+    { name: "VINCO 3PH SUB-MOTOR", size: "1.5KW", brand: "VINCO", price: 43500 },
+    { name: "VINCO 3PH SUB-MOTOR", size: "2.2KW", brand: "VINCO", price: 48000 }
   ],
-  "Digital Control Panels": [
-    { name: "EMPOWER EMP3SP 2.2KW PANEL", price: 36000 }, { name: "EMPOWER EMP7.5DOL 5.5KW PANEL", price: 44000 },
-    { name: "EMPOWER EMP10DOL 7.5KW PANEL", price: 50000 }, { name: "EMPOWER EMP20DOL 15KW PANEL", price: 64000 }
+  "Submersible Cables": [
+    { name: "4 CORE SUBMERSIBLE CABLE", size: "1.5MM2", brand: "Generic", price: 380 },
+    { name: "4 CORE SUBMERSIBLE CABLE", size: "2.5MM2", brand: "Generic", price: 560 },
+    { name: "4 CORE SUBMERSIBLE CABLE", size: "4MM2", brand: "Generic", price: 760 },
+    { name: "4 CORE SUBMERSIBLE CABLE", size: "6MM2", brand: "Generic", price: 1160 },
+    { name: "4 CORE SUBMERSIBLE CABLE", size: "10MM2", brand: "Generic", price: 2200 }
   ],
-  "UPVC Borehole Pipes": [
-    { name: "1.25\" UPVC 3M DROP PIPE - 26BAR", price: 2000 }, { name: "1.5\" UPVC 3M DROP PIPE - 26BAR", price: 2400 },
-    { name: "2\" UPVC 3M DROP PIPE - 21 BAR", price: 3600 }, { name: "2\" UPVC 3M DROP PIPE - 27 BAR", price: 4600 },
-    { name: "2.5\" UPVC 3M DROP PIPE - 18 BAR", price: 4600 }, { name: "2.5\" UPVC 3M DROP PIPE - 27 BAR", price: 5500 },
-    { name: "3\" UPVC 3M DROP PIPE - 18 BAR", price: 5800 }, { name: "3\" UPVC 3M DROP PIPE - 35 BAR", price: 7600 }
+  "Solar Inverters": [
+    { name: "VEIKONG 1PH PUMPING INVERTER", size: "2.2KW", brand: "VEIKONG", price: 68000 },
+    { name: "VEIKONG 1PH PUMPING INVERTER", size: "4KW", brand: "VEIKONG", price: 84000 },
+    { name: "VEIKONG 3PH LCD INVERTER", size: "5.5KW", brand: "VEIKONG", price: 90000 },
+    { name: "VEIKONG 3PH LCD INVERTER", size: "7.5KW", brand: "VEIKONG", price: 100000 }
   ],
-  "Adapter Sets": [
-    { name: "HEAVY DUTY C.I TOP/BOTTOM 1.25\"", price: 3200 }, { name: "HEAVY DUTY C.I TOP/BOTTOM 1.5\"", price: 4000 },
-    { name: "HEAVY DUTY C.I TOP/BOTTOM 2\"", price: 5600 }, { name: "HEAVY DUTY C.I TOP/BOTTOM 2.5\"", price: 11400 },
-    { name: "HEAVY DUTY C.I TOP/BOTTOM 3\"", price: 17200 }, { name: "HEAVY DUTY C.I TOP / SS BOTTOM 1.25\"", price: 7000 },
-    { name: "HEAVY DUTY C.I TOP / SS BOTTOM 1.5\"", price: 8000 }, { name: "HEAVY DUTY C.I TOP / SS BOTTOM 2\"", price: 9500 },
-    { name: "HEAVY DUTY C.I TOP / SS BOTTOM 2.5\"", price: 17200 }, { name: "HEAVY DUTY C.I TOP / SS BOTTOM 3\"", price: 24000 },
-    { name: "SUPER HEAVY DUTY MS/CI 3\"", price: 19600 }, { name: "SUPER HEAVY DUTY MS/SS 3\"", price: 28400 }
+  "Solar Panels": [
+    { name: "MONOCRYSTALLINE SOLAR PANEL", size: "350W", brand: "Generic", price: 13650 },
+    { name: "MONOCRYSTALLINE SOLAR PANEL", size: "450W", brand: "Generic", price: 18500 },
+    { name: "MONOCRYSTALLINE SOLAR PANEL", size: "550W", brand: "Generic", price: 22000 }
   ],
-  "Electrical Accessories": [
-    { name: "SPLICING KIT - CELL PACK MM11", price: 2000 }, { name: "SPLICING KIT - CELL PACK MM12", price: 4000 },
-    { name: "PV DISCONNECT SISO SWITCH 32A", price: 12000 }, { name: "PV DISCONNECT C/W SPD 16A/1000VDC", price: 24000 },
-    { name: "PV DISCONNECT C/W SPD 20A/1000VDC", price: 25000 }, { name: "PV DISCONNECT C/W SPD 32A/1000VDC", price: 26000 },
-    { name: "PV DISCONNECT C/W SPD 40A/1000VDC", price: 27000 }, { name: "PV DISCONNECT C/W SPD 63A/1000VDC", price: 30000 },
-    { name: "AC SURGE PROTECTOR - 1PH/275V", price: 6000 }, { name: "AC SURGE PROTECTOR - 3PH/415V", price: 8000 },
-    { name: "DC SURGE PROTECTOR - 3POLE", price: 8000 }, { name: "DC ISOLATOR FOR DIN RAIL 32A", price: 8000 },
-    { name: "DC BREAKER 40A/1000VDC", price: 8000 }, { name: "DC BREAKER 63A/1000VDC", price: 8000 },
-    { name: "DC BREAKER 100A/1000VDC", price: 19000 }, { name: "EARTH ROD 1M C/W CLAMP", price: 1600 },
-    { name: "LIGHTNING ARRESTOR - 2FT", price: 4400 }, { name: "LIGHTNING ARRESTOR - 3FT", price: 6000 },
-    { name: "ELECTRODE PENCIL", price: 1200 }, { name: "WELL PROBE SENSORS", price: 6000 },
-    { name: "FLOAT SWITCH", price: 3000 }
-  ],
-  "Inverter Enclosures": [
-    { name: "ENCLOSURE C/W SPD & 16A/20A DC BREAKER", price: 44000 }, { name: "ENCLOSURE C/W SPD & 32A DC", price: 50000 },
-    { name: "ENCLOSURE C/W SPD & 63A DC", price: 54000 }
-  ],
-  "Solar Inverters & Reactors": [
-    { name: "VEIKONG 2.2KW 1PH INVERTER", price: 68000 }, { name: "VEIKONG 4KW 1PH INVERTER", price: 84000 },
-    { name: "VEIKONG 2.2KW 3PH INVERTER", price: 68000 }, { name: "VEIKONG 4KW 3PH LCD INVERTER", price: 84000 },
-    { name: "VEIKONG 5.5KW 3PH LCD INVERTER", price: 90000 }, { name: "VEIKONG 7.5KW 3PH LCD INVERTER", price: 100000 },
-    { name: "VEIKONG 11KW 3PH LCD INVERTER", price: 130000 }, { name: "VEIKONG 15KW 3PH LCD INVERTER", price: 144000 },
-    { name: "VEIKONG 22KW 3PH LCD INVERTER", price: 210000 }, { name: "AC OUTPUT REACTOR 4KW 1PH", price: 20000 },
-    { name: "AC OUTPUT REACTOR 4KW 3PH", price: 20000 }, { name: "AC OUTPUT REACTOR 5.5KW 3PH", price: 22000 },
-    { name: "AC OUTPUT REACTOR 7.5KW 3PH", price: 24000 }, { name: "AC OUTPUT REACTOR 11KW 3PH", price: 27000 },
-    { name: "AC OUTPUT REACTOR 15KW 3PH", price: 32000 }, { name: "AC OUTPUT REACTOR 22KW 3PH", price: 36000 },
-    { name: "GPRS DONGLE", price: 32000 }
-  ],
-  "Submersible & Armoured Cables": [
-    { name: "1.5MM2 4 CORE SUBMERSIBLE CABLE", price: 380 }, { name: "2.5MM2 4 CORE SUBMERSIBLE CABLE", price: 560 },
-    { name: "4MM2 4 CORE SUBMERSIBLE CABLE", price: 760 }, { name: "6MM2 4 CORE SUBMERSIBLE CABLE", price: 1160 },
-    { name: "10MM2 4 CORE SUBMERSIBLE CABLE", price: 2200 }, { name: "DUAL LONDEX CABLE", price: 130 },
-    { name: "1.5MM2 4 CORE U/G CABLE", price: 560 }, { name: "4.0MM2 4 CORE U/G CABLE", price: 1000 },
-    { name: "6.0MM2 4 CORE U/G CABLE", price: 1340 }, { name: "10.0MM2 4 CORE U/G CABLE", price: 2200 }
-  ],
-  "Water Meters": [
-    { name: "1.25\" SUPER WATER METER", price: 9000 }, { name: "1.5\" SUPER WATER METER", price: 11000 },
-    { name: "2\" SUPER WATER METER", price: 16000 }, { name: "2.5\" SUPER WATER METER", price: 35000 },
-    { name: "3\" SUPER WATER METER", price: 38000 }
-  ],
-  "Borehole Covers & Valves": [
-    { name: "1.25\" BOREHOLE COVER W/ SUNDRIES", price: 14000 }, { name: "1.5\" BOREHOLE COVER W/ SUNDRIES", price: 15000 },
-    { name: "2\" BOREHOLE COVER W/ SUNDRIES", price: 17200 }, { name: "2.5\" BOREHOLE COVER W/ SUNDRIES", price: 25600 },
-    { name: "3\" BOREHOLE COVER W/ SUNDRIES", price: 31400 }, { name: "1.25\" NRV", price: 3400 },
-    { name: "1.5\" NRV", price: 4000 }, { name: "2.5\" NRV", price: 5000 },
-    { name: "3\" NRV", price: 11000 }
+  "Accessories": [
+    { name: "PV DISCONNECT SISO SWITCH", size: "32A", brand: "Generic", price: 12000 },
+    { name: "AC SURGE PROTECTOR - 1PH", size: "275V", brand: "Generic", price: 6000 },
+    { name: "LIGHTNING ARRESTOR", size: "2FT", brand: "Generic", price: 4400 },
+    { name: "WELL PROBE SENSORS", size: "Standard", brand: "Generic", price: 6000 }
   ]
 };
 
@@ -118,12 +52,13 @@ async function main() {
   console.log('Wiping old products...');
   await prisma.product.deleteMany({});
   
-  console.log('Seeding fresh catalog with ALL products...');
+  console.log('Seeding fresh catalog...');
   for (const [category, items] of Object.entries(catalog)) {
+    // 1. Create Main Parent Product
     const mainProduct = await prisma.product.create({
       data: {
         name: category, 
-        description: `Explore our complete range of ${category.toLowerCase()}. Select a type below.`,
+        description: `Select a specification and brand for our ${category.toLowerCase()}.`,
         price: Math.min(...items.map(i => i.price)), 
         category: "Equipment", 
         status: 'APPROVED', 
@@ -131,21 +66,24 @@ async function main() {
       },
     });
 
+    // 2. Create Children with size and brand
     for (const item of items) {
       await prisma.product.create({
         data: {
           name: item.name, 
-          description: `Genuine ${item.name} from authorized partners.`,
+          description: `Genuine ${item.brand} ${category}. Model: ${item.size}.`,
           price: item.price, 
+          brand: item.brand,
+          size: item.size,
           category: "Equipment", 
           status: 'APPROVED', 
           createdBy: 'system', 
-          parentId: mainProduct.id, // Links directly to the Main Product
+          parentId: mainProduct.id,
         },
       });
     }
   }
-  console.log('✅ ALL products successfully added and linked!');
+  console.log('✅ Database seeded successfully with sizes and brands!');
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
