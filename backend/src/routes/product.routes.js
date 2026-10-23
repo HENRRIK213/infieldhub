@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET ONE (With parent and children)
+// GET ONE
 router.get('/:id', async (req, res) => {
   try {
     const product = await prisma.product.findUnique({
@@ -76,7 +76,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   }
 });
 
-// UPDATE (This was missing on Render)
+// UPDATE (The critical route causing the 404)
 router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, vat, category, stock, size, brand } = req.body;
