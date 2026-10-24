@@ -8,12 +8,12 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
-  const [parentId, setParentId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '', price: '', size: '', brand: '' });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const fetchProducts = () => {
     setLoading(true);
+    // CACHE BUSTING: appending ?t=Date.now() forces a fresh fetch
     fetch(`https://infieldhub-backend.onrender.com/api/products?t=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => setProducts(data))
@@ -23,20 +23,8 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this product?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(`https://infieldhub-backend.onrender.com/api/products/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      fetchProducts();
-    } catch (e) { alert('Failed to delete'); }
-  };
-
   const openEdit = (p: any) => {
-    setEditProduct(p); setParentId(p.parentId);
+    setEditProduct(p);
     setFormData({ name: p.name, description: p.description || '', price: p.price, size: p.size || '', brand: p.brand || '' });
     setImageFile(null); setShowModal(true);
   };
@@ -46,22 +34,22 @@ export default function AdminProductsPage() {
     if (!editProduct) return;
 
     const fd = new FormData();
+    fd.append('id', editProduct.id); // ID sent in body, NOT in URL
     fd.append('name', formData.name); 
     fd.append('description', formData.description || ''); 
     fd.append('price', formData.price); 
     fd.append('size', formData.size); 
     fd.append('brand', formData.brand);
-    if (parentId) fd.append('parentId', parentId);
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
     
-    // NATIVE FETCH PUT REQUEST (No Axios)
-    const url = `https://infieldhub-backend.onrender.com/api/products/${editProduct.id}`;
+    // NATIVE FETCH TO THE NEW /update ROUTE
+    const url = `https://infieldhub-backend.onrender.com/api/products/update`;
 
     try {
       const response = await fetch(url, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: fd,
         cache: 'no-store'
@@ -83,21 +71,14 @@ export default function AdminProductsPage() {
   return (
     <Layout requireAdmin>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Product Management</h1>
-        </div>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginBottom: 24 }}>Product Management</h1>
 
         {loading ? <div>Loading...</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
             {products.map((main: any) => (
               <div key={main.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
                 <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid #f1f5f9', paddingBottom: 16, marginBottom: 16 }}>
-                  <div style={{ flex: 1 }}>
-                    <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0' }}>{main.name}</h2>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => handleDelete(main.id)} style={{ background: '#FEE2E2', color: '#991B1B', border: 'none', padding: '8px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>🗑️</button>
-                  </div>
+                  <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>{main.name}</h2>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
@@ -113,10 +94,7 @@ export default function AdminProductsPage() {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 13, fontWeight: 800, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>✏️</button>
-                          <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>🗑️</button>
-                        </div>
+                        <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>✏️ Edit</button>
                       </div>
                     </div>
                   ))}
@@ -129,7 +107,7 @@ export default function AdminProductsPage() {
 
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', width: 500, borderRadius: 12, padding: 24, maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: '#fff', width: 500, borderRadius: 12, padding: 24 }}>
             <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>Edit Product</h2>
             <form onSubmit={submitForm} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
@@ -145,7 +123,7 @@ export default function AdminProductsPage() {
                 <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, minHeight: 60 }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700 }}>Image (Leave blank to keep existing)</label>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Image</label>
                 <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
