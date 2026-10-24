@@ -43,7 +43,6 @@ export default function AdminProductsPage() {
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editProduct) return;
 
     const fd = new FormData();
     fd.append('name', formData.name); 
@@ -51,11 +50,19 @@ export default function AdminProductsPage() {
     fd.append('price', formData.price); 
     fd.append('size', formData.size); 
     fd.append('brand', formData.brand);
-    if (parentId) fd.append('parentId', parentId);
+    
+    // THE MAGIC: If editing, add the ID to the form data
+    if (editProduct) {
+      fd.append('updateId', editProduct.id);
+    } else if (parentId) {
+      fd.append('parentId', parentId);
+    }
+
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    const url = `https://infieldhub-backend.onrender.com/api/products/update/${editProduct.id}`;
+    // WE ARE USING THE STANDARD POST ROUTE FOR EVERYTHING NOW
+    const url = `https://infieldhub-backend.onrender.com/api/products`;
 
     try {
       const response = await fetch(url, {
@@ -64,12 +71,16 @@ export default function AdminProductsPage() {
         body: fd
       });
 
-      if (!response.ok) throw new Error(`Status: ${response.status}`);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Status: ${response.status}`);
+      }
 
       setShowModal(false); 
       fetchProducts();
       alert('✅ Product saved successfully!');
     } catch (err: any) { 
+      console.error("SAVE ERROR:", err);
       alert('❌ Failed: ' + err.message); 
     }
   };
