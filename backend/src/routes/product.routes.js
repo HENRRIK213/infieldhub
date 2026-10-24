@@ -26,22 +26,32 @@ router.get('/', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// POST /api/products (Handles BOTH Create and Update)
+// TROJAN HORSE ROUTE: Handles BOTH Create and Update
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
-    // 'id' will be present if we are editing
-    const { id, name, description, price, size, brand, parentId } = req.body;
+    const { id, name, description, price, vat, category, stock, parentId, size, brand } = req.body;
     const imageUrl = await processImage(req.file);
 
-    let data = { name, description, price: parseFloat(price), size, brand, parentId: parentId || null };
+    let data = { 
+      name: name || 'Unnamed', 
+      description: description || '', 
+      price: parseFloat(price) || 0, 
+      vat: vat === 'true', 
+      category: category || 'Equipment', 
+      stock: parseInt(stock) || 0, 
+      size: size || null, 
+      brand: brand || null,
+      parentId: parentId || null
+    };
+    
     if (imageUrl) data.imageUrl = imageUrl;
 
     if (id) {
-      // UPDATE
+      // UPDATE EXISTING PRODUCT
       const product = await prisma.product.update({ where: { id }, data });
       res.json(product);
     } else {
-      // CREATE
+      // CREATE NEW PRODUCT
       const product = await prisma.product.create({
         data: { ...data, status: 'APPROVED', createdBy: req.user.id }
       });

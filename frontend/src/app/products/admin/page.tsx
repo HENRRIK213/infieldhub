@@ -8,6 +8,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
+  const [parentId, setParentId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '', price: '', size: '', brand: '' });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -35,7 +36,7 @@ export default function AdminProductsPage() {
   };
 
   const openEdit = (p: any) => {
-    setEditProduct(p);
+    setEditProduct(p); setParentId(p.parentId);
     setFormData({ name: p.name, description: p.description || '', price: p.price, size: p.size || '', brand: p.brand || '' });
     setImageFile(null); setShowModal(true);
   };
@@ -45,24 +46,21 @@ export default function AdminProductsPage() {
     if (!editProduct) return;
 
     const fd = new FormData();
-    // Append ID to tell backend this is an update
-    fd.append('id', editProduct.id); 
+    fd.append('id', editProduct.id); // Magic key for update
     fd.append('name', formData.name); 
     fd.append('description', formData.description || ''); 
     fd.append('price', formData.price); 
     fd.append('size', formData.size); 
     fd.append('brand', formData.brand);
-    if (editProduct.parentId) fd.append('parentId', editProduct.parentId);
+    if (parentId) fd.append('parentId', parentId);
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    
-    // Hit the POST route, bypassing cache entirely
     const url = `https://infieldhub-backend.onrender.com/api/products`;
 
     try {
       const response = await fetch(url, {
-        method: 'POST',
+        method: 'POST', // Using POST instead of PUT to bypass cache issues
         headers: { 'Authorization': `Bearer ${token}` },
         body: fd,
         cache: 'no-store'
