@@ -14,7 +14,7 @@ export default function AdminProductsPage() {
 
   const fetchProducts = () => {
     setLoading(true);
-    fetch('https://infieldhub-backend.onrender.com/api/products')
+    fetch(`https://infieldhub-backend.onrender.com/api/products?t=${Date.now()}`)
       .then(r => r.json())
       .then(data => setProducts(data))
       .catch(() => {})
@@ -43,6 +43,7 @@ export default function AdminProductsPage() {
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editProduct) return;
 
     const fd = new FormData();
     fd.append('name', formData.name); 
@@ -50,19 +51,14 @@ export default function AdminProductsPage() {
     fd.append('price', formData.price); 
     fd.append('size', formData.size); 
     fd.append('brand', formData.brand);
-    
-    // THE MAGIC: If editing, add the ID to the form data
-    if (editProduct) {
-      fd.append('updateId', editProduct.id);
-    } else if (parentId) {
-      fd.append('parentId', parentId);
-    }
-
+    if (parentId) fd.append('parentId', parentId);
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    // WE ARE USING THE STANDARD POST ROUTE FOR EVERYTHING NOW
-    const url = `https://infieldhub-backend.onrender.com/api/products`;
+    
+    // USING THE BRAND NEW ROUTE
+    const url = `https://infieldhub-backend.onrender.com/api/products/update/${editProduct.id}`;
+    console.log("SENDING POST TO:", url);
 
     try {
       const response = await fetch(url, {
@@ -72,15 +68,13 @@ export default function AdminProductsPage() {
       });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Status: ${response.status}`);
+        throw new Error(`Status: ${response.status}`);
       }
 
       setShowModal(false); 
       fetchProducts();
       alert('✅ Product saved successfully!');
     } catch (err: any) { 
-      console.error("SAVE ERROR:", err);
       alert('❌ Failed: ' + err.message); 
     }
   };

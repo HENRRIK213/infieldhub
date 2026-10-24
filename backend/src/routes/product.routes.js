@@ -34,55 +34,24 @@ router.get('/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// THE TROJAN HORSE ROUTE
-// It uses POST / but handles both Create and Update
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, vat, category, stock, parentId, size, brand, updateId } = req.body;
+    const { name, description, price, vat, category, stock, parentId, size, brand } = req.body;
     const imageUrl = await processImage(req.file);
-
-    let data = { 
-      name: name || 'Unnamed', 
-      description: description || '', 
-      price: parseFloat(price) || 0, 
-      vat: vat === 'true', 
-      category: category || 'Equipment', 
-      stock: parseInt(stock) || 0, 
-      size: size || null, 
-      brand: brand || null,
-      parentId: parentId || null
-    };
-    
-    if (imageUrl) data.imageUrl = imageUrl;
-
-    if (updateId) {
-      // UPDATE EXISTING
-      console.log("UPDATING PRODUCT:", updateId);
-      const product = await prisma.product.update({
-        where: { id: updateId },
-        data: data
-      });
-      res.json(product);
-    } else {
-      // CREATE NEW
-      console.log("CREATING NEW PRODUCT");
-      const product = await prisma.product.create({
-        data: { ...data, status: 'APPROVED', createdBy: req.user.id }
-      });
-      res.json(product);
-    }
-  } catch (e) { 
-    console.error("POST ERROR:", e.message);
-    res.status(500).json({ error: e.message }); 
-  }
+    const product = await prisma.product.create({
+      data: { name: name || 'Unnamed', description: description || '', price: parseFloat(price) || 0, vat: vat === 'true', category: category || 'Equipment', stock: parseInt(stock) || 0, status: 'APPROVED', imageUrl, createdBy: req.user.id, parentId: parentId || null, size: size || null, brand: brand || null },
+    });
+    res.json(product);
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Keep PUT as fallback just in case
-router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
+// BRAND NEW UPDATE ROUTE
+router.post('/update/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, vat, category, stock, size, brand } = req.body;
-    let updateData = { name, description, price: parseFloat(price), vat: vat === 'true', stock: parseInt(stock), category, size, brand };
+    const { name, description, price, size, brand } = req.body;
+    let updateData = { name, description, price: parseFloat(price), size, brand };
     if (req.file) { updateData.imageUrl = await processImage(req.file); }
+    
     const product = await prisma.product.update({ where: { id: req.params.id }, data: updateData });
     res.json(product);
   } catch (e) { res.status(500).json({ error: e.message }); }
