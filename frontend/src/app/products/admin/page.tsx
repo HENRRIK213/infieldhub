@@ -46,7 +46,7 @@ export default function AdminProductsPage() {
     if (!editProduct) return;
 
     const fd = new FormData();
-    fd.append('id', editProduct.id); // Magic key for update
+    fd.append('id', editProduct.id);
     fd.append('name', formData.name); 
     fd.append('description', formData.description || ''); 
     fd.append('price', formData.price); 
@@ -56,11 +56,13 @@ export default function AdminProductsPage() {
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    const url = `https://infieldhub-backend.onrender.com/api/products`;
+    
+    // USING THE NEW /update ENDPOINT
+    const url = `https://infieldhub-backend.onrender.com/api/products/update`;
 
     try {
       const response = await fetch(url, {
-        method: 'POST', // Using POST instead of PUT to bypass cache issues
+        method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: fd,
         cache: 'no-store'
