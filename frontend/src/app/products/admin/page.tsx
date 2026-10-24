@@ -1,6 +1,6 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
-import { api, UPLOADS_URL } from '@/lib/api';
+import { UPLOADS_URL } from '@/lib/api';
 import { useEffect, useState } from 'react';
 
 export default function AdminProductsPage() {
@@ -14,14 +14,25 @@ export default function AdminProductsPage() {
 
   const fetchProducts = () => {
     setLoading(true);
-    api.get('/products').then(r => setProducts(r.data)).catch(() => {}).finally(() => setLoading(false));
+    fetch('https://infieldhub-backend.onrender.com/api/products')
+      .then(r => r.json())
+      .then(data => setProducts(data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchProducts(); }, []);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this product?')) return;
-    try { await api.delete(`/products/${id}`); fetchProducts(); } catch (e) { alert('Failed to delete'); }
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`https://infieldhub-backend.onrender.com/api/products/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      fetchProducts();
+    } catch (e) { alert('Failed to delete'); }
   };
 
   const openEdit = (p: any) => {
@@ -32,7 +43,7 @@ export default function AdminProductsPage() {
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editProduct || !editProduct.id) return;
+    if (!editProduct) return;
 
     const fd = new FormData();
     fd.append('name', formData.name); 
@@ -44,32 +55,23 @@ export default function AdminProductsPage() {
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    
-    // USING THE NEW POST /update ENDPOINT
+    // ABSOLUTE HARDCODED POST URL
     const url = `https://infieldhub-backend.onrender.com/api/products/update/${editProduct.id}`;
-    
-    console.log("SENDING POST TO:", url);
 
     try {
       const response = await fetch(url, {
-        method: 'POST', // <--- CHANGED TO POST
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
         body: fd
       });
 
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Status ${response.status}: ${text}`);
-      }
+      if (!response.ok) throw new Error(`Status: ${response.status}`);
 
       setShowModal(false); 
       fetchProducts();
       alert('✅ Product saved successfully!');
     } catch (err: any) { 
-      console.error(err);
-      alert('❌ Failed to save: ' + err.message); 
+      alert('❌ Failed: ' + err.message); 
     }
   };
 

@@ -32,11 +32,7 @@ export default function AdminProductsPage() {
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!editProduct || !editProduct.id) {
-      alert("Error: No product selected or missing ID.");
-      return;
-    }
+    if (!editProduct || !editProduct.id) return;
 
     const fd = new FormData();
     fd.append('name', formData.name); 
@@ -48,13 +44,15 @@ export default function AdminProductsPage() {
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    const url = `https://infieldhub-backend.onrender.com/api/products/${editProduct.id}`;
     
-    console.log("SENDING PUT TO:", url);
+    // USING THE NEW POST /update ENDPOINT
+    const url = `https://infieldhub-backend.onrender.com/api/products/update/${editProduct.id}`;
+    
+    console.log("SENDING POST TO:", url);
 
     try {
       const response = await fetch(url, {
-        method: 'PUT',
+        method: 'POST', // <--- CHANGED TO POST
         headers: {
           'Authorization': `Bearer ${token}`
         },
