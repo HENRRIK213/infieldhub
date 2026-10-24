@@ -23,6 +23,18 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, []);
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this product?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`https://infieldhub-backend.onrender.com/api/products/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      fetchProducts();
+    } catch (e) { alert('Failed to delete'); }
+  };
+
   const openEdit = (p: any) => {
     setEditProduct(p);
     setFormData({ name: p.name, description: p.description || '', price: p.price, size: p.size || '', brand: p.brand || '' });
@@ -34,12 +46,13 @@ export default function AdminProductsPage() {
     if (!editProduct) return;
 
     const fd = new FormData();
-    fd.append('id', editProduct.id); // ID sent in body, NOT in URL
+    fd.append('id', editProduct.id);
     fd.append('name', formData.name); 
     fd.append('description', formData.description || ''); 
     fd.append('price', formData.price); 
     fd.append('size', formData.size); 
     fd.append('brand', formData.brand);
+    if (editProduct.parentId) fd.append('parentId', editProduct.parentId);
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
@@ -71,14 +84,21 @@ export default function AdminProductsPage() {
   return (
     <Layout requireAdmin>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginBottom: 24 }}>Product Management</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Product Management</h1>
+        </div>
 
         {loading ? <div>Loading...</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
             {products.map((main: any) => (
               <div key={main.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
                 <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid #f1f5f9', paddingBottom: 16, marginBottom: 16 }}>
-                  <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>{main.name}</h2>
+                  <div style={{ flex: 1 }}>
+                    <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0' }}>{main.name}</h2>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => handleDelete(main.id)} style={{ background: '#FEE2E2', color: '#991B1B', border: 'none', padding: '8px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>🗑️</button>
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
@@ -94,7 +114,10 @@ export default function AdminProductsPage() {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 13, fontWeight: 800, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
-                        <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>✏️ Edit</button>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>✏️</button>
+                          <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>🗑️</button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -107,7 +130,7 @@ export default function AdminProductsPage() {
 
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', width: 500, borderRadius: 12, padding: 24 }}>
+          <div style={{ background: '#fff', width: 500, borderRadius: 12, padding: 24, maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>Edit Product</h2>
             <form onSubmit={submitForm} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
