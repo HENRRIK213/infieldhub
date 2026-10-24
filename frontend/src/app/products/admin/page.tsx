@@ -23,18 +23,6 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this product?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(`https://infieldhub-backend.onrender.com/api/products/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      fetchProducts();
-    } catch (e) { alert('Failed to delete'); }
-  };
-
   const openEdit = (p: any) => {
     setEditProduct(p); setParentId(p.parentId);
     setFormData({ name: p.name, description: p.description || '', price: p.price, size: p.size || '', brand: p.brand || '' });
@@ -46,6 +34,8 @@ export default function AdminProductsPage() {
     if (!editProduct) return;
 
     const fd = new FormData();
+    // Append the ID to the form data so the backend knows to update
+    fd.append('id', editProduct.id);
     fd.append('name', formData.name); 
     fd.append('description', formData.description || ''); 
     fd.append('price', formData.price); 
@@ -55,19 +45,16 @@ export default function AdminProductsPage() {
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    const url = `https://infieldhub-backend.onrender.com/api/products/${editProduct.id}`;
+    const url = `https://infieldhub-backend.onrender.com/api/products`;
 
     try {
       const response = await fetch(url, {
-        method: 'PUT',
+        method: 'POST', // Use POST instead of PUT
         headers: { 'Authorization': `Bearer ${token}` },
         body: fd
       });
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || `Status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Status: ${response.status}`);
 
       setShowModal(false); 
       fetchProducts();
@@ -92,9 +79,6 @@ export default function AdminProductsPage() {
                   <div style={{ flex: 1 }}>
                     <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0' }}>{main.name}</h2>
                   </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => handleDelete(main.id)} style={{ background: '#FEE2E2', color: '#991B1B', border: 'none', padding: '8px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>🗑️</button>
-                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
@@ -112,7 +96,6 @@ export default function AdminProductsPage() {
                         <span style={{ fontSize: 13, fontWeight: 800, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>✏️</button>
-                          <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>🗑️</button>
                         </div>
                       </div>
                     </div>

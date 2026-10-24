@@ -45,7 +45,7 @@ export default function PublicProductsPage() {
     setSelectedSize(''); setSelectedBrand(''); setFinalChildId(''); setModalBrands([]);
     
     if (product.children && product.children.length > 0) {
-      // EXTRACT SIZES FROM CHILDREN
+      // EXTRACT SIZES FROM THE DATABASE FIELD
       const uniqueSizes = Array.from(new Set(product.children.map((c: any) => c.size).filter(Boolean))) as string[];
       setModalSizes(uniqueSizes);
     } else {
