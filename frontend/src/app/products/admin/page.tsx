@@ -1,6 +1,6 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
-import { api, UPLOADS_URL } from '@/lib/api';
+import { UPLOADS_URL } from '@/lib/api';
 import { useEffect, useState } from 'react';
 
 export default function AdminProductsPage() {
@@ -14,14 +14,25 @@ export default function AdminProductsPage() {
 
   const fetchProducts = () => {
     setLoading(true);
-    api.get('/products').then(r => setProducts(r.data)).catch(() => {}).finally(() => setLoading(false));
+    fetch('https://infieldhub-backend.onrender.com/api/products')
+      .then(r => r.json())
+      .then(data => setProducts(data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchProducts(); }, []);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this product?')) return;
-    try { await api.delete(`/products/${id}`); fetchProducts(); } catch (e) { alert('Failed to delete'); }
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`https://infieldhub-backend.onrender.com/api/products/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      fetchProducts();
+    } catch (e) { alert('Failed to delete'); }
   };
 
   const openEdit = (p: any) => {
@@ -32,11 +43,7 @@ export default function AdminProductsPage() {
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!editProduct || !editProduct.id) {
-      alert("Error: No product selected or missing ID.");
-      return;
-    }
+    if (!editProduct) return;
 
     const fd = new FormData();
     fd.append('name', formData.name); 
@@ -47,31 +54,25 @@ export default function AdminProductsPage() {
     if (parentId) fd.append('parentId', parentId);
     if (imageFile) fd.append('image', imageFile);
 
-    const token = localStorage.getItem('token');
-    const url = `https://infieldhub-backend.onrender.com/api/products/${editProduct.id}`;
-    
-    console.log("SENDING PUT TO:", url);
-
     try {
-      const response = await fetch(url, {
+      const token = localStorage.getItem('token');
+      // BULLETPROOF FETCH WITH ABSOLUTE URL
+      const response = await fetch(`https://infieldhub-backend.onrender.com/api/products/${editProduct.id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: fd
       });
 
       if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Status ${response.status}: ${text}`);
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Status: ${response.status}`);
       }
 
       setShowModal(false); 
       fetchProducts();
       alert('✅ Product saved successfully!');
     } catch (err: any) { 
-      console.error(err);
-      alert('❌ Failed to save: ' + err.message); 
+      alert('❌ Failed: ' + err.message); 
     }
   };
 
