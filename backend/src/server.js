@@ -22,6 +22,7 @@ app.use(express.json());
 // MOUNT ROUTES
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/products', require('./routes/product.routes'));
+app.use('/api/admin/products', require('./routes/admin-product.routes'));
 app.use('/api/payments', require('./routes/payment.routes'));
 app.use('/api/documents', require('./routes/document.routes'));
 
@@ -33,3 +34,4 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+
