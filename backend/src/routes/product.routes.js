@@ -45,7 +45,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// THE ROUTE THAT IS CURRENTLY MISSING ON RENDER
+// THE CRITICAL UPDATE ROUTE
 router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, vat, category, stock, size, brand } = req.body;
