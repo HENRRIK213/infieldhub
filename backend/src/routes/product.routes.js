@@ -45,7 +45,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// THE OUT-OF-THE-BOX POST UPDATE ROUTE
+// CRITICAL: POST UPDATE ROUTE
 router.post('/update/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     console.log("POST UPDATE RECEIVED FOR:", req.params.id);
@@ -60,17 +60,6 @@ router.post('/update/:id', auth, requireAdmin, upload.single('image'), async (re
     console.error("UPDATE ERROR:", e.message);
     res.status(500).json({ error: e.message }); 
   }
-});
-
-// Keep PUT as a fallback
-router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
-  try {
-    const { name, description, price, vat, category, stock, size, brand } = req.body;
-    let updateData = { name: name || 'Unnamed', description: description || '', price: parseFloat(price) || 0, vat: vat === 'true', stock: parseInt(stock) || 0, category: category || 'Equipment', size: size || null, brand: brand || null };
-    if (req.file) { updateData.imageUrl = await processImage(req.file); }
-    const product = await prisma.product.update({ where: { id: req.params.id }, data: updateData });
-    res.json(product);
-  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.delete('/:id', auth, requireAdmin, async (req, res) => {

@@ -55,7 +55,6 @@ export default function AdminProductsPage() {
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    // ABSOLUTE HARDCODED POST URL
     const url = `https://infieldhub-backend.onrender.com/api/products/update/${editProduct.id}`;
 
     try {

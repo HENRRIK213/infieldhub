@@ -11,7 +11,6 @@ export default function PublicProductsPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
-  // Modal State
   const [activeModalProduct, setActiveModalProduct] = useState<any>(null);
   const [modalSizes, setModalSizes] = useState<string[]>([]);
   const [modalBrands, setModalBrands] = useState<string[]>([]);
@@ -44,7 +43,9 @@ export default function PublicProductsPage() {
   const openOptionsModal = (product: any) => {
     setActiveModalProduct(product);
     setSelectedSize(''); setSelectedBrand(''); setFinalChildId(''); setModalBrands([]);
+    
     if (product.children && product.children.length > 0) {
+      // EXTRACT SIZES FROM CHILDREN
       const uniqueSizes = Array.from(new Set(product.children.map((c: any) => c.size).filter(Boolean))) as string[];
       setModalSizes(uniqueSizes);
     } else {
@@ -67,8 +68,6 @@ export default function PublicProductsPage() {
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: '#F8FAFC', minHeight: '100vh', paddingBottom: 80 }}>
-      
-      {/* Hero Section */}
       <div style={{ background: 'linear-gradient(135deg, #0D2B4E 0%, #1E88E5 100%)', padding: '60px 20px 80px', textAlign: 'center', color: '#fff' }}>
         <h1 style={{ fontSize: 42, fontWeight: 800, margin: '0 0 16px 0' }}>Premium Energy Solutions</h1>
         <div style={{ maxWidth: 600, margin: '0 auto', position: 'relative' }}>
@@ -77,27 +76,18 @@ export default function PublicProductsPage() {
         </div>
       </div>
 
-      {/* Products Grid */}
       <div style={{ maxWidth: 1300, margin: '-40px auto 0', padding: '0 20px', position: 'relative', zIndex: 10 }}>
         {loading ? ( <div style={{ textAlign: 'center', padding: 60, fontSize: 18 }}>Loading...</div> ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 30 }}>
             {filtered.map((p: any) => (
               <div key={p.id} style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 20px rgba(13,43,78,0.05)', border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
-                
-                {/* Admin Edit Button */}
                 {isAdmin && (
-                  <button onClick={() => router.push(`/products/admin?edit=${p.id}`)} style={{ position: 'absolute', top: 12, left: 12, background: '#FEE2E2', color: '#991B1B', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 700, cursor: 'pointer', zIndex: 10, fontSize: 11 }}>
-                    ✏️ Edit Product
-                  </button>
+                  <button onClick={() => router.push(`/products/admin?edit=${p.id}`)} style={{ position: 'absolute', top: 12, left: 12, background: '#FEE2E2', color: '#991B1B', border: 'none', padding: '6px 10px', borderRadius: 6, fontWeight: 700, cursor: 'pointer', zIndex: 10, fontSize: 11 }}>✏️ Edit Product</button>
                 )}
-
                 <div style={{ height: 220, background: '#F8FAFC', position: 'relative', borderBottom: '1px solid #F1F5F9', flexShrink: 0 }}>
-                  {p.imageUrl ? (
-                    <img src={getImageUrl(p.imageUrl)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60 }}>📦</div>}
+                  {p.imageUrl ? ( <img src={getImageUrl(p.imageUrl)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> ) : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60 }}>📦</div>}
                   <span style={{ position: 'absolute', top: 16, right: 16, background: '#DBEAFE', color: '#1E40AF', padding: '4px 12px', borderRadius: 999, fontSize: 10, fontWeight: 800 }}>{p.category}</span>
                 </div>
-
                 <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
                   <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0' }}>{p.name}</h3>
                   <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 20px 0', flex: 1 }}>{p.description}</p>
@@ -112,7 +102,6 @@ export default function PublicProductsPage() {
         )}
       </div>
 
-      {/* MODAL: Cascading Dropdowns */}
       {activeModalProduct && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,43,78,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: '#fff', width: '100%', maxWidth: 500, borderRadius: 20, padding: 30 }}>
