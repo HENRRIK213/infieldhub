@@ -55,20 +55,18 @@ export default function AdminProductsPage() {
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    
-    // USING THE BRAND NEW ROUTE
-    const url = `https://infieldhub-backend.onrender.com/api/products/update/${editProduct.id}`;
-    console.log("SENDING POST TO:", url);
+    const url = `https://infieldhub-backend.onrender.com/api/products/${editProduct.id}`;
 
     try {
       const response = await fetch(url, {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
         body: fd
       });
 
       if (!response.ok) {
-        throw new Error(`Status: ${response.status}`);
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Status: ${response.status}`);
       }
 
       setShowModal(false); 

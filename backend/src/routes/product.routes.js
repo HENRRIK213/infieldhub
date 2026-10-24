@@ -37,16 +37,14 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// NEW UNBREAKABLE UPDATE ROUTE: POST /api/products/update
-router.post('/update', auth, requireAdmin, upload.single('image'), async (req, res) => {
+// STANDARD PUT ROUTE FOR UPDATES
+router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
-    const { id, name, description, price, vat, stock, size, brand } = req.body;
-    if (!id) return res.status(400).json({ error: "Product ID is required" });
-
+    const { name, description, price, vat, stock, size, brand } = req.body;
     let updateData = { name, description, price: parseFloat(price), vat: vat === 'true', stock: parseInt(stock), size, brand };
     if (req.file) { updateData.imageUrl = await processImage(req.file); }
     
-    const product = await prisma.product.update({ where: { id }, data: updateData });
+    const product = await prisma.product.update({ where: { id: req.params.id }, data: updateData });
     res.json(product);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
