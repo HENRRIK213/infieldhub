@@ -37,14 +37,16 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// THE CRITICAL PUT ROUTE
-router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
+// NEW EXPLICIT UPDATE ROUTE
+router.post('/update', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, vat, stock, size, brand } = req.body;
+    const { id, name, description, price, vat, stock, size, brand } = req.body;
+    if (!id) return res.status(400).json({ error: "Product ID required" });
+
     let updateData = { name, description, price: parseFloat(price), vat: vat === 'true', stock: parseInt(stock), size, brand };
     if (req.file) { updateData.imageUrl = await processImage(req.file); }
     
-    const product = await prisma.product.update({ where: { id: req.params.id }, data: updateData });
+    const product = await prisma.product.update({ where: { id }, data: updateData });
     res.json(product);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
