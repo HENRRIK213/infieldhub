@@ -37,17 +37,22 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// EXPLICIT POST ROUTE FOR UPDATES
-router.post('/update', auth, requireAdmin, upload.single('image'), async (req, res) => {
+// THE CRITICAL PUT ROUTE
+router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
-    const { id, name, description, price, vat, stock, size, brand } = req.body;
-    if (!id) return res.status(400).json({ error: "Product ID required" });
-
+    const { name, description, price, vat, stock, size, brand } = req.body;
     let updateData = { name, description, price: parseFloat(price), vat: vat === 'true', stock: parseInt(stock), size, brand };
     if (req.file) { updateData.imageUrl = await processImage(req.file); }
     
-    const product = await prisma.product.update({ where: { id }, data: updateData });
+    const product = await prisma.product.update({ where: { id: req.params.id }, data: updateData });
     res.json(product);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete('/:id', auth, requireAdmin, async (req, res) => {
+  try {
+    await prisma.product.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

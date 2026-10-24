@@ -46,7 +46,6 @@ export default function AdminProductsPage() {
     if (!editProduct) return;
 
     const fd = new FormData();
-    fd.append('id', editProduct.id);
     fd.append('name', formData.name); 
     fd.append('description', formData.description || ''); 
     fd.append('price', formData.price); 
@@ -57,12 +56,12 @@ export default function AdminProductsPage() {
 
     const token = localStorage.getItem('token');
     
-    // USING THE NEW /update ENDPOINT
-    const url = `https://infieldhub-backend.onrender.com/api/products/update`;
+    // NATIVE FETCH PUT REQUEST (No Axios)
+    const url = `https://infieldhub-backend.onrender.com/api/products/${editProduct.id}`;
 
     try {
       const response = await fetch(url, {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
         body: fd,
         cache: 'no-store'
