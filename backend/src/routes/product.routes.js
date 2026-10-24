@@ -26,14 +26,6 @@ router.get('/', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.get('/:id', async (req, res) => {
-  try {
-    const product = await prisma.product.findUnique({ where: { id: req.params.id }, include: { children: true, parent: true } });
-    if (!product) return res.status(404).json({ error: 'Not found' });
-    res.json(product);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, vat, category, stock, parentId, size, brand } = req.body;
@@ -45,22 +37,17 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// BRAND NEW UPDATE ROUTE
-router.post('/update/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
+// NEW UNBREAKABLE UPDATE ROUTE: POST /api/products/update
+router.post('/update', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, size, brand } = req.body;
-    let updateData = { name, description, price: parseFloat(price), size, brand };
+    const { id, name, description, price, vat, stock, size, brand } = req.body;
+    if (!id) return res.status(400).json({ error: "Product ID is required" });
+
+    let updateData = { name, description, price: parseFloat(price), vat: vat === 'true', stock: parseInt(stock), size, brand };
     if (req.file) { updateData.imageUrl = await processImage(req.file); }
     
-    const product = await prisma.product.update({ where: { id: req.params.id }, data: updateData });
+    const product = await prisma.product.update({ where: { id }, data: updateData });
     res.json(product);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-router.delete('/:id', auth, requireAdmin, async (req, res) => {
-  try {
-    await prisma.product.delete({ where: { id: req.params.id } });
-    res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

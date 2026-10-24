@@ -13,7 +13,7 @@ const adminLinks = [
   { href: '/admin/profile', label: 'My Profile', icon: '⚙️' },
   { href: '/admin/payments', label: 'Payments', icon: '💳' },
   { href: '/admin/documents', label: 'PDF Generator', icon: '📄' },
-  { href: '/products/admin', label: 'Products', icon: '📦' }, // <-- FIXED: Goes to Admin page
+  { href: '/admin/products-new', label: 'Products', icon: '📦' }, // <-- FIXED: Goes to Admin page
   { href: '/admin/projects', label: 'Projects (Gantt)', icon: '📅' },
   { href: '/admin/documents/history', label: 'Quotations & Invoices', icon: '🧾' },
   { href: '/admin/reports', label: 'Reports', icon: '📈' },
@@ -48,3 +48,4 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     </div>
   );
 }
+
