@@ -33,8 +33,8 @@ export default function AdminProductsPage() {
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editProduct && !editProduct.id) {
-      alert("Error: Product ID is missing. Please refresh and try again.");
+    if (!editProduct || !editProduct.id) {
+      alert("Error: No product selected or missing ID.");
       return;
     }
 
@@ -47,18 +47,31 @@ export default function AdminProductsPage() {
     if (parentId) fd.append('parentId', parentId);
     if (imageFile) fd.append('image', imageFile);
 
+    const token = localStorage.getItem('token');
+    const url = `https://infieldhub-backend.onrender.com/api/products/${editProduct.id}`;
+    
+    console.log("SENDING PUT TO:", url);
+
     try {
-      if (editProduct) {
-        await api.put(`/products/${editProduct.id}`, fd);
-      } else {
-        await api.post('/products', fd);
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: fd
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Status ${response.status}: ${text}`);
       }
+
       setShowModal(false); 
       fetchProducts();
-      alert('Product saved successfully!');
+      alert('✅ Product saved successfully!');
     } catch (err: any) { 
-      console.error("Save Error:", err.response || err);
-      alert('Failed to save: ' + (err.response?.data?.error || err.message)); 
+      console.error(err);
+      alert('❌ Failed to save: ' + err.message); 
     }
   };
 
