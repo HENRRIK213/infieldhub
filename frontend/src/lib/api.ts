@@ -1,12 +1,9 @@
 ﻿import axios from 'axios';
 
-// ABSOLUTE HARDCODE: Force the frontend to always hit the Render backend
-const API_URL = 'https://infieldhub-backend.onrender.com/api';
-const BACKEND_URL = 'https://infieldhub-backend.onrender.com';
-
+// FORCED HARDCODE: Bypasses all environment variables and Vercel routing
 export const api = axios.create({
-  baseURL: API_URL,
-  timeout: 15000,
+  baseURL: 'https://infieldhub-backend.onrender.com/api',
+  timeout: 30000,
 });
 
 api.interceptors.request.use((config) => {
@@ -17,5 +14,5 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export const UPLOADS_URL = BACKEND_URL;
-export const BACKEND_URL = BACKEND_URL;
+export const UPLOADS_URL = 'https://infieldhub-backend.onrender.com';
+export const BACKEND_URL = 'https://infieldhub-backend.onrender.com';

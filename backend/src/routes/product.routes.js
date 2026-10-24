@@ -26,24 +26,14 @@ router.get('/', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// THE TROJAN HORSE: Handles BOTH Create and Update on POST /
+// POST /api/products (Handles BOTH Create and Update)
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
-    const { id, name, description, price, vat, category, stock, parentId, size, brand } = req.body;
+    // 'id' will be present if we are editing
+    const { id, name, description, price, size, brand, parentId } = req.body;
     const imageUrl = await processImage(req.file);
 
-    let data = { 
-      name: name || 'Unnamed', 
-      description: description || '', 
-      price: parseFloat(price) || 0, 
-      vat: vat === 'true', 
-      category: category || 'Equipment', 
-      stock: parseInt(stock) || 0, 
-      size: size || null, 
-      brand: brand || null,
-      parentId: parentId || null
-    };
-    
+    let data = { name, description, price: parseFloat(price), size, brand, parentId: parentId || null };
     if (imageUrl) data.imageUrl = imageUrl;
 
     if (id) {
