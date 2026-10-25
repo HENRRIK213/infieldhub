@@ -37,10 +37,11 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// EXPLICIT UPDATE ROUTE (POST to bypass cache/routing issues)
-router.post('/update', auth, requireAdmin, upload.single('image'), async (req, res) => {
+// THE TROJAN HORSE: Catch BOTH PUT /:id and POST /update
+const handleUpdate = async (req, res) => {
   try {
-    const { id, name, description, price, vat, stock, size, brand } = req.body;
+    const id = req.params.id || req.body.id;
+    const { name, description, price, vat, stock, size, brand } = req.body;
     if (!id) return res.status(400).json({ error: "Product ID required" });
 
     let updateData = { name, description, price: parseFloat(price), vat: vat === 'true', stock: parseInt(stock), size, brand };
@@ -49,7 +50,10 @@ router.post('/update', auth, requireAdmin, upload.single('image'), async (req, r
     const product = await prisma.product.update({ where: { id }, data: updateData });
     res.json(product);
   } catch (e) { res.status(500).json({ error: e.message }); }
-});
+};
+
+router.put('/:id', auth, requireAdmin, upload.single('image'), handleUpdate);
+router.post('/update', auth, requireAdmin, upload.single('image'), handleUpdate);
 
 router.delete('/:id', auth, requireAdmin, async (req, res) => {
   try {

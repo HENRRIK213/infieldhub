@@ -1,8 +1,9 @@
-import './globals.css';
+﻿import './globals.css';
+// Cache Buster: 1766456943
 
 export const metadata = {
-  title: 'InfieldHub – Integrated Stock Management',
-  description: 'Infield Engineering – Solar • Electrical • Water Solutions',
+  title: 'InfieldHub â€“ Integrated Stock Management',
+  description: 'Infield Engineering â€“ Solar â€¢ Electrical â€¢ Water Solutions',
   icons: { icon: '/logo.png', apple: '/logo.png' },
 };
 
