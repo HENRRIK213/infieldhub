@@ -13,7 +13,7 @@ export default function AdminProductsPage() {
 
   const fetchProducts = () => {
     setLoading(true);
-    // CACHE BUSTING: appending ?t=Date.now() forces a fresh fetch
+    // Cache busting to ensure we get fresh data
     fetch(`https://infieldhub-backend.onrender.com/api/products?t=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => setProducts(data))
@@ -56,8 +56,6 @@ export default function AdminProductsPage() {
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    
-    // NATIVE FETCH TO THE NEW /update ROUTE
     const url = `https://infieldhub-backend.onrender.com/api/products/update`;
 
     try {
