@@ -26,23 +26,36 @@ router.get('/', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// UPDATE ROUTE (POST to bypass any PUT restrictions)
+router.post('/', auth, upload.single('image'), async (req, res) => {
+  try {
+    const { name, description, price, vat, category, stock, parentId, size, brand } = req.body;
+    const imageUrl = await processImage(req.file);
+    const product = await prisma.product.create({
+      data: { name: name || 'Unnamed', description: description || '', price: parseFloat(price) || 0, vat: vat === 'true', category: category || 'Equipment', stock: parseInt(stock) || 0, status: 'APPROVED', imageUrl, createdBy: req.user.id, parentId: parentId || null, size: size || null, brand: brand || null },
+    });
+    res.json(product);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// THE EXPLICIT UPDATE ROUTE
 router.post('/update', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
-    const { id, name, description, price, size, brand } = req.body;
-    console.log("BACKEND RECEIVED UPDATE FOR ID:", id);
-    
+    const { id, name, description, price, vat, stock, size, brand } = req.body;
     if (!id) return res.status(400).json({ error: "Product ID required" });
 
-    let updateData = { name, description, price: parseFloat(price), size, brand };
+    let updateData = { name, description, price: parseFloat(price), vat: vat === 'true', stock: parseInt(stock), size, brand };
     if (req.file) { updateData.imageUrl = await processImage(req.file); }
     
     const product = await prisma.product.update({ where: { id }, data: updateData });
     res.json(product);
-  } catch (e) { 
-    console.error("BACKEND UPDATE ERROR:", e);
-    res.status(500).json({ error: e.message }); 
-  }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete('/:id', auth, requireAdmin, async (req, res) => {
+  try {
+    await prisma.product.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 module.exports = router;
