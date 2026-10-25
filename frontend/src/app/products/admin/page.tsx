@@ -13,7 +13,6 @@ export default function AdminProductsPage() {
 
   const fetchProducts = () => {
     setLoading(true);
-    // Cache busting to ensure we get fresh data
     fetch(`https://infieldhub-backend.onrender.com/api/products?t=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => setProducts(data))
