@@ -1,4 +1,5 @@
 ﻿import './globals.css';
+// Force Vercel Rebuild: 726486853
 // Cache Buster: 1766456943
 
 export const metadata = {
@@ -18,3 +19,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+

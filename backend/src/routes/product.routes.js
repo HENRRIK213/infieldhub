@@ -26,34 +26,42 @@ router.get('/', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// THE UNIFIED ROUTE: Handles both ADD and EDIT
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, vat, category, stock, parentId, size, brand } = req.body;
+    const { id, name, description, price, vat, category, stock, parentId, size, brand } = req.body;
     const imageUrl = await processImage(req.file);
-    const product = await prisma.product.create({
-      data: { name: name || 'Unnamed', description: description || '', price: parseFloat(price) || 0, vat: vat === 'true', category: category || 'Equipment', stock: parseInt(stock) || 0, status: 'APPROVED', imageUrl, createdBy: req.user.id, parentId: parentId || null, size: size || null, brand: brand || null },
-    });
-    res.json(product);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
 
-// THE TROJAN HORSE: Catch BOTH PUT /:id and POST /update
-const handleUpdate = async (req, res) => {
-  try {
-    const id = req.params.id || req.body.id;
-    const { name, description, price, vat, stock, size, brand } = req.body;
-    if (!id) return res.status(400).json({ error: "Product ID required" });
-
-    let updateData = { name, description, price: parseFloat(price), vat: vat === 'true', stock: parseInt(stock), size, brand };
-    if (req.file) { updateData.imageUrl = await processImage(req.file); }
+    let data = { 
+      name: name || 'Unnamed', 
+      description: description || '', 
+      price: parseFloat(price) || 0, 
+      vat: vat === 'true', 
+      category: category || 'Equipment', 
+      stock: parseInt(stock) || 0, 
+      size: size || null, 
+      brand: brand || null,
+      parentId: parentId || null
+    };
     
-    const product = await prisma.product.update({ where: { id }, data: updateData });
-    res.json(product);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-};
+    if (imageUrl) data.imageUrl = imageUrl;
 
-router.put('/:id', auth, requireAdmin, upload.single('image'), handleUpdate);
-router.post('/update', auth, requireAdmin, upload.single('image'), handleUpdate);
+    if (id) {
+      // EDIT EXISTING PRODUCT
+      const product = await prisma.product.update({ where: { id }, data });
+      res.json(product);
+    } else {
+      // ADD NEW PRODUCT
+      const product = await prisma.product.create({
+        data: { ...data, status: 'APPROVED', createdBy: req.user.id }
+      });
+      res.json(product);
+    }
+  } catch (e) { 
+    console.error("POST ERROR:", e);
+    res.status(500).json({ error: e.message }); 
+  }
+});
 
 router.delete('/:id', auth, requireAdmin, async (req, res) => {
   try {

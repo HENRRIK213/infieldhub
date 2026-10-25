@@ -31,19 +31,22 @@ export default function AdminProductsPage() {
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editProduct) return;
-
+    
     const fd = new FormData();
-    fd.append('id', editProduct.id);
+    // If we are editing, attach the ID
+    if (editProduct) fd.append('id', editProduct.id);
     fd.append('name', formData.name); 
     fd.append('description', formData.description || ''); 
     fd.append('price', formData.price); 
     fd.append('size', formData.size); 
     fd.append('brand', formData.brand);
+    if (editProduct?.parentId) fd.append('parentId', editProduct.parentId);
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    const url = `${BASE_URL}/api/products/update`;
+    
+    // USE THE STANDARD POST ROUTE FOR BOTH ADD AND EDIT
+    const url = `${BASE_URL}/api/products`;
 
     try {
       const response = await fetch(url, {
@@ -53,7 +56,10 @@ export default function AdminProductsPage() {
         cache: 'no-store'
       });
 
-      if (!response.ok) throw new Error(`Status: ${response.status}`);
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Status: ${response.status}`);
+      }
 
       setShowModal(false); 
       alert('✅ Product saved successfully! Page will now reload.');
@@ -66,14 +72,20 @@ export default function AdminProductsPage() {
   return (
     <Layout requireAdmin>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginBottom: 24 }}>Product Management</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Product Management</h1>
+        </div>
+
         {loading ? <div>Loading...</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
             {products.map((main: any) => (
               <div key={main.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
                 <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid #f1f5f9', paddingBottom: 16, marginBottom: 16 }}>
-                  <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>{main.name}</h2>
+                  <div style={{ flex: 1 }}>
+                    <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0' }}>{main.name}</h2>
+                  </div>
                 </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
                   {main.children?.map((sub: any) => (
                     <div key={sub.id} style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #e2e8f0', padding: 12 }}>
@@ -87,7 +99,9 @@ export default function AdminProductsPage() {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 13, fontWeight: 800, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
-                        <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>✏️</button>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>✏️</button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -114,6 +128,10 @@ export default function AdminProductsPage() {
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Description</label>
                 <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, minHeight: 60 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Image</label>
+                <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
                 <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, padding: 12, background: '#f1f5f9', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
