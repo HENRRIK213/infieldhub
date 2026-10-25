@@ -1,6 +1,5 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
-import { UPLOADS_URL } from '@/lib/api';
 import { useEffect, useState } from 'react';
 
 export default function AdminProductsPage() {
@@ -11,9 +10,11 @@ export default function AdminProductsPage() {
   const [formData, setFormData] = useState({ name: '', description: '', price: '', size: '', brand: '' });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  const BASE_URL = 'https://infieldhub-backend.onrender.com';
+
   const fetchProducts = () => {
     setLoading(true);
-    fetch(`https://infieldhub-backend.onrender.com/api/products?t=${Date.now()}`, { cache: 'no-store' })
+    fetch(`${BASE_URL}/api/products?t=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => setProducts(data))
       .catch(() => {})
@@ -26,7 +27,7 @@ export default function AdminProductsPage() {
     if (!confirm('Delete this product?')) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`https://infieldhub-backend.onrender.com/api/products/${id}`, {
+      await fetch(`${BASE_URL}/api/products/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -55,7 +56,7 @@ export default function AdminProductsPage() {
     if (imageFile) fd.append('image', imageFile);
 
     const token = localStorage.getItem('token');
-    const url = `https://infieldhub-backend.onrender.com/api/products/update`;
+    const url = `${BASE_URL}/api/products/update`;
 
     try {
       const response = await fetch(url, {
@@ -71,8 +72,8 @@ export default function AdminProductsPage() {
       }
 
       setShowModal(false); 
-      fetchProducts();
-      alert('✅ Product saved successfully!');
+      alert('✅ Product saved successfully! Page will now reload.');
+      window.location.reload();
     } catch (err: any) { 
       alert('❌ Failed to save: ' + err.message); 
     }
@@ -102,7 +103,7 @@ export default function AdminProductsPage() {
                   {main.children?.map((sub: any) => (
                     <div key={sub.id} style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #e2e8f0', padding: 12 }}>
                       <div style={{ height: 120, background: '#fff', borderRadius: 6, marginBottom: 12 }}>
-                        {sub.imageUrl ? <img src={sub.imageUrl.startsWith('http') ? sub.imageUrl : `${UPLOADS_URL}${sub.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <div style={{textAlign:'center', paddingTop:40, fontSize: 24}}>📦</div>}
+                        {sub.imageUrl ? <img src={sub.imageUrl.startsWith('http') ? sub.imageUrl : `${BASE_URL}${sub.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <div style={{textAlign:'center', paddingTop:40, fontSize: 24}}>📦</div>}
                       </div>
                       <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0D2B4E', margin: '0 0 4px 0' }}>{sub.name}</h3>
                       <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>

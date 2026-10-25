@@ -37,7 +37,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// EXPLICIT UPDATE ROUTE
+// EXPLICIT UPDATE ROUTE (POST to bypass cache/routing issues)
 router.post('/update', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const { id, name, description, price, vat, stock, size, brand } = req.body;

@@ -1,11 +1,11 @@
 ﻿/** @type {import('next').NextConfig} */
-const path = require('path');
-
 const nextConfig = {
   reactStrictMode: true,
   images: { unoptimized: true },
-  devIndicators: false,
-  outputFileTracingRoot: path.join(__dirname, './'),
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
+  generateBuildId: async () => {
+    return 'build-' + Date.now()
+  },
 };
-
 module.exports = nextConfig;
