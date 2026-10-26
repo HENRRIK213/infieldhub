@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// THE UNIFIED ROUTE: Handles both ADD and EDIT
+// THE MAGIC UNIFIED ROUTE
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     const { id, name, description, price, vat, category, stock, parentId, size, brand } = req.body;
@@ -47,11 +47,11 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     if (imageUrl) data.imageUrl = imageUrl;
 
     if (id) {
-      // EDIT EXISTING PRODUCT
+      // UPDATE EXISTING (Editing)
       const product = await prisma.product.update({ where: { id }, data });
       res.json(product);
     } else {
-      // ADD NEW PRODUCT
+      // CREATE NEW (Adding)
       const product = await prisma.product.create({
         data: { ...data, status: 'APPROVED', createdBy: req.user.id }
       });
