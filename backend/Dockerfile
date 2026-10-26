@@ -18,5 +18,5 @@ ENV PORT=10000
 
 EXPOSE 10000
 
-# Using semicolons ensures the server starts even if the database sync fails
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss ; node seed.js ; node src/server.js"]
+# Sync DB, try to seed, and ALWAYS start the server
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss || true; node seed.js || true; node src/server.js"]
