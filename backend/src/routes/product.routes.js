@@ -37,16 +37,33 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// EXACT PUT ROUTE FOR EDITING
+// THE CRITICAL PUT ROUTE FOR EDITING
 router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, vat, stock, size, brand } = req.body;
-    let updateData = { name, description, price: parseFloat(price), vat: vat === 'true', stock: parseInt(stock), size, brand };
-    if (req.file) { updateData.imageUrl = await processImage(req.file); }
+    let updateData = { 
+      name: name || 'Unnamed', 
+      description: description || '', 
+      price: parseFloat(price) || 0, 
+      vat: vat === 'true', 
+      stock: parseInt(stock) || 0, 
+      size: size || null, 
+      brand: brand || null 
+    };
     
-    const product = await prisma.product.update({ where: { id: req.params.id }, data: updateData });
+    if (req.file) { 
+      updateData.imageUrl = await processImage(req.file); 
+    }
+    
+    const product = await prisma.product.update({ 
+      where: { id: req.params.id }, 
+      data: updateData 
+    });
     res.json(product);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { 
+    console.error("UPDATE ERROR:", e);
+    res.status(500).json({ error: e.message }); 
+  }
 });
 
 router.delete('/:id', auth, requireAdmin, async (req, res) => {

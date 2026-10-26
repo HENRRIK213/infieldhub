@@ -44,15 +44,11 @@ export default function AdminProductsPage() {
 
     try {
       if (editProduct) {
-        // EXACT PUT REQUEST FOR EDITING
-        await api.put(`/products/${editProduct.id}`, fd, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        // THE FIX: Do NOT set 'Content-Type': 'multipart/form-data' manually.
+        // Axios automatically sets it with the correct boundary when it detects FormData.
+        await api.put(`/products/${editProduct.id}`, fd);
       } else {
-        // POST REQUEST FOR ADDING
-        await api.post('/products', fd, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await api.post('/products', fd);
       }
       
       setShowModal(false); 
