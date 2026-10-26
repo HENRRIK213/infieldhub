@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import Layout from '@/components/Layout';
 import { api, UPLOADS_URL } from '@/lib/api';
 import { useEffect, useState } from 'react';
@@ -7,17 +7,19 @@ import { useRouter } from 'next/navigation';
 export default function ProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState<any>(null); // The "Main Product"
-  const [selectedType, setSelectedType] = useState(''); // The Size/Type
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Drill-down states
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
   
   useEffect(() => {
     api.get('/products').then(r => {
-      // Only show approved items to customers
       setProducts(r.data.filter((p: any) => p.status === 'APPROVED' || !p.status));
     }).catch(() => {});
   }, []);
 
-  // Group products by their Main Category
+  // Group by Category
   const groupedProducts: { [key: string]: any[] } = {};
   products.forEach(p => {
     const cat = p.category || 'General Products';
@@ -25,88 +27,109 @@ export default function ProductsPage() {
     groupedProducts[cat].push(p);
   });
 
-  // If a group is selected, get unique types/sizes for that group
-  const availableTypes = selectedGroup 
-    ? [...new Set(groupedProducts[selectedGroup].map(p => p.type || p.size).filter(Boolean))] 
+  // Filter based on search
+  const filteredCategories = Object.keys(groupedProducts).filter(cat => 
+    cat.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    groupedProducts[cat].some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  // Get Types for selected category
+  const availableTypes = selectedCategory 
+    ? [...new Set(groupedProducts[selectedCategory].map(p => p.type || p.size).filter(Boolean))] 
     : [];
 
-  // If a type is selected, get unique brands for that type
-  const availableBrands = (selectedGroup && selectedType)
-    ? [...new Set(groupedProducts[selectedGroup].filter(p => (p.type || p.size) === selectedType).map(p => p.brand).filter(Boolean))]
+  // Get Products for selected Type
+  const finalProducts = (selectedCategory && selectedType)
+    ? groupedProducts[selectedCategory].filter(p => (p.type || p.size) === selectedType)
     : [];
 
-  // Get the final products matching the selection
-  const finalProducts = (selectedGroup && selectedType)
-    ? groupedProducts[selectedGroup].filter(p => (p.type || p.size) === selectedType)
-    : [];
-
-  const handleSelectBrand = (brandName: string) => {
-    const exactProduct = finalProducts.find(p => p.brand === brandName);
-    if (exactProduct) {
-      router.push(`/products/${exactProduct.id}`);
-    }
+  const handleSelectBrand = (productId: string) => {
+    router.push(`/products/${productId}`);
   };
 
   return (
     <Layout>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
+      <div style={{ background: '#0D2B4E', padding: '60px 20px', color: '#fff', textAlign: 'center' }}>
+        <h1 style={{ fontSize: 36, fontWeight: 900, marginBottom: 16 }}>Premium Energy Solutions</h1>
+        <p style={{ fontSize: 18, color: '#cbd5e1', marginBottom: 32 }}>Select a category to view available models and brands.</p>
         
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h1 style={{ fontSize: 32, fontWeight: 900, color: '#0D2B4E', marginBottom: 8 }}>Premium Energy Solutions</h1>
-          <p style={{ color: '#64748b', fontSize: 16 }}>Select a category to view available models and brands.</p>
+        <div style={{ maxWidth: 600, margin: '0 auto', position: 'relative' }}>
+          <input 
+            type="text" 
+            placeholder="Search products..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ width: '100%', padding: '16px 24px', borderRadius: 30, border: 'none', fontSize: 16, outline: 'none' }}
+          />
+          <span style={{ position: 'absolute', right: 24, top: 16, fontSize: 20 }}>🔍</span>
         </div>
+      </div>
 
-        {/* Main Grid */}
-        {!selectedGroup ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
-            {Object.keys(groupedProducts).map(cat => (
-              <div key={cat} onClick={() => setSelectedGroup(cat)} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 32, textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+      <div style={{ maxWidth: 1200, margin: '40px auto', padding: '0 20px' }}>
+        
+        {/* Breadcrumbs / Back Buttons */}
+        {(selectedCategory || selectedType) && (
+          <div style={{ marginBottom: 24, display: 'flex', gap: 8, fontSize: 14, fontWeight: 600, color: '#64748b' }}>
+            <span onClick={() => { setSelectedCategory(null); setSelectedType(null); }} style={{ cursor: 'pointer', color: '#1E88E5' }}>All Categories</span>
+            {selectedCategory && <span>/ {selectedCategory}</span>}
+            {selectedType && <span>/ {selectedType}</span>}
+          </div>
+        )}
+
+        {/* STEP 1: Show Categories */}
+        {!selectedCategory && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
+            {filteredCategories.map(cat => (
+              <div key={cat} onClick={() => setSelectedCategory(cat)} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 32, textAlign: 'center', cursor: 'pointer', transition: 'transform 0.2s', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>📦</div>
-                <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E' }}>{cat}</h3>
-                <p style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>{groupedProducts[cat].length} models available</p>
-                <button style={{ marginTop: 20, background: '#0D2B4E', color: '#fff', padding: '10px 24px', borderRadius: 8, fontWeight: 700, border: 'none', width: '100%' }}>View Types</button>
+                <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', marginBottom: 8 }}>{cat}</h3>
+                <p style={{ color: '#64748b', fontSize: 14 }}>{groupedProducts[cat].length} variations available</p>
+                <button style={{ marginTop: 20, background: '#1E88E5', color: '#fff', padding: '10px 24px', borderRadius: 8, fontWeight: 700, border: 'none', width: '100%' }}>View Types</button>
               </div>
             ))}
+            {filteredCategories.length === 0 && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#64748b' }}>No products found matching your search.</div>}
           </div>
-        ) : (
-          <div>
-            <button onClick={() => { setSelectedGroup(null); setSelectedType(''); }} style={{ marginBottom: 20, background: 'none', border: 'none', color: '#1E88E5', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-              ← Back to Categories
-            </button>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginBottom: 24 }}>{selectedGroup}</h2>
+        )}
 
-            {/* Step 2: Select Type/Size */}
-            {!selectedType ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
-                {availableTypes.map(t => (
-                  <div key={t} onClick={() => setSelectedType(t)} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, cursor: 'pointer', textAlign: 'center' }}>
-                    <h4 style={{ fontSize: 16, fontWeight: 700, color: '#1E88E5' }}>{t}</h4>
+        {/* STEP 2: Show Types/Sizes */}
+        {selectedCategory && !selectedType && (
+          <div>
+            <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E', marginBottom: 24 }}>{selectedCategory}</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+              {availableTypes.map(t => (
+                <div key={t} onClick={() => setSelectedType(t)} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = '#1E88E5'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                  <h4 style={{ fontSize: 18, fontWeight: 700, color: '#0D2B4E' }}>{t}</h4>
+                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Click to view brands</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: Show Brands (Final Products) */}
+        {selectedCategory && selectedType && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E' }}>{selectedType}</h2>
+              <button onClick={() => setSelectedType(null)} style={{ background: '#F1F5F9', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', color: '#0D2B4E' }}>← Change Type</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
+              {finalProducts.map(p => (
+                <div key={p.id} onClick={() => handleSelectBrand(p.id)} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  <div style={{ height: 160, background: '#F8FAFC', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {p.imageUrl ? <img src={`${UPLOADS_URL}${p.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 40 }}>📦</span>}
                   </div>
-                ))}
-              </div>
-            ) : (
-              /* Step 3: Select Brand */
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0D2B4E' }}>Select Brand for {selectedType}</h3>
-                  <button onClick={() => setSelectedType('')} style={{ background: 'none', border: 'none', color: '#1E88E5', cursor: 'pointer', fontSize: 14 }}>Change Type</button>
+                  <div>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1E88E5', textTransform: 'uppercase' }}>{p.brand}</span>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0D2B4E', marginTop: 4 }}>{p.name}</h3>
+                  </div>
+                  <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: '#0D2B4E' }}>KSH {p.price.toLocaleString()}</span>
+                    <button style={{ background: '#0D2B4E', color: '#fff', padding: '8px 16px', borderRadius: 8, fontWeight: 700, border: 'none' }}>View</button>
+                  </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                  {finalProducts.map(p => (
-                    <div key={p.id} onClick={() => router.push(`/products/${p.id}`)} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, cursor: 'pointer', display: 'flex', gap: 16, alignItems: 'center' }}>
-                      <div style={{ width: 60, height: 60, background: '#F8FAFC', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
-                        {p.imageUrl ? <img src={`${UPLOADS_URL}${p.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ textAlign: 'center', paddingTop: 16 }}>📦</div>}
-                      </div>
-                      <div>
-                        <h4 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E' }}>{p.brand || 'Generic'} {p.size}</h4>
-                        <p style={{ fontSize: 13, color: '#1E88E5', fontWeight: 700, marginTop: 4 }}>KSH {p.price.toLocaleString()}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         )}
       </div>
