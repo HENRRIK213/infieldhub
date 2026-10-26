@@ -1,4 +1,4 @@
-﻿generator client {
+generator client {
   provider = "prisma-client-js"
 }
 
@@ -7,30 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================================
-// USERS (Admin + Employee)
-// ============================================================
 model User {
-  id              String      @id @default(cuid())
-  email           String      @unique
+  id              String   @id @default(cuid())
+  email           String   @unique
   password        String
-  role            String      @default("EMPLOYEE")
+  role            String   @default("EMPLOYEE")
   name            String?
   phone           String?
   lastLogin       DateTime?
-  failedAttempts  Int         @default(0)
+  failedAttempts  Int      @default(0)
   lockedUntil     DateTime?
-  passwordHistory String[]    @default([])
-  active          Boolean     @default(true)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  passwordHistory String[] @default([])
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   logs            Log[]
   quotations      Quotation[]
 }
 
-// ============================================================
-// PRODUCTS
-// ============================================================
 model Product {
   id              String   @id @default(cuid())
   name            String
@@ -39,25 +33,17 @@ model Product {
   price           Float
   vat             Boolean  @default(false)
   category        String?
-  subCategory     String?
+  type            String?
+  brand           String?
+  size            String?
   stock           Int      @default(0)
   status          String   @default("PENDING")
   imageUrl        String?
   createdBy       String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-
-  parentId    String?
-  parent      Product?  @relation("ProductHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children    Product[] @relation("ProductHierarchy")
-
-  brand       String?
-  size        String?
 }
 
-// ============================================================
-// QUOTATIONS
-// ============================================================
 model Quotation {
   id            String   @id @default(cuid())
   serialNumber  String   @unique
@@ -76,9 +62,6 @@ model Quotation {
   updatedAt     DateTime @updatedAt
 }
 
-// ============================================================
-// CUSTOMER SHOPPING LINKS (24-hour validity)
-// ============================================================
 model CustomerLink {
   id        String   @id @default(cuid())
   token     String   @unique
@@ -88,9 +71,6 @@ model CustomerLink {
   createdAt DateTime @default(now())
 }
 
-// ============================================================
-// EMPLOYEE REGISTRATION INVITES (7-day validity)
-// ============================================================
 model EmployeeInvite {
   id        String   @id @default(cuid())
   token     String   @unique
@@ -101,9 +81,6 @@ model EmployeeInvite {
   createdAt DateTime @default(now())
 }
 
-// ============================================================
-// CUSTOMER SESSIONS (email verification + 6-hour session)
-// ============================================================
 model CustomerSession {
   id        String   @id @default(cuid())
   email     String
@@ -114,9 +91,6 @@ model CustomerSession {
   createdAt DateTime @default(now())
 }
 
-// ============================================================
-// REGISTERED CUSTOMERS (so admin can manage them)
-// ============================================================
 model Customer {
   id         String   @id @default(cuid())
   email      String   @unique
@@ -126,9 +100,6 @@ model Customer {
   createdAt  DateTime @default(now())
 }
 
-// ============================================================
-// PAYMENTS (M-Pesa STK Push)
-// ============================================================
 model Payment {
   id            String   @id @default(cuid())
   quotationId   String?
@@ -142,9 +113,6 @@ model Payment {
   updatedAt     DateTime @updatedAt
 }
 
-// ============================================================
-// ACTIVITY LOGS
-// ============================================================
 model Log {
   id        String   @id @default(cuid())
   userId    String?
@@ -158,9 +126,6 @@ model Log {
   createdAt DateTime @default(now())
 }
 
-// ============================================================
-// SECURITY ALERTS
-// ============================================================
 model SecurityAlert {
   id        String   @id @default(cuid())
   type      String
@@ -170,25 +135,8 @@ model SecurityAlert {
   createdAt DateTime @default(now())
 }
 
-// ============================================================
-// SYSTEM SETTINGS
-// ============================================================
 model SystemSetting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
 }
-model Document {
-  id          String   @id @default(cuid())
-  type        String
-  serialNo    String   @unique
-  title       String
-  clientName  String?
-  clientPhone String?
-  content     String
-  total       Float?
-  status      String   @default("DRAFT")
-  createdAt   DateTime @default(now())
-}
-
-
