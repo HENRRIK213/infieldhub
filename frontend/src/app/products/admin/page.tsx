@@ -20,10 +20,18 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  const openAdd = () => {
+  // Group products by Category (Main Product)
+  const groupedProducts: { [key: string]: any[] } = {};
+  products.forEach(p => {
+    const cat = p.category || 'General Products';
+    if (!groupedProducts[cat]) groupedProducts[cat] = [];
+    groupedProducts[cat].push(p);
+  });
+
+  const openAdd = (categoryName = '') => {
     setEditProduct(null);
     setErrorMsg('');
-    setFormData({ name: '', description: '', price: '', category: 'Water Meters', type: '', brand: 'Generic', size: '', stock: 10 });
+    setFormData({ name: '', description: '', price: '', category: categoryName, type: '', brand: 'Generic', size: '', stock: 10 });
     setImageFile(null); setShowModal(true);
   };
 
@@ -47,11 +55,6 @@ export default function AdminProductsPage() {
     setErrorMsg('');
     const fd = new FormData();
     
-    // THE CRITICAL FIX: Only send ID if we are editing
-    if (editProduct && editProduct.id) {
-      fd.append('id', editProduct.id);
-    }
-    
     fd.append('name', formData.name); 
     fd.append('description', formData.description); 
     fd.append('price', formData.price); 
@@ -63,8 +66,13 @@ export default function AdminProductsPage() {
     if (imageFile) fd.append('image', imageFile);
 
     try {
-      // Use POST for EVERYTHING to avoid 404 routing errors
-      await api.post('/products', fd);
+      if (editProduct && editProduct.id) {
+        // UPDATE EXISTING
+        await api.put(`/products/${editProduct.id}`, fd);
+      } else {
+        // CREATE NEW
+        await api.post('/products', fd);
+      }
       setShowModal(false); 
       alert('✅ Saved successfully!');
       fetchProducts();
@@ -78,39 +86,44 @@ export default function AdminProductsPage() {
       <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 40 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E' }}>Product Management</h1>
-          <button onClick={openAdd} style={{ background: '#1E88E5', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>+ Add Product</button>
+          <button onClick={() => openAdd()} style={{ background: '#1E88E5', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>+ Add Main Product</button>
         </div>
 
         {loading ? <div>Loading...</div> : (
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 14 }}>
-              <thead style={{ background: '#F8FAFC', borderBottom: '1px solid #e2e8f0' }}>
-                <tr>
-                  <th style={{ padding: '16px' }}>Product Name</th>
-                  <th>Category</th>
-                  <th>Brand</th>
-                  <th>Price</th>
-                  <th style={{ textAlign: 'right', paddingRight: 24 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((p: any) => (
-                  <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '16px', fontWeight: 600, color: '#0D2B4E', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      {p.imageUrl ? <img src={`${UPLOADS_URL}${p.imageUrl}`} style={{ width: 32, height: 32, borderRadius: 4, objectFit: 'cover' }} /> : <div style={{ width: 32, height: 32, background: '#F1F5F9', borderRadius: 4, textAlign: 'center', lineHeight: '32px' }}>📦</div>}
-                      {p.name}
-                    </td>
-                    <td>{p.category}</td>
-                    <td>{p.brand}</td>
-                    <td style={{ fontWeight: 700, color: '#1E88E5' }}>KSH {p.price.toLocaleString()}</td>
-                    <td style={{ textAlign: 'right', paddingRight: 24 }}>
-                      <button onClick={() => openEdit(p)} style={{ marginRight: 8, padding: '6px 12px', background: '#F59E0B', color: '#fff', borderRadius: 6, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Edit</button>
-                      <button onClick={() => handleDelete(p.id)} style={{ padding: '6px 12px', background: '#EF4444', color: '#fff', borderRadius: 6, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Delete</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
+            {Object.keys(groupedProducts).map(mainCategory => (
+              <div key={mainCategory} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+                
+                {/* Main Product Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: 16, marginBottom: 16 }}>
+                  <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>{mainCategory}</h2>
+                  <button onClick={() => openAdd(mainCategory)} style={{ background: '#E1F5FE', color: '#0277BD', border: 'none', padding: '6px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>+ Add Sub-Product</button>
+                </div>
+
+                {/* Sub-Products Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                  {groupedProducts[mainCategory].map(sub => (
+                    <div key={sub.id} style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #e2e8f0', padding: 16, display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ height: 120, background: '#fff', borderRadius: 6, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                        {sub.imageUrl ? <img src={`${UPLOADS_URL}${sub.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 32 }}>📦</span>}
+                      </div>
+                      <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', marginBottom: 4 }}>{sub.name}</h3>
+                      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                        {sub.size && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.size}</span>}
+                        {sub.brand && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.brand}</span>}
+                      </div>
+                      <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 16, fontWeight: 900, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Edit</button>
+                          <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', color: '#B91C1C', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>🗑️</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -128,7 +141,7 @@ export default function AdminProductsPage() {
                 <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700 }}>Category (Main Group)</label>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Main Category</label>
                 <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} placeholder="e.g. Water Meters" style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
@@ -136,12 +149,12 @@ export default function AdminProductsPage() {
                 <input required value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700 }}>Type/Model</label>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Type/Model (Optional)</label>
                 <input value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700 }}>Size/Specs</label>
-                <input value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Size/Specs (Optional)</label>
+                <input value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} placeholder="e.g. 2 inch or 1.5KW" style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Price (KSH)</label>

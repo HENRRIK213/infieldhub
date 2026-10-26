@@ -43,10 +43,6 @@ export default function ProductsPage() {
     ? groupedProducts[selectedCategory].filter(p => (p.type || p.size) === selectedType)
     : [];
 
-  const handleSelectBrand = (productId: string) => {
-    router.push(`/products/${productId}`);
-  };
-
   return (
     <Layout>
       <div style={{ background: '#0D2B4E', padding: '60px 20px', color: '#fff', textAlign: 'center' }}>
@@ -67,7 +63,7 @@ export default function ProductsPage() {
 
       <div style={{ maxWidth: 1200, margin: '40px auto', padding: '0 20px' }}>
         
-        {/* Breadcrumbs / Back Buttons */}
+        {/* Breadcrumbs */}
         {(selectedCategory || selectedType) && (
           <div style={{ marginBottom: 24, display: 'flex', gap: 8, fontSize: 14, fontWeight: 600, color: '#64748b' }}>
             <span onClick={() => { setSelectedCategory(null); setSelectedType(null); }} style={{ cursor: 'pointer', color: '#1E88E5' }}>All Categories</span>
@@ -97,7 +93,7 @@ export default function ProductsPage() {
             <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E', marginBottom: 24 }}>{selectedCategory}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
               {availableTypes.map(t => (
-                <div key={t} onClick={() => setSelectedType(t)} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = '#1E88E5'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                <div key={t} onClick={() => setSelectedType(t as string)} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = '#1E88E5'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
                   <h4 style={{ fontSize: 18, fontWeight: 700, color: '#0D2B4E' }}>{t}</h4>
                   <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Click to view brands</p>
                 </div>
@@ -115,7 +111,7 @@ export default function ProductsPage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
               {finalProducts.map(p => (
-                <div key={p.id} onClick={() => handleSelectBrand(p.id)} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                <div key={p.id} onClick={() => router.push(`/products/${p.id}`)} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                   <div style={{ height: 160, background: '#F8FAFC', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {p.imageUrl ? <img src={`${UPLOADS_URL}${p.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 40 }}>📦</span>}
                   </div>
