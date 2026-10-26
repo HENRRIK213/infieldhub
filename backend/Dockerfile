@@ -18,5 +18,5 @@ ENV PORT=10000
 
 EXPOSE 10000
 
-# The "|| true" prevents a seed failure from crashing the whole container
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && (node seed.js || true) && node src/server.js"]
+# Using semicolons ensures the server starts even if the database sync fails
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss ; node seed.js ; node src/server.js"]
