@@ -68,10 +68,8 @@ export default function AdminProductsPage() {
 
     try {
       if (editProduct && editProduct.id) {
-        // UPDATE EXISTING - Do NOT set manual headers for FormData
         await api.put(`/products/${editProduct.id}`, fd);
       } else {
-        // CREATE NEW
         await api.post('/products', fd);
       }
       setShowModal(false); 
@@ -110,6 +108,7 @@ export default function AdminProductsPage() {
                       </div>
                       <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', marginBottom: 4 }}>{sub.name}</h3>
                       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                        {sub.type && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.type}</span>}
                         {sub.size && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.size}</span>}
                         {sub.brand && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.brand}</span>}
                       </div>

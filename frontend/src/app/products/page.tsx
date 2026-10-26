@@ -10,19 +10,16 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAuthorized, setIsAuthorized] = useState(false);
   
-  // Drill-down states
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   
   useEffect(() => {
-    // SECURITY CHECK: Only allow access if Admin/Employee or if a valid link token exists
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     const urlParams = new URLSearchParams(window.location.search);
-    const hasLinkToken = urlParams.has('link'); // Assuming link generator uses ?link=xyz
+    const hasLinkToken = urlParams.has('link');
 
     if (!user || (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE')) {
       if (!hasLinkToken) {
-        // Block public access
         setIsAuthorized(false);
         return;
       }
@@ -48,7 +45,6 @@ export default function ProductsPage() {
     );
   }
 
-  // Group by Category
   const groupedProducts: { [key: string]: any[] } = {};
   products.forEach(p => {
     const cat = p.category || 'General Products';

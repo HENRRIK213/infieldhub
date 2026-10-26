@@ -19,7 +19,6 @@ async function processImage(file) {
   return '/uploads/products/' + filename;
 }
 
-// GET ALL
 router.get('/', async (req, res) => {
   try {
     const products = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
@@ -27,7 +26,6 @@ router.get('/', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// CREATE NEW
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, vat, category, type, brand, size, stock } = req.body;
@@ -44,29 +42,20 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// UPDATE EXISTING (The Save Button Fix)
 router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, vat, category, type, brand, size, stock } = req.body;
-    
     let updateData = { 
       name: name || 'Unnamed', description: description || '', price: parseFloat(price) || 0, 
       vat: vat === 'true', category: category || 'General', type: type || null,
       brand: brand || 'Generic', size: size || null, stock: parseInt(stock) || 0
     };
+    if (req.file) { updateData.imageUrl = await processImage(req.file); }
     
-    if (req.file) { 
-      updateData.imageUrl = await processImage(req.file); 
-    }
-    
-    const product = await prisma.product.update({ 
-      where: { id: req.params.id }, 
-      data: updateData 
-    });
+    const product = await prisma.product.update({ where: { id: req.params.id }, data: updateData });
     res.json(product);
   } catch (e) { 
     console.error("UPDATE ERROR:", e);
-    // Catch Prisma error P2025 (Record to update not found)
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
       return res.status(404).json({ error: 'Product no longer exists in the database. Please refresh the page.' });
     }
@@ -74,7 +63,6 @@ router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) 
   }
 });
 
-// DELETE
 router.delete('/:id', auth, requireAdmin, async (req, res) => {
   try {
     await prisma.product.delete({ where: { id: req.params.id } });
