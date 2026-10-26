@@ -10,6 +10,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAuthorized, setIsAuthorized] = useState(false);
   
+  // Drill-down states
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   
@@ -38,13 +39,14 @@ export default function ProductsPage() {
         <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 20 }}>
           <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
           <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0D2B4E', marginBottom: 10 }}>Private Catalog</h1>
-          <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>This catalog is private. Please use the secure link provided by your sales representative.</p>
+          <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>This catalog is private. Please use the secure link provided by your sales representative to view our products.</p>
           <button onClick={() => router.push('/login')} style={{ marginTop: 24, background: '#1E88E5', color: '#fff', padding: '12px 24px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Employee Login</button>
         </div>
       </Layout>
     );
   }
 
+  // Group by Category
   const groupedProducts: { [key: string]: any[] } = {};
   products.forEach(p => {
     const cat = p.category || 'General Products';
@@ -57,7 +59,6 @@ export default function ProductsPage() {
     groupedProducts[cat].some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Extract unique types for the selected category
   const availableTypes = selectedCategory 
     ? [...new Set(groupedProducts[selectedCategory].map(p => p.type).filter(Boolean))] 
     : [];
@@ -87,7 +88,6 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* STEP 1: Categories */}
         {!selectedCategory && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
             {filteredCategories.map(cat => (
@@ -101,12 +101,10 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* STEP 2: Types (Fixed logic) */}
         {selectedCategory && !selectedType && (
           <div>
             <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E', marginBottom: 24 }}>{selectedCategory}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
-              {/* FIX: If no types exist, show a direct "View All Brands" option */}
               {availableTypes.length === 0 ? (
                 <div onClick={() => setSelectedType('__ALL__')} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', textAlign: 'center' }}>
                   <h4 style={{ fontSize: 18, fontWeight: 700, color: '#0D2B4E' }}>View All Brands</h4>
@@ -124,7 +122,6 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* STEP 3: Brands / Products */}
         {selectedCategory && selectedType && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>

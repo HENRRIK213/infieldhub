@@ -4,16 +4,16 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 const masterProducts = [
-  // --- WATER METERS ---
-  { name: 'Dayliff MJ Multijet Water Meter', price: 8500, category: 'Water Meters', type: 'Multijet (MJ)', brand: 'Dayliff', size: '1/2"' },
-  { name: 'Dayliff MJ Multijet Water Meter', price: 12500, category: 'Water Meters', type: 'Multijet (MJ)', brand: 'Dayliff', size: '3/4"' },
-  { name: 'Dayliff MJ Multijet Water Meter', price: 18000, category: 'Water Meters', type: 'Multijet (MJ)', brand: 'Dayliff', size: '1"' },
-  { name: 'Dayliff WP Woltman Water Meter', price: 38000, category: 'Water Meters', type: 'Woltman (WP)', brand: 'Dayliff', size: '2"' },
-  { name: 'Dayliff WP Woltman Water Meter', price: 45000, category: 'Water Meters', type: 'Woltman (WP)', brand: 'Dayliff', size: '3"' },
+  // --- WATER METERS (Grouped by Type & Size) ---
+  { name: 'Dayliff MJ Multijet Water Meter', price: 8500, category: 'Water Meters', type: 'Multijet (MJ)', brand: 'Dayliff', size: '1/2" (DN15)' },
+  { name: 'Dayliff MJ Multijet Water Meter', price: 12500, category: 'Water Meters', type: 'Multijet (MJ)', brand: 'Dayliff', size: '3/4" (DN20)' },
+  { name: 'Dayliff MJ Multijet Water Meter', price: 18000, category: 'Water Meters', type: 'Multijet (MJ)', brand: 'Dayliff', size: '1" (DN25)' },
+  { name: 'Dayliff WP Woltman Water Meter', price: 38000, category: 'Water Meters', type: 'Woltman (WP)', brand: 'Dayliff', size: '2" (DN50)' },
+  { name: 'Dayliff WP Woltman Water Meter', price: 45000, category: 'Water Meters', type: 'Woltman (WP)', brand: 'Dayliff', size: '3" (DN80)' },
   { name: 'Baylan Volumetric Water Meter', price: 16500, category: 'Water Meters', type: 'Volumetric Piston', brand: 'Baylan', size: '2"' },
   { name: 'Diehl Woltman Water Meter', price: 52000, category: 'Water Meters', type: 'Woltman Flanged', brand: 'Diehl', size: '4"' },
 
-  // --- PUMP ENDS (Submersible) ---
+  // --- PUMP ENDS ---
   { name: 'Dayliff DSD Multistage Pump End', price: 42000, category: 'Pump Ends', type: 'DSD 3"', brand: 'Dayliff', size: '0.37KW (0.5HP)' },
   { name: 'Dayliff DSD Multistage Pump End', price: 56000, category: 'Pump Ends', type: 'DSD 3"', brand: 'Dayliff', size: '0.75KW (1.0HP)' },
   { name: 'Dayliff DSD Multistage Pump End', price: 72000, category: 'Pump Ends', type: 'DSD 3"', brand: 'Dayliff', size: '1.1KW (1.5HP)' },
