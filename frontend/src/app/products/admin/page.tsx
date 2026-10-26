@@ -9,6 +9,7 @@ export default function AdminProductsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   
   const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', type: '', brand: '', size: '', stock: 0 });
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -20,7 +21,6 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  // Group products by Category (Main Product)
   const groupedProducts: { [key: string]: any[] } = {};
   products.forEach(p => {
     const cat = p.category || 'General Products';
@@ -53,8 +53,9 @@ export default function AdminProductsPage() {
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    const fd = new FormData();
+    setIsSaving(true);
     
+    const fd = new FormData();
     fd.append('name', formData.name); 
     fd.append('description', formData.description); 
     fd.append('price', formData.price); 
@@ -67,7 +68,7 @@ export default function AdminProductsPage() {
 
     try {
       if (editProduct && editProduct.id) {
-        // UPDATE EXISTING
+        // UPDATE EXISTING - Do NOT set manual headers for FormData
         await api.put(`/products/${editProduct.id}`, fd);
       } else {
         // CREATE NEW
@@ -78,6 +79,8 @@ export default function AdminProductsPage() {
       fetchProducts();
     } catch (err: any) { 
       setErrorMsg(err.response?.data?.error || 'Failed to save. Please refresh the page.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -94,13 +97,11 @@ export default function AdminProductsPage() {
             {Object.keys(groupedProducts).map(mainCategory => (
               <div key={mainCategory} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
                 
-                {/* Main Product Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: 16, marginBottom: 16 }}>
                   <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>{mainCategory}</h2>
                   <button onClick={() => openAdd(mainCategory)} style={{ background: '#E1F5FE', color: '#0277BD', border: 'none', padding: '6px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>+ Add Sub-Product</button>
                 </div>
 
-                {/* Sub-Products Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                   {groupedProducts[mainCategory].map(sub => (
                     <div key={sub.id} style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #e2e8f0', padding: 16, display: 'flex', flexDirection: 'column' }}>
@@ -149,12 +150,12 @@ export default function AdminProductsPage() {
                 <input required value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700 }}>Type/Model (Optional)</label>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Type/Model</label>
                 <input value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700 }}>Size/Specs (Optional)</label>
-                <input value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} placeholder="e.g. 2 inch or 1.5KW" style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Size/Specs</label>
+                <input value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} placeholder="e.g. 2 inch" style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Price (KSH)</label>
@@ -173,8 +174,10 @@ export default function AdminProductsPage() {
                 <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div style={{ gridColumn: 'span 2', display: 'flex', gap: 12, marginTop: 10 }}>
-                <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, padding: 14, background: '#F1F5F9', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ flex: 1, padding: 14, background: '#1E88E5', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                <button type="button" onClick={() => setShowModal(false)} disabled={isSaving} style={{ flex: 1, padding: 14, background: '#F1F5F9', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" disabled={isSaving} style={{ flex: 1, padding: 14, background: isSaving ? '#94a3b8' : '#1E88E5', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: isSaving ? 'not-allowed' : 'pointer' }}>
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
               </div>
             </form>
           </div>

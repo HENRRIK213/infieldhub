@@ -3,7 +3,7 @@ const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient, Prisma } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 const { auth, requireAdmin } = require('../middleware/auth');
@@ -34,45 +34,25 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     const imageUrl = await processImage(req.file);
     const product = await prisma.product.create({
       data: { 
-        name: name || 'Unnamed', 
-        description: description || '', 
-        price: parseFloat(price) || 0, 
-        vat: vat === 'true', 
-        category: category || 'General', 
-        type: type || null,
-        brand: brand || 'Generic',
-        size: size || null,
-        stock: parseInt(stock) || 0,
-        status: 'APPROVED', 
-        imageUrl, 
-        createdBy: req.user.id 
+        name: name || 'Unnamed', description: description || '', price: parseFloat(price) || 0, 
+        vat: vat === 'true', category: category || 'General', type: type || null,
+        brand: brand || 'Generic', size: size || null, stock: parseInt(stock) || 0,
+        status: 'APPROVED', imageUrl, createdBy: req.user.id 
       },
     });
     res.json(product);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// UPDATE EXISTING (The 404 Fix)
+// UPDATE EXISTING (The Save Button Fix)
 router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, vat, category, type, brand, size, stock } = req.body;
     
-    // Check if product exists first
-    const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
-    if (!existing) {
-      return res.status(404).json({ error: 'Product not found. It may have been deleted. Please refresh.' });
-    }
-
     let updateData = { 
-      name: name || 'Unnamed', 
-      description: description || '', 
-      price: parseFloat(price) || 0, 
-      vat: vat === 'true', 
-      category: category || 'General', 
-      type: type || null,
-      brand: brand || 'Generic',
-      size: size || null,
-      stock: parseInt(stock) || 0
+      name: name || 'Unnamed', description: description || '', price: parseFloat(price) || 0, 
+      vat: vat === 'true', category: category || 'General', type: type || null,
+      brand: brand || 'Generic', size: size || null, stock: parseInt(stock) || 0
     };
     
     if (req.file) { 
@@ -86,6 +66,10 @@ router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) 
     res.json(product);
   } catch (e) { 
     console.error("UPDATE ERROR:", e);
+    // Catch Prisma error P2025 (Record to update not found)
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+      return res.status(404).json({ error: 'Product no longer exists in the database. Please refresh the page.' });
+    }
     res.status(500).json({ error: e.message }); 
   }
 });
