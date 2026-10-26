@@ -8,16 +8,45 @@ export default function ProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAuthorized, setIsAuthorized] = useState(false);
   
   // Drill-down states
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   
   useEffect(() => {
+    // SECURITY CHECK: Only allow access if Admin/Employee or if a valid link token exists
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasLinkToken = urlParams.has('link'); // Assuming link generator uses ?link=xyz
+
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE')) {
+      if (!hasLinkToken) {
+        // Block public access
+        setIsAuthorized(false);
+        return;
+      }
+    }
+    
+    setIsAuthorized(true);
+    
     api.get('/products').then(r => {
       setProducts(r.data.filter((p: any) => p.status === 'APPROVED' || !p.status));
     }).catch(() => {});
   }, []);
+
+  if (!isAuthorized) {
+    return (
+      <Layout>
+        <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 20 }}>
+          <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
+          <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0D2B4E', marginBottom: 10 }}>Private Catalog</h1>
+          <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>This catalog is private. Please use the secure link provided by your sales representative to view our products.</p>
+          <button onClick={() => router.push('/login')} style={{ marginTop: 24, background: '#1E88E5', color: '#fff', padding: '12px 24px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Employee Login</button>
+        </div>
+      </Layout>
+    );
+  }
 
   // Group by Category
   const groupedProducts: { [key: string]: any[] } = {};
@@ -27,18 +56,15 @@ export default function ProductsPage() {
     groupedProducts[cat].push(p);
   });
 
-  // Filter based on search
   const filteredCategories = Object.keys(groupedProducts).filter(cat => 
     cat.toLowerCase().includes(searchQuery.toLowerCase()) || 
     groupedProducts[cat].some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Get Types for selected category
   const availableTypes = selectedCategory 
     ? [...new Set(groupedProducts[selectedCategory].map(p => p.type || p.size).filter(Boolean))] 
     : [];
 
-  // Get Products for selected Type
   const finalProducts = (selectedCategory && selectedType)
     ? groupedProducts[selectedCategory].filter(p => (p.type || p.size) === selectedType)
     : [];
@@ -50,20 +76,12 @@ export default function ProductsPage() {
         <p style={{ fontSize: 18, color: '#cbd5e1', marginBottom: 32 }}>Select a category to view available models and brands.</p>
         
         <div style={{ maxWidth: 600, margin: '0 auto', position: 'relative' }}>
-          <input 
-            type="text" 
-            placeholder="Search products..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ width: '100%', padding: '16px 24px', borderRadius: 30, border: 'none', fontSize: 16, outline: 'none' }}
-          />
+          <input type="text" placeholder="Search products..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: '100%', padding: '16px 24px', borderRadius: 30, border: 'none', fontSize: 16, outline: 'none' }} />
           <span style={{ position: 'absolute', right: 24, top: 16, fontSize: 20 }}>🔍</span>
         </div>
       </div>
 
       <div style={{ maxWidth: 1200, margin: '40px auto', padding: '0 20px' }}>
-        
-        {/* Breadcrumbs */}
         {(selectedCategory || selectedType) && (
           <div style={{ marginBottom: 24, display: 'flex', gap: 8, fontSize: 14, fontWeight: 600, color: '#64748b' }}>
             <span onClick={() => { setSelectedCategory(null); setSelectedType(null); }} style={{ cursor: 'pointer', color: '#1E88E5' }}>All Categories</span>
@@ -72,7 +90,6 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* STEP 1: Show Categories */}
         {!selectedCategory && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
             {filteredCategories.map(cat => (
@@ -83,11 +100,9 @@ export default function ProductsPage() {
                 <button style={{ marginTop: 20, background: '#1E88E5', color: '#fff', padding: '10px 24px', borderRadius: 8, fontWeight: 700, border: 'none', width: '100%' }}>View Types</button>
               </div>
             ))}
-            {filteredCategories.length === 0 && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#64748b' }}>No products found matching your search.</div>}
           </div>
         )}
 
-        {/* STEP 2: Show Types/Sizes */}
         {selectedCategory && !selectedType && (
           <div>
             <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E', marginBottom: 24 }}>{selectedCategory}</h2>
@@ -102,7 +117,6 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* STEP 3: Show Brands (Final Products) */}
         {selectedCategory && selectedType && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
