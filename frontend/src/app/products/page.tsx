@@ -38,7 +38,7 @@ export default function ProductsPage() {
         <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 20 }}>
           <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
           <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0D2B4E', marginBottom: 10 }}>Private Catalog</h1>
-          <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>This catalog is private. Please use the secure link provided by your sales representative to view our products.</p>
+          <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>This catalog is private. Please use the secure link provided by your sales representative.</p>
           <button onClick={() => router.push('/login')} style={{ marginTop: 24, background: '#1E88E5', color: '#fff', padding: '12px 24px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Employee Login</button>
         </div>
       </Layout>
@@ -57,12 +57,13 @@ export default function ProductsPage() {
     groupedProducts[cat].some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  // Extract unique types for the selected category
   const availableTypes = selectedCategory 
-    ? [...new Set(groupedProducts[selectedCategory].map(p => p.type || p.size).filter(Boolean))] 
+    ? [...new Set(groupedProducts[selectedCategory].map(p => p.type).filter(Boolean))] 
     : [];
 
   const finalProducts = (selectedCategory && selectedType)
-    ? groupedProducts[selectedCategory].filter(p => (p.type || p.size) === selectedType)
+    ? groupedProducts[selectedCategory].filter(p => p.type === selectedType)
     : [];
 
   return (
@@ -86,6 +87,7 @@ export default function ProductsPage() {
           </div>
         )}
 
+        {/* STEP 1: Categories */}
         {!selectedCategory && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
             {filteredCategories.map(cat => (
@@ -99,24 +101,34 @@ export default function ProductsPage() {
           </div>
         )}
 
+        {/* STEP 2: Types (Fixed logic) */}
         {selectedCategory && !selectedType && (
           <div>
             <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E', marginBottom: 24 }}>{selectedCategory}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
-              {availableTypes.map(t => (
-                <div key={t} onClick={() => setSelectedType(t as string)} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = '#1E88E5'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
-                  <h4 style={{ fontSize: 18, fontWeight: 700, color: '#0D2B4E' }}>{t}</h4>
-                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Click to view brands</p>
+              {/* FIX: If no types exist, show a direct "View All Brands" option */}
+              {availableTypes.length === 0 ? (
+                <div onClick={() => setSelectedType('__ALL__')} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', textAlign: 'center' }}>
+                  <h4 style={{ fontSize: 18, fontWeight: 700, color: '#0D2B4E' }}>View All Brands</h4>
+                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Click to view products</p>
                 </div>
-              ))}
+              ) : (
+                availableTypes.map(t => (
+                  <div key={t} onClick={() => setSelectedType(t as string)} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = '#1E88E5'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                    <h4 style={{ fontSize: 18, fontWeight: 700, color: '#0D2B4E' }}>{t}</h4>
+                    <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Click to view brands</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
 
+        {/* STEP 3: Brands / Products */}
         {selectedCategory && selectedType && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E' }}>{selectedType}</h2>
+              <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E' }}>{selectedType === '__ALL__' ? 'All Products' : selectedType}</h2>
               <button onClick={() => setSelectedType(null)} style={{ background: '#F1F5F9', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', color: '#0D2B4E' }}>← Change Type</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>

@@ -57,7 +57,7 @@ router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) 
   } catch (e) { 
     console.error("UPDATE ERROR:", e);
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-      return res.status(404).json({ error: 'Product no longer exists in the database. Please refresh the page.' });
+      return res.status(404).json({ error: 'Product no longer exists. Please refresh.' });
     }
     res.status(500).json({ error: e.message }); 
   }
