@@ -18,5 +18,5 @@ ENV PORT=10000
 
 EXPOSE 10000
 
-# This command force-syncs the database schema and runs the seed script
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node seed.js && node src/server.js"]
+# The "|| true" prevents a seed failure from crashing the whole container
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && (node seed.js || true) && node src/server.js"]
