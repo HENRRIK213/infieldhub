@@ -26,41 +26,27 @@ router.get('/', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// THE MAGIC UNIFIED ROUTE
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
-    const { id, name, description, price, vat, category, stock, parentId, size, brand } = req.body;
+    const { name, description, price, vat, category, stock, parentId, size, brand } = req.body;
     const imageUrl = await processImage(req.file);
+    const product = await prisma.product.create({
+      data: { name: name || 'Unnamed', description: description || '', price: parseFloat(price) || 0, vat: vat === 'true', category: category || 'Equipment', stock: parseInt(stock) || 0, status: 'APPROVED', imageUrl, createdBy: req.user.id, parentId: parentId || null, size: size || null, brand: brand || null },
+    });
+    res.json(product);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
-    let data = { 
-      name: name || 'Unnamed', 
-      description: description || '', 
-      price: parseFloat(price) || 0, 
-      vat: vat === 'true', 
-      category: category || 'Equipment', 
-      stock: parseInt(stock) || 0, 
-      size: size || null, 
-      brand: brand || null,
-      parentId: parentId || null
-    };
+// EXACT PUT ROUTE FOR EDITING
+router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
+  try {
+    const { name, description, price, vat, stock, size, brand } = req.body;
+    let updateData = { name, description, price: parseFloat(price), vat: vat === 'true', stock: parseInt(stock), size, brand };
+    if (req.file) { updateData.imageUrl = await processImage(req.file); }
     
-    if (imageUrl) data.imageUrl = imageUrl;
-
-    if (id) {
-      // UPDATE EXISTING (Editing)
-      const product = await prisma.product.update({ where: { id }, data });
-      res.json(product);
-    } else {
-      // CREATE NEW (Adding)
-      const product = await prisma.product.create({
-        data: { ...data, status: 'APPROVED', createdBy: req.user.id }
-      });
-      res.json(product);
-    }
-  } catch (e) { 
-    console.error("POST ERROR:", e);
-    res.status(500).json({ error: e.message }); 
-  }
+    const product = await prisma.product.update({ where: { id: req.params.id }, data: updateData });
+    res.json(product);
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.delete('/:id', auth, requireAdmin, async (req, res) => {
