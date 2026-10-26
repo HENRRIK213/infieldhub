@@ -35,7 +35,7 @@ export default function ProductCard({ product, onClick, onEdit, isAdmin }: { pro
         <p className="text-xs text-gray-500 mb-2">{product.brand} • {product.size}</p>
         
         <div className="mt-auto flex items-center justify-between pt-2">
-          <span className="font-extrabold text-[#1E88E5]">KSH {product.price.toLocaleString()}</span>
+          <span className="font-extrabold text-[#1E88E5]">KSH {Number(product.price).toLocaleString()}</span>
           <button className="bg-[#0D2B4E] text-white text-xs px-3 py-1.5 rounded-lg">View Types</button>
         </div>
       </div>
