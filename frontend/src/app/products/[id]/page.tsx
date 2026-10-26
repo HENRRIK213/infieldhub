@@ -1,137 +1,68 @@
-﻿'use client';
+'use client';
+import Layout from '@/components/Layout';
 import { api, UPLOADS_URL } from '@/lib/api';
-import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default function ProductDetailPage() {
-  const params = useParams();
+export default function ProductDetail() {
+  const { id } = useParams();
   const router = useRouter();
   const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  
-  // Filter States
-  const [selectedSize, setSelectedSize] = useState<string>('');
-  const [sizes, setSizes] = useState<string[]>([]);
-  const [brands, setBrands] = useState<string[]>([]);
-  const [selectedBrand, setSelectedBrand] = useState<string>('');
-  const [finalProduct, setFinalProduct] = useState<any>(null);
-
-  const getImageUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    const BASE_URL = 'https://infieldhub-backend.onrender.com';
-    return `${BASE_URL}${url.startsWith('/') ? url : '/' + url}`;
-  };
 
   useEffect(() => {
-    if (params.id) {
-      api.get(`/products/${params.id}`)
-        .then(r => {
-          const p = r.data;
-          setProduct(p);
-          
-          if (p.children && p.children.length > 0) {
-            // Extract Sizes
-            const uniqueSizes = Array.from(new Set(p.children.map((c: any) => c.size).filter(Boolean))) as string[];
-            setSizes(uniqueSizes);
-          }
-        })
-        .catch((err) => console.error(err))
-        .finally(() => setLoading(false));
-    }
-  }, [params.id]);
+    api.get(`/products/${id}`)
+      .then(r => setProduct(r.data))
+      .catch(() => router.push('/products'));
+  }, [id, router]);
 
-  // When Size changes, update Brands
-  useEffect(() => {
-    if (selectedSize && product) {
-      const filtered = product.children.filter((c: any) => c.size === selectedSize);
-      const uniqueBrands = Array.from(new Set(filtered.map((c: any) => c.brand).filter(Boolean))) as string[];
-      setBrands(uniqueBrands);
-      setSelectedBrand('');
-      setFinalProduct(null);
-    }
-  }, [selectedSize, product]);
-
-  // When Brand changes, find exact product
-  useEffect(() => {
-    if (selectedSize && selectedBrand && product) {
-      const exact = product.children.find((c: any) => c.size === selectedSize && c.brand === selectedBrand);
-      setFinalProduct(exact);
-    }
-  }, [selectedBrand, selectedSize, product]);
-
-  if (loading) return <div style={{ padding: 100, textAlign: 'center' }}>Loading...</div>;
-  if (!product) return <div style={{ padding: 100, textAlign: 'center' }}>Product not found.</div>;
+  if (!product) return <Layout><div style={{ padding: 100, textAlign: 'center' }}>Loading...</div></Layout>;
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif', background: '#F8FAFC', minHeight: '100vh', paddingBottom: 80 }}>
-      <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '16px 20px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <button onClick={() => router.push('/products')} style={{ background: 'none', border: 'none', color: '#1E88E5', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>← Back to Products</button>
-        </div>
-      </div>
+    <Layout>
+      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '40px 16px' }}>
+        <button onClick={() => router.back()} style={{ marginBottom: 24, background: 'none', border: 'none', color: '#1E88E5', fontWeight: 700, cursor: 'pointer' }}>
+          ← Back to Store
+        </button>
 
-      <div style={{ maxWidth: 1000, margin: '40px auto', padding: '0 20px' }}>
-        
-        {/* Header */}
-        <div style={{ background: '#fff', padding: 40, borderRadius: 24, border: '1px solid #e2e8f0', marginBottom: 40, textAlign: 'center' }}>
-          <span style={{ background: '#DBEAFE', color: '#1E40AF', padding: '6px 16px', borderRadius: 999, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', marginBottom: 16, display: 'inline-block' }}>{product.category}</span>
-          <h1 style={{ fontSize: 38, fontWeight: 800, color: '#0D2B4E', margin: '0 0 16px 0' }}>{product.name}</h1>
-        </div>
-
-        {/* Dropdown Flow */}
-        <div style={{ background: '#fff', padding: 40, borderRadius: 24, border: '1px solid #e2e8f0', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-          
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 16, fontWeight: 800, color: '#0D2B4E', marginBottom: 12 }}>Step 1: Select Size / Type</label>
-            <select 
-              value={selectedSize} 
-              onChange={e => setSelectedSize(e.target.value)}
-              style={{ width: '100%', padding: '16px', borderRadius: 12, border: '2px solid #cbd5e1', fontSize: 16, fontWeight: 600, color: '#0D2B4E', outline: 'none', cursor: 'pointer' }}
-            >
-              <option value="">-- Choose a size --</option>
-              {sizes.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40, background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 32 }}>
+          {/* Image */}
+          <div style={{ background: '#F8FAFC', borderRadius: 12, overflow: 'hidden', height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {product.imageUrl ? (
+              <img src={`${UPLOADS_URL}${product.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            ) : (
+              <span style={{ fontSize: 80 }}>📦</span>
+            )}
           </div>
 
-          {selectedSize && (
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 16, fontWeight: 800, color: '#0D2B4E', marginBottom: 12 }}>Step 2: Select Brand / Company</label>
-              <select 
-                value={selectedBrand} 
-                onChange={e => setSelectedBrand(e.target.value)}
-                style={{ width: '100%', padding: '16px', borderRadius: 12, border: '2px solid #cbd5e1', fontSize: 16, fontWeight: 600, color: '#0D2B4E', outline: 'none', cursor: 'pointer' }}
-              >
-                <option value="">-- Choose a brand --</option>
-                {brands.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
+          {/* Details */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1E88E5', textTransform: 'uppercase', letterSpacing: 1 }}>{product.category}</div>
+            <h1 style={{ fontSize: 32, fontWeight: 900, color: '#0D2B4E', marginTop: 8, marginBottom: 16 }}>{product.name}</h1>
+            
+            <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
+              <span style={{ background: '#E1F5FE', color: '#0D2B4E', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>Brand: {product.brand}</span>
+              <span style={{ background: '#F1F5F9', color: '#475569', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>Size: {product.size}</span>
             </div>
-          )}
 
-          {finalProduct && (
-            <div style={{ marginTop: 40, borderTop: '2px dashed #e2e8f0', paddingTop: 40, display: 'flex', gap: 40, flexWrap: 'wrap' }}>
-              
-              <div style={{ width: '100%', maxWidth: 300, height: 300, background: '#F8FAFC', borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e2e8f0' }}>
-                {finalProduct.imageUrl ? (
-                  <img src={getImageUrl(finalProduct.imageUrl)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                ) : <span style={{ fontSize: 80, opacity: 0.3 }}>📦</span>}
-              </div>
-
-              <div style={{ flex: 1, minWidth: 300 }}>
-                <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0' }}>{finalProduct.name}</h2>
-                <div style={{ fontSize: 14, color: '#64748b', marginBottom: 20 }}>{finalProduct.description}</div>
-                <div style={{ fontSize: 36, fontWeight: 800, color: '#1E88E5', marginBottom: 30 }}>KSH {Number(finalProduct.price).toLocaleString()}</div>
-
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <button style={{ flex: 1, background: '#1E88E5', color: '#fff', padding: '16px', borderRadius: 8, border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>🛒 Add to Cart</button>
-                  <button style={{ flex: 1, background: '#0D2B4E', color: '#fff', padding: '16px', borderRadius: 8, border: 'none', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>🧾 Get Quote</button>
-                </div>
-              </div>
-
+            <div style={{ fontSize: 36, fontWeight: 900, color: '#0D2B4E', marginBottom: 24 }}>
+              KSH {product.price.toLocaleString()}
             </div>
-          )}
+
+            <p style={{ color: '#475569', lineHeight: 1.6, marginBottom: 32 }}>
+              {product.longDescription || product.description || 'No description available.'}
+            </p>
+
+            <div style={{ display: 'flex', gap: 16 }}>
+              <button onClick={() => router.push('/quotations')} style={{ flex: 1, padding: 16, background: '#1E88E5', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 12px rgba(30,136,229,0.3)' }}>
+                Add to Quotation
+              </button>
+              <button style={{ flex: 1, padding: 16, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 12px rgba(46,125,50,0.3)' }}>
+                Buy Now
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }

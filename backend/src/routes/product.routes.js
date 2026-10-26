@@ -7,6 +7,7 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 const { auth, requireAdmin } = require('../middleware/auth');
+const { logActivity } = require('../utils/security'); // Import logger
 
 const upload = multer({ dest: 'uploads/tmp/' });
 
@@ -38,11 +39,17 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
         imageUrl, createdBy: req.user.id 
       },
     });
+    
+    // Notify Admin if employee added it
+    if (req.user.role !== 'ADMIN') {
+      await logActivity({ userId: req.user.id, action: 'PRODUCT_ADD', interface: 'web', details: `Employee added: ${name}` });
+    }
+
     res.json(product);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) => {
+router.put('/:id', auth, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, vat, category, type, brand, size, stock } = req.body;
     let updateData = { 
@@ -52,9 +59,32 @@ router.put('/:id', auth, requireAdmin, upload.single('image'), async (req, res) 
     };
     if (req.file) updateData.imageUrl = await processImage(req.file);
     
+    // Find product first to ensure it exists
+    const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Product not found. It may have been deleted or refreshed.' });
+    }
+
+    // If Employee is editing, set to PENDING so Admin can approve
+    if (req.user.role !== 'ADMIN') {
+      updateData.status = 'PENDING';
+    }
+
     const product = await prisma.product.update({ where: { id: req.params.id }, data: updateData });
+    
+    // Log the edit for the Admin
+    await logActivity({ 
+      userId: req.user.id, 
+      action: 'PRODUCT_EDIT', 
+      interface: 'web', 
+      details: `${req.user.role} edited product: ${product.name} (ID: ${product.id})` 
+    });
+
     res.json(product);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { 
+    console.error("Update error:", e);
+    res.status(500).json({ error: e.message }); 
+  }
 });
 
 router.delete('/:id', auth, requireAdmin, async (req, res) => {
