@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 const masterProducts = [
-  // --- WATER METERS ---
+  // --- WATER METERS (11) ---
   { name: 'Dayliff MJ Multijet Water Meter', price: 8500, category: 'Water Meters', type: 'Multijet (MJ)', brand: 'Dayliff', size: '1/2"' },
   { name: 'Dayliff MJ Multijet Water Meter', price: 12500, category: 'Water Meters', type: 'Multijet (MJ)', brand: 'Dayliff', size: '3/4"' },
   { name: 'Dayliff MJ Multijet Water Meter', price: 18000, category: 'Water Meters', type: 'Multijet (MJ)', brand: 'Dayliff', size: '1"' },
@@ -17,7 +17,7 @@ const masterProducts = [
   { name: 'Diehl Woltman Flanged Water Meter', price: 50000, category: 'Water Meters', type: 'Woltman Flanged', brand: 'Diehl', size: '3"' },
   { name: 'Diehl Woltman Flanged Water Meter', price: 52000, category: 'Water Meters', type: 'Woltman Flanged', brand: 'Diehl', size: '4"' },
 
-  // --- PUMP ENDS ---
+  // --- PUMP ENDS (18) ---
   { name: 'EMPOWER DP4RFF 02/18 0.75KW PUMP END', price: 44000, category: 'Pump Ends', type: 'DP4RFF', brand: 'EMPOWER', size: '0.75KW' },
   { name: 'EMPOWER DP4RFF 02/23 1.1KW PUMP END', price: 56000, category: 'Pump Ends', type: 'DP4RFF', brand: 'EMPOWER', size: '1.1KW' },
   { name: 'EMPOWER DP4RFF 02/33 1.5KW PUMP END', price: 72000, category: 'Pump Ends', type: 'DP4RFF', brand: 'EMPOWER', size: '1.5KW' },
@@ -37,7 +37,7 @@ const masterProducts = [
   { name: 'Dayliff DSD 3" 1.1KW PUMP END', price: 72000, category: 'Pump Ends', type: 'DSD 3"', brand: 'Dayliff', size: '1.1KW' },
   { name: 'Grundfos SP 4" 2.2KW PUMP END', price: 145000, category: 'Pump Ends', type: 'SP 4"', brand: 'Grundfos', size: '2.2KW' },
 
-  // --- SUB-MOTORS ---
+  // --- SUB-MOTORS (29) ---
   { name: 'EMPOWER DSMO4 1.1KW 1PH O/F SUB-MOTOR', price: 44000, category: 'Sub-Motors', type: 'DSMO4 1PH O/F', brand: 'EMPOWER', size: '1.1KW' },
   { name: 'EMPOWER DSMO4 1.5KW 1PH O/F SUB-MOTOR', price: 50000, category: 'Sub-Motors', type: 'DSMO4 1PH O/F', brand: 'EMPOWER', size: '1.5KW' },
   { name: 'EMPOWER DSMO4 2.2KW 1PH O/F SUB-MOTOR', price: 62000, category: 'Sub-Motors', type: 'DSMO4 1PH O/F', brand: 'EMPOWER', size: '2.2KW' },
@@ -68,21 +68,21 @@ const masterProducts = [
   { name: 'VINCO 5.5KW 3PH SUB-MOTOR', price: 84000, category: 'Sub-Motors', type: '3PH Motors', brand: 'VINCO', size: '5.5KW' },
   { name: 'VINCO 7.5KW 6" 3PH SUB-MOTOR', price: 130000, category: 'Sub-Motors', type: '3PH Motors', brand: 'VINCO', size: '7.5KW' },
 
-  // --- SUBMERSIBLE CABLES ---
+  // --- SUBMERSIBLE CABLES (5) ---
   { name: '1.5MM2 4 CORE SUBMERSIBLE CABLE', price: 380, category: 'Submersible Cables', type: '4 Core', brand: 'Generic', size: '1.5MM2' },
   { name: '2.5MM2 4 CORE SUBMERSIBLE CABLE', price: 560, category: 'Submersible Cables', type: '4 Core', brand: 'Generic', size: '2.5MM2' },
   { name: '4MM2 4 CORE SUBMERSIBLE CABLE', price: 760, category: 'Submersible Cables', type: '4 Core', brand: 'Generic', size: '4MM2' },
   { name: '6MM2 4 CORE SUBMERSIBLE CABLE', price: 1160, category: 'Submersible Cables', type: '4 Core', brand: 'Generic', size: '6MM2' },
   { name: '10MM2 4 CORE SUBMERSIBLE CABLE', price: 2200, category: 'Submersible Cables', type: '4 Core', brand: 'Generic', size: '10MM2' },
 
-  // --- UPVC DROP PIPES ---
+  // --- UPVC DROP PIPES (5) ---
   { name: '1.25" UPVC 3M DROP PIPES', price: 2000, category: 'UPVC Drop Pipes', type: 'Class C (26BAR)', brand: 'Generic', size: '1.25"' },
   { name: '1.5" UPVC 3M DROP PIPES', price: 2400, category: 'UPVC Drop Pipes', type: 'Class C (26BAR)', brand: 'Generic', size: '1.5"' },
   { name: '2" UPVC 3M DROP PIPES', price: 3600, category: 'UPVC Drop Pipes', type: 'Class D (21-27BAR)', brand: 'Generic', size: '2"' },
   { name: '2.5" UPVC 3M DROP PIPES', price: 4600, category: 'UPVC Drop Pipes', type: 'Class D (21-27BAR)', brand: 'Generic', size: '2.5"' },
   { name: '3" UPVC 3M DROP PIPES', price: 7600, category: 'UPVC Drop Pipes', type: 'Class E (35BAR)', brand: 'Generic', size: '3"' },
 
-  // --- SOLAR PUMP INVERTERS ---
+  // --- SOLAR PUMP INVERTERS (7) ---
   { name: 'VEIKONG 2.2KW SOLAR PUMP INVERTER', price: 68000, category: 'Solar Pump Inverters', type: '1PH / 3PH', brand: 'VEIKONG', size: '2.2KW' },
   { name: 'VEIKONG 4KW SOLAR PUMP INVERTER', price: 84000, category: 'Solar Pump Inverters', type: '1PH / 3PH', brand: 'VEIKONG', size: '4KW' },
   { name: 'VEIKONG 5.5KW SOLAR PUMP INVERTER', price: 90000, category: 'Solar Pump Inverters', type: '1PH / 3PH', brand: 'VEIKONG', size: '5.5KW' },
@@ -91,13 +91,13 @@ const masterProducts = [
   { name: 'VEIKONG 15KW SOLAR PUMP INVERTER', price: 144000, category: 'Solar Pump Inverters', type: '1PH / 3PH', brand: 'VEIKONG', size: '15KW' },
   { name: 'VEIKONG 22KW SOLAR PUMP INVERTER', price: 210000, category: 'Solar Pump Inverters', type: '1PH / 3PH', brand: 'VEIKONG', size: '22KW' },
 
-  // --- CONTROL PANELS ---
+  // --- CONTROL PANELS (4) ---
   { name: 'EMPOWER EMP3SP 2.2KW DIGITAL CONTROL PANEL', price: 36000, category: 'Control Panels', type: 'Digital', brand: 'EMPOWER', size: 'EMP3SP 2.2KW' },
   { name: 'EMPOWER EMP7.5DOL 5.5KW DIGITAL CONTROL PANEL', price: 44000, category: 'Control Panels', type: 'Digital', brand: 'EMPOWER', size: 'EMP7.5DOL 5.5KW' },
   { name: 'EMPOWER EMP10DOL 7.5KW DIGITAL CONTROL PANEL', price: 50000, category: 'Control Panels', type: 'Digital', brand: 'EMPOWER', size: 'EMP10DOL 7.5KW' },
   { name: 'EMPOWER EMP20DOL 15KW DIGITAL CONTROL PANEL', price: 64000, category: 'Control Panels', type: 'Digital', brand: 'EMPOWER', size: 'EMP20DOL 15KW' },
 
-  // --- AC OUTPUT REACTORS ---
+  // --- AC OUTPUT REACTORS (6) ---
   { name: 'AC OUTPUT REACTOR 4KW', price: 20000, category: 'AC Output Reactors', type: '1PH / 3PH', brand: 'Generic', size: '4KW' },
   { name: 'AC OUTPUT REACTOR 5.5KW', price: 22000, category: 'AC Output Reactors', type: '1PH / 3PH', brand: 'Generic', size: '5.5KW' },
   { name: 'AC OUTPUT REACTOR 7.5KW', price: 24000, category: 'AC Output Reactors', type: '1PH / 3PH', brand: 'Generic', size: '7.5KW' },
@@ -105,32 +105,32 @@ const masterProducts = [
   { name: 'AC OUTPUT REACTOR 15KW', price: 32000, category: 'AC Output Reactors', type: '1PH / 3PH', brand: 'Generic', size: '15KW' },
   { name: 'AC OUTPUT REACTOR 22KW', price: 36000, category: 'AC Output Reactors', type: '1PH / 3PH', brand: 'Generic', size: '22KW' },
 
-  // --- PV DISCONNECTS ---
+  // --- PV DISCONNECTS (5) ---
   { name: 'PV DISCONNECT 32A', price: 12000, category: 'PV Disconnects', type: 'SISO / C/W Breaker', brand: 'Generic', size: '32A' },
   { name: 'PV DISCONNECT 16A', price: 24000, category: 'PV Disconnects', type: 'SISO / C/W Breaker', brand: 'Generic', size: '16A' },
   { name: 'PV DISCONNECT 20A', price: 25000, category: 'PV Disconnects', type: 'SISO / C/W Breaker', brand: 'Generic', size: '20A' },
   { name: 'PV DISCONNECT 40A', price: 27000, category: 'PV Disconnects', type: 'SISO / C/W Breaker', brand: 'Generic', size: '40A' },
   { name: 'PV DISCONNECT 63A', price: 30000, category: 'PV Disconnects', type: 'SISO / C/W Breaker', brand: 'Generic', size: '63A' },
 
-  // --- SURGE PROTECTORS ---
+  // --- SURGE PROTECTORS (3) ---
   { name: 'SURGE PROTECTOR 1PH/275V', price: 6000, category: 'Surge Protectors', type: 'AC / DC', brand: 'Generic', size: '1PH/275V' },
   { name: 'SURGE PROTECTOR 3PH/415V', price: 8000, category: 'Surge Protectors', type: 'AC / DC', brand: 'Generic', size: '3PH/415V' },
   { name: 'SURGE PROTECTOR 3POLE', price: 8000, category: 'Surge Protectors', type: 'AC / DC', brand: 'Generic', size: '3POLE' },
 
-  // --- NON-RETURN VALVES ---
+  // --- NON-RETURN VALVES (4) ---
   { name: '1.25" NRV', price: 3400, category: 'Non-Return Valves', type: 'Brass / Cast Iron', brand: 'Generic', size: '1.25"' },
   { name: '1.5" NRV', price: 4000, category: 'Non-Return Valves', type: 'Brass / Cast Iron', brand: 'Generic', size: '1.5"' },
   { name: '2.5" NRV', price: 5000, category: 'Non-Return Valves', type: 'Brass / Cast Iron', brand: 'Generic', size: '2.5"' },
   { name: '3" NRV', price: 11000, category: 'Non-Return Valves', type: 'Brass / Cast Iron', brand: 'Generic', size: '3"' },
 
-  // --- BOREHOLE COVERS ---
+  // --- BOREHOLE COVERS (5) ---
   { name: '1.25" BOREHOLE COVER WITH SUNDRIES', price: 14000, category: 'Borehole Covers', type: 'With Sundries', brand: 'Generic', size: '1.25"' },
   { name: '1.5" BOREHOLE COVER WITH SUNDRIES', price: 15000, category: 'Borehole Covers', type: 'With Sundries', brand: 'Generic', size: '1.5"' },
   { name: '2" BOREHOLE COVER WITH SUNDRIES', price: 17200, category: 'Borehole Covers', type: 'With Sundries', brand: 'Generic', size: '2"' },
   { name: '2.5" BOREHOLE COVER WITH SUNDRIES', price: 25600, category: 'Borehole Covers', type: 'With Sundries', brand: 'Generic', size: '2.5"' },
   { name: '3" BOREHOLE COVER WITH SUNDRIES', price: 31400, category: 'Borehole Covers', type: 'With Sundries', brand: 'Generic', size: '3"' },
 
-  // --- ACCESSORIES ---
+  // --- ACCESSORIES (5) ---
   { name: 'SPLICING KIT MM11', price: 2000, category: 'Accessories', type: 'Splicing Kit', brand: 'Generic', size: 'MM11' },
   { name: 'SPLICING KIT MM12', price: 4000, category: 'Accessories', type: 'Splicing Kit', brand: 'Generic', size: 'MM12' },
   { name: 'FLOAT SWITCH', price: 3000, category: 'Accessories', type: 'Misc', brand: 'Generic', size: 'Float Switch' },
@@ -145,23 +145,11 @@ async function main() {
   
   console.log('👤 Creating Admin and Employee accounts...');
   await prisma.user.create({
-    data: { 
-      email: 'admin@infieldhub.com', 
-      password: await bcrypt.hash('Admin@InfieldHub2020!', 10), 
-      role: 'ADMIN', 
-      name: 'Super Admin', 
-      active: true 
-    }
+    data: { email: 'admin@infieldhub.com', password: await bcrypt.hash('Admin@InfieldHub2020!', 10), role: 'ADMIN', name: 'Super Admin', active: true }
   });
 
   await prisma.user.create({
-    data: { 
-      email: 'employee@infieldhub.com', 
-      password: await bcrypt.hash('Employee@InfieldHub2020!', 10), 
-      role: 'EMPLOYEE', 
-      name: 'Sales Employee', 
-      active: true 
-    }
+    data: { email: 'employee@infieldhub.com', password: await bcrypt.hash('Employee@InfieldHub2020!', 10), role: 'EMPLOYEE', name: 'Sales Employee', active: true }
   });
 
   console.log(`📦 Adding ${masterProducts.length} exact products...`);
