@@ -8,16 +8,45 @@ export default function ProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAuthorized, setIsAuthorized] = useState(false);
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasLinkToken = urlParams.has('link');
+
+    // ALLOW ACCESS IF: Admin, Employee, Customer, OR valid link token
+    const isStaff = user && (user.role === 'ADMIN' || user.role === 'EMPLOYEE');
+    const isCustomer = user && user.role === 'CUSTOMER';
+
+    if (!isStaff && !isCustomer && !hasLinkToken) {
+      setIsAuthorized(false);
+      return;
+    }
+    
+    setIsAuthorized(true);
+    
     api.get('/products').then(r => {
       setProducts(r.data.filter((p: any) => p.status === 'APPROVED' || !p.status));
     }).catch(() => {});
   }, []);
+
+  if (!isAuthorized) {
+    return (
+      <Layout>
+        <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 20 }}>
+          <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
+          <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0D2B4E', marginBottom: 10 }}>Private Catalog</h1>
+          <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>Please use the secure link provided by your sales representative to view our products.</p>
+          <button onClick={() => router.push('/login')} style={{ marginTop: 24, background: '#1E88E5', color: '#fff', padding: '12px 24px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Staff Login</button>
+        </div>
+      </Layout>
+    );
+  }
 
   const groupedProducts: { [key: string]: any[] } = {};
   products.forEach(p => {
@@ -65,7 +94,6 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* LEVEL 1: Main Categories */}
         {!selectedCategory && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
             {filteredCategories.map(cat => (
@@ -79,7 +107,6 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* LEVEL 2: Sub-Types */}
         {selectedCategory && !selectedType && (
           <div>
             <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E', marginBottom: 24 }}>{selectedCategory} - Select Type</h2>
@@ -94,7 +121,6 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* LEVEL 3: Sizes */}
         {selectedCategory && selectedType && !selectedSize && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -111,7 +137,6 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* LEVEL 4: Brands / Exact Product Cards */}
         {selectedCategory && selectedType && selectedSize && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
