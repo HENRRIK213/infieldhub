@@ -4,16 +4,16 @@ RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Copy package files and Prisma schema first
 COPY package*.json ./
 COPY prisma ./prisma/
 
 RUN npm install --include=dev
 
-# Copy the rest of the application
 COPY . .
 
-# Generate Prisma Client AFTER the schema is in place
+# Set a dummy URL for the build phase so Prisma can generate the client
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
 RUN npx prisma generate
 
 ENV NODE_ENV=production
