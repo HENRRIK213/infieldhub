@@ -56,12 +56,10 @@ export default function ProductsPage() {
     groupedProducts[cat].some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Extract exact sub-types for the selected category
   const availableTypes = selectedCategory 
     ? [...new Set(groupedProducts[selectedCategory].map(p => p.type).filter(Boolean))] 
     : [];
 
-  // Filter final products by type
   const finalProducts = (selectedCategory && selectedType)
     ? groupedProducts[selectedCategory].filter(p => p.type === selectedType)
     : [];
@@ -114,7 +112,7 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* STEP 3: Exact Product Cards (Brands & Sizes) */}
+        {/* STEP 3: Exact Product Cards */}
         {selectedCategory && selectedType && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>

@@ -24,33 +24,27 @@ const masterProducts = [
   { name: 'EMPOWER DP4RFF 02/48 2.2KW PUMP END', price: 102000, category: 'Pump Ends', type: 'DP4RFF', brand: 'EMPOWER', size: '2.2KW' },
   { name: 'EMPOWER DP4RFF 02/65 3KW PUMP END', price: 142000, category: 'Pump Ends', type: 'DP4RFF', brand: 'EMPOWER', size: '3KW' },
   { name: 'EMPOWER DP4RFF 03/60 4KW PUMP END', price: 126600, category: 'Pump Ends', type: 'DP4RFF', brand: 'EMPOWER', size: '4KW' },
-  
   { name: 'EMPOWER DP6MFF 17/7 4KW PUMP END', price: 92000, category: 'Pump Ends', type: 'DP6MFF', brand: 'EMPOWER', size: '4KW' },
   { name: 'EMPOWER DP6MFF 17/10 5.5KW PUMP END', price: 80000, category: 'Pump Ends', type: 'DP6MFF', brand: 'EMPOWER', size: '5.5KW' },
   { name: 'EMPOWER DP6MFF 17/13 7.5KW PUMP END', price: 114600, category: 'Pump Ends', type: 'DP6MFF', brand: 'EMPOWER', size: '7.5KW' },
   { name: 'EMPOWER DP6MFF 46/7 11KW PUMP END', price: 170000, category: 'Pump Ends', type: 'DP6MFF', brand: 'EMPOWER', size: '11KW' },
   { name: 'EMPOWER DP6MFF 46/10 15KW PUMP END', price: 200000, category: 'Pump Ends', type: 'DP6MFF', brand: 'EMPOWER', size: '15KW' },
   { name: 'EMPOWER DP6MFF 46/15 22KW PUMP END', price: 220000, category: 'Pump Ends', type: 'DP6MFF', brand: 'EMPOWER', size: '22KW' },
-
   { name: 'BENAX 4SP 1/42 1.1KW PUMP END', price: 96600, category: 'Pump Ends', type: '4SP', brand: 'BENAX', size: '1.1KW' },
   { name: 'BENAX 4SP 1/57 1.5KW PUMP END', price: 124600, category: 'Pump Ends', type: '4SP', brand: 'BENAX', size: '1.5KW' },
-  
   { name: 'Dayliff DSD 3" 0.37KW PUMP END', price: 42000, category: 'Pump Ends', type: 'DSD 3"', brand: 'Dayliff', size: '0.37KW' },
   { name: 'Dayliff DSD 3" 0.75KW PUMP END', price: 56000, category: 'Pump Ends', type: 'DSD 3"', brand: 'Dayliff', size: '0.75KW' },
   { name: 'Dayliff DSD 3" 1.1KW PUMP END', price: 72000, category: 'Pump Ends', type: 'DSD 3"', brand: 'Dayliff', size: '1.1KW' },
-  
   { name: 'Grundfos SP 4" 2.2KW PUMP END', price: 145000, category: 'Pump Ends', type: 'SP 4"', brand: 'Grundfos', size: '2.2KW' },
 
   // --- SUB-MOTORS ---
   { name: 'EMPOWER DSMO4 1.1KW 1PH O/F SUB-MOTOR', price: 44000, category: 'Sub-Motors', type: 'DSMO4 1PH O/F', brand: 'EMPOWER', size: '1.1KW' },
   { name: 'EMPOWER DSMO4 1.5KW 1PH O/F SUB-MOTOR', price: 50000, category: 'Sub-Motors', type: 'DSMO4 1PH O/F', brand: 'EMPOWER', size: '1.5KW' },
   { name: 'EMPOWER DSMO4 2.2KW 1PH O/F SUB-MOTOR', price: 62000, category: 'Sub-Motors', type: 'DSMO4 1PH O/F', brand: 'EMPOWER', size: '2.2KW' },
-  
   { name: 'EMPOWER DSMO4 0.75KW 1PH W/F SUB-MOTOR', price: 42000, category: 'Sub-Motors', type: 'DSMO4 1PH W/F', brand: 'EMPOWER', size: '0.75KW' },
   { name: 'EMPOWER DSMO4 1.1KW 1PH W/F SUB-MOTOR', price: 48000, category: 'Sub-Motors', type: 'DSMO4 1PH W/F', brand: 'EMPOWER', size: '1.1KW' },
   { name: 'EMPOWER DSMO4 1.5KW 1PH W/F SUB-MOTOR', price: 52000, category: 'Sub-Motors', type: 'DSMO4 1PH W/F', brand: 'EMPOWER', size: '1.5KW' },
   { name: 'EMPOWER DSMO4 2.2KW 1PH W/F SUB-MOTOR', price: 72000, category: 'Sub-Motors', type: 'DSMO4 1PH W/F', brand: 'EMPOWER', size: '2.2KW' },
-  
   { name: 'EMPOWER DSMO4 1.1KW 3PH SUB-MOTOR', price: 56000, category: 'Sub-Motors', type: 'DSMO4 3PH', brand: 'EMPOWER', size: '1.1KW' },
   { name: 'EMPOWER DSMO4 1.5KW 3PH SUB-MOTOR', price: 58000, category: 'Sub-Motors', type: 'DSMO4 3PH', brand: 'EMPOWER', size: '1.5KW' },
   { name: 'EMPOWER DSMO4 2.2KW 3PH SUB-MOTOR', price: 70000, category: 'Sub-Motors', type: 'DSMO4 3PH', brand: 'EMPOWER', size: '2.2KW' },
@@ -58,17 +52,14 @@ const masterProducts = [
   { name: 'EMPOWER DSMO4 4KW 3PH SUB-MOTOR', price: 93000, category: 'Sub-Motors', type: 'DSMO4 3PH', brand: 'EMPOWER', size: '4KW' },
   { name: 'EMPOWER DSMO4 5.5KW 3PH SUB-MOTOR', price: 104000, category: 'Sub-Motors', type: 'DSMO4 3PH', brand: 'EMPOWER', size: '5.5KW' },
   { name: 'EMPOWER DSMO4 7.5KW 3PH SUB-MOTOR', price: 132000, category: 'Sub-Motors', type: 'DSMO4 3PH', brand: 'EMPOWER', size: '7.5KW' },
-
   { name: 'EMPOWER DSMO5/6 7.5KW 3PH SUB-MOTOR', price: 154000, category: 'Sub-Motors', type: 'DSMO5/6 3PH', brand: 'EMPOWER', size: '7.5KW' },
   { name: 'EMPOWER DSMO5/6 9.3KW 3PH SUB-MOTOR', price: 194000, category: 'Sub-Motors', type: 'DSMO5/6 3PH', brand: 'EMPOWER', size: '9.3KW' },
   { name: 'EMPOWER DSMO5/6 11KW 3PH SUB-MOTOR', price: 204000, category: 'Sub-Motors', type: 'DSMO5/6 3PH', brand: 'EMPOWER', size: '11KW' },
   { name: 'EMPOWER DSMO5/6 13KW 3PH SUB-MOTOR', price: 220600, category: 'Sub-Motors', type: 'DSMO5/6 3PH', brand: 'EMPOWER', size: '13KW' },
   { name: 'EMPOWER DSMO5/6 15KW 3PH SUB-MOTOR', price: 256800, category: 'Sub-Motors', type: 'DSMO5/6 3PH', brand: 'EMPOWER', size: '15KW' },
-
   { name: 'VINCO 1.1KW 1PH SUB-MOTOR', price: 38000, category: 'Sub-Motors', type: '1PH Motors', brand: 'VINCO', size: '1.1KW' },
   { name: 'VINCO 1.5KW 1PH SUB-MOTOR', price: 42000, category: 'Sub-Motors', type: '1PH Motors', brand: 'VINCO', size: '1.5KW' },
   { name: 'VINCO 2.2KW 1PH SUB-MOTOR', price: 48000, category: 'Sub-Motors', type: '1PH Motors', brand: 'VINCO', size: '2.2KW' },
-
   { name: 'VINCO 1.1KW 3PH SUB-MOTOR', price: 38000, category: 'Sub-Motors', type: '3PH Motors', brand: 'VINCO', size: '1.1KW' },
   { name: 'VINCO 1.5KW 3PH SUB-MOTOR', price: 43500, category: 'Sub-Motors', type: '3PH Motors', brand: 'VINCO', size: '1.5KW' },
   { name: 'VINCO 2.2KW 3PH SUB-MOTOR', price: 48000, category: 'Sub-Motors', type: '3PH Motors', brand: 'VINCO', size: '2.2KW' },
@@ -148,12 +139,29 @@ const masterProducts = [
 ];
 
 async function main() {
-  console.log('🧹 Wiping old data to enforce exact structural mapping...');
+  console.log('🧹 Wiping users and products for a clean slate...');
   await prisma.product.deleteMany({});
+  await prisma.user.deleteMany({});
   
-  await prisma.user.deleteMany({ where: { email: 'admin@infieldhub.com' } });
+  console.log('👤 Creating Admin and Employee accounts...');
   await prisma.user.create({
-    data: { email: 'admin@infieldhub.com', password: await bcrypt.hash('Admin@InfieldHub2020!', 10), role: 'ADMIN', name: 'Super Admin', active: true }
+    data: { 
+      email: 'admin@infieldhub.com', 
+      password: await bcrypt.hash('Admin@InfieldHub2020!', 10), 
+      role: 'ADMIN', 
+      name: 'Super Admin', 
+      active: true 
+    }
+  });
+
+  await prisma.user.create({
+    data: { 
+      email: 'employee@infieldhub.com', 
+      password: await bcrypt.hash('Employee@InfieldHub2020!', 10), 
+      role: 'EMPLOYEE', 
+      name: 'Sales Employee', 
+      active: true 
+    }
   });
 
   console.log(`📦 Adding ${masterProducts.length} exact products...`);
