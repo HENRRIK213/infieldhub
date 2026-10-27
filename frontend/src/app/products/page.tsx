@@ -8,42 +8,19 @@ export default function ProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
   
+  // 4-Level Drill Down States
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasLinkToken = urlParams.has('link');
-
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE')) {
-      if (!hasLinkToken) {
-        setIsAuthorized(false);
-        return;
-      }
-    }
-    
-    setIsAuthorized(true);
-    
     api.get('/products').then(r => {
       setProducts(r.data.filter((p: any) => p.status === 'APPROVED' || !p.status));
     }).catch(() => {});
   }, []);
 
-  if (!isAuthorized) {
-    return (
-      <Layout>
-        <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 20 }}>
-          <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
-          <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0D2B4E', marginBottom: 10 }}>Private Catalog</h1>
-          <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>Please use the secure link provided by your sales representative to view our products.</p>
-        </div>
-      </Layout>
-    );
-  }
-
+  // Group by Category
   const groupedProducts: { [key: string]: any[] } = {};
   products.forEach(p => {
     const cat = p.category || 'General Products';
@@ -56,12 +33,21 @@ export default function ProductsPage() {
     groupedProducts[cat].some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  // 1. Get Types for selected category
   const availableTypes = selectedCategory 
     ? [...new Set(groupedProducts[selectedCategory].map(p => p.type).filter(Boolean))] 
     : [];
 
-  const finalProducts = (selectedCategory && selectedType)
-    ? groupedProducts[selectedCategory].filter(p => p.type === selectedType)
+  // 2. Get Sizes for selected type
+  const availableSizes = (selectedCategory && selectedType)
+    ? [...new Set(groupedProducts[selectedCategory]
+        .filter(p => p.type === selectedType)
+        .map(p => p.size).filter(Boolean))]
+    : [];
+
+  // 3. Get Final Products (Brands) for selected size
+  const finalProducts = (selectedCategory && selectedType && selectedSize)
+    ? groupedProducts[selectedCategory].filter(p => p.type === selectedType && p.size === selectedSize)
     : [];
 
   return (
@@ -75,11 +61,14 @@ export default function ProductsPage() {
       </div>
 
       <div style={{ maxWidth: 1200, margin: '40px auto', padding: '0 20px' }}>
-        {(selectedCategory || selectedType) && (
+        
+        {/* Breadcrumb Navigation */}
+        {(selectedCategory || selectedType || selectedSize) && (
           <div style={{ marginBottom: 24, display: 'flex', gap: 8, fontSize: 14, fontWeight: 600, color: '#64748b' }}>
-            <span onClick={() => { setSelectedCategory(null); setSelectedType(null); }} style={{ cursor: 'pointer', color: '#1E88E5' }}>All Categories</span>
+            <span onClick={() => { setSelectedCategory(null); setSelectedType(null); setSelectedSize(null); }} style={{ cursor: 'pointer', color: '#1E88E5' }}>All Categories</span>
             {selectedCategory && <span>/ {selectedCategory}</span>}
-            {selectedType && <span>/ {selectedType}</span>}
+            {selectedType && <span onClick={() => { setSelectedType(null); setSelectedSize(null); }} style={{ cursor: 'pointer', color: '#1E88E5' }}>/ {selectedType}</span>}
+            {selectedSize && <span>/ {selectedSize}</span>}
           </div>
         )}
 
@@ -105,19 +94,37 @@ export default function ProductsPage() {
               {availableTypes.map(t => (
                 <div key={t} onClick={() => setSelectedType(t as string)} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', textAlign: 'center' }}>
                   <h4 style={{ fontSize: 18, fontWeight: 700, color: '#0D2B4E' }}>{t}</h4>
-                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Click to view exact models</p>
+                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Click to view sizes</p>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* STEP 3: Exact Product Cards */}
-        {selectedCategory && selectedType && (
+        {/* STEP 3: Sizes */}
+        {selectedCategory && selectedType && !selectedSize && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E' }}>{selectedType}</h2>
               <button onClick={() => setSelectedType(null)} style={{ background: '#F1F5F9', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', color: '#0D2B4E' }}>← Change Type</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+              {availableSizes.map(s => (
+                <div key={s} onClick={() => setSelectedSize(s as string)} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', textAlign: 'center' }}>
+                  <h4 style={{ fontSize: 18, fontWeight: 700, color: '#0D2B4E' }}>{s}</h4>
+                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Click to view brands</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: Brands -> Click to view single product */}
+        {selectedCategory && selectedType && selectedSize && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E' }}>{selectedSize} Brands</h2>
+              <button onClick={() => setSelectedSize(null)} style={{ background: '#F1F5F9', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', color: '#0D2B4E' }}>← Change Size</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
               {finalProducts.map(p => (
@@ -127,11 +134,11 @@ export default function ProductsPage() {
                   </div>
                   <div>
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#1E88E5', textTransform: 'uppercase' }}>{p.brand}</span>
-                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0D2B4E', marginTop: 4 }}>{p.size}</h3>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0D2B4E', marginTop: 4 }}>{p.name}</h3>
                   </div>
                   <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 18, fontWeight: 900, color: '#0D2B4E' }}>KSH {p.price.toLocaleString()}</span>
-                    <button style={{ background: '#0D2B4E', color: '#fff', padding: '8px 16px', borderRadius: 8, fontWeight: 700, border: 'none' }}>View</button>
+                    <button style={{ background: '#0D2B4E', color: '#fff', padding: '8px 16px', borderRadius: 8, fontWeight: 700, border: 'none' }}>Select</button>
                   </div>
                 </div>
               ))}
