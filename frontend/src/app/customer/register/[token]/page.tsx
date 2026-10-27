@@ -14,9 +14,7 @@ export default function CustomerRegister() {
     setLoading(true);
     setError('');
     try {
-      // Calls the backend API to create the user and send the email
       await api.post('/auth/register', formData);
-      // Redirects to the verify page, passing the email as a query parameter
       router.push(`/customer/verify?email=${encodeURIComponent(formData.email)}`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
