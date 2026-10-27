@@ -19,7 +19,6 @@ export default function ProductsPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const hasLinkToken = urlParams.has('link');
 
-    // ALLOW ACCESS IF: Admin, Employee, Customer, OR valid link token
     const isStaff = user && (user.role === 'ADMIN' || user.role === 'EMPLOYEE');
     const isCustomer = user && user.role === 'CUSTOMER';
 
