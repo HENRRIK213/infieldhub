@@ -56,7 +56,7 @@ export default function ProductsPage() {
     groupedProducts[cat].some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Extract types for the selected category
+  // Extract exact sub-types for the selected category
   const availableTypes = selectedCategory 
     ? [...new Set(groupedProducts[selectedCategory].map(p => p.type).filter(Boolean))] 
     : [];
@@ -107,14 +107,14 @@ export default function ProductsPage() {
               {availableTypes.map(t => (
                 <div key={t} onClick={() => setSelectedType(t as string)} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', textAlign: 'center' }}>
                   <h4 style={{ fontSize: 18, fontWeight: 700, color: '#0D2B4E' }}>{t}</h4>
-                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Click to view brands</p>
+                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Click to view exact models</p>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* STEP 3: Exact Product Cards */}
+        {/* STEP 3: Exact Product Cards (Brands & Sizes) */}
         {selectedCategory && selectedType && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
