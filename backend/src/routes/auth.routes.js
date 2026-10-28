@@ -26,10 +26,8 @@ router.post('/register', async (req, res) => {
       }
     });
 
-    // Send the email
     await sendVerificationEmail(email, verificationCode);
-
-    res.status(201).json({ message: 'Registration successful. Check your email for the code.', email: user.email });
+    res.status(201).json({ message: 'Registration successful. Check your email.', email: user.email });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Server error during registration' });
@@ -51,10 +49,11 @@ router.post('/verify', async (req, res) => {
       data: { isVerified: true, verificationCode: null, verificationCodeExpires: null }
     });
 
+    // EXACTLY 6 HOURS EXPIRY
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET || 'fallback_secret_key',
-      { expiresIn: '24h' }
+      { expiresIn: '6h' }
     );
 
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
@@ -74,10 +73,11 @@ router.post('/login', async (req, res) => {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
 
+    // EXACTLY 6 HOURS EXPIRY
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET || 'fallback_secret_key',
-      { expiresIn: '24h' }
+      { expiresIn: '6h' }
     );
 
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });

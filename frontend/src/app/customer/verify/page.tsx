@@ -19,6 +19,7 @@ function VerifyForm() {
       const res = await api.post('/auth/verify', { email, code });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      localStorage.setItem('loginTime', Date.now().toString());
       router.push('/products');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Verification failed');

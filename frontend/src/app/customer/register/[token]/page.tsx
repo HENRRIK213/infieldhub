@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 
 export default function CustomerPortal() {
   const router = useRouter();
-  const [isLogin, setIsLogin] = useState(false); // Toggle between Login and Register
+  const [isLogin, setIsLogin] = useState(false); 
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,13 +17,12 @@ export default function CustomerPortal() {
     
     try {
       if (isLogin) {
-        // LOGIN FLOW
         const res = await api.post('/auth/login', { email: formData.email, password: formData.password });
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('user', JSON.stringify(res.data.user));
+        localStorage.setItem('loginTime', Date.now().toString()); // Track time for 6hr logout
         router.push('/products');
       } else {
-        // REGISTRATION FLOW
         await api.post('/auth/register', formData);
         router.push(`/customer/verify?email=${encodeURIComponent(formData.email)}`);
       }
