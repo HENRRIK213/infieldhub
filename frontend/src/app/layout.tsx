@@ -5,6 +5,13 @@ import './globals.css';
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
+export const metadata = {
+  title: 'InfieldHub | Integrated Stock Management',
+  description: 'Solar, Electrical, and Water solutions management system.',
+  icons: {
+    icon: '/icon.png', // Forces Next.js to use the icon in the app folder
+  },
+};
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -46,5 +53,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
 
 
