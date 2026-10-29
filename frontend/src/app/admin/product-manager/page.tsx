@@ -11,7 +11,9 @@ export default function AdminProductManager() {
   const [editProduct, setEditProduct] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   
-  const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', type: '', brand: '', size: '', stock: 0 });
+  const [formData, setFormData] = useState({ 
+    name: '', description: '', price: '', category: '', type: '', brand: '', size: '', stock: 0 
+  });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const fetchProducts = () => {
@@ -21,7 +23,7 @@ export default function AdminProductManager() {
       .then(r => setProducts(r.data))
       .catch((err) => {
         console.error(err);
-        setErrorMsg('Failed to load products. The server might be waking up. Please wait a minute and refresh.');
+        setErrorMsg('Failed to load products. The backend might be waking up. Please wait a minute and refresh.');
       })
       .finally(() => setLoading(false));
   };
@@ -44,8 +46,14 @@ export default function AdminProductManager() {
   const openEdit = (p: any) => {
     setEditProduct(p);
     setFormData({ 
-      name: p.name, description: p.description || '', price: String(p.price), 
-      category: p.category || '', type: p.type || '', brand: p.brand || '', size: p.size || '', stock: p.stock || 0 
+      name: p.name, 
+      description: p.description || '', 
+      price: String(p.price), 
+      category: p.category || '', 
+      type: p.type || '', 
+      brand: p.brand || '', 
+      size: p.size || '', 
+      stock: Number(p.stock) || 0 
     });
     setImageFile(null); setShowModal(true);
   };
@@ -97,8 +105,8 @@ export default function AdminProductManager() {
       <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 40 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           
-          {/* EXACT FIX: Removed the word (New) */}
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E' }}>Product Manager</h1>
+          {/* The word (New) is completely removed here */}
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Product Manager</h1>
           
           <button onClick={() => openAdd()} style={{ background: '#1E88E5', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>+ Add Main Product</button>
         </div>
@@ -126,7 +134,7 @@ export default function AdminProductManager() {
                   {groupedProducts[mainCategory].map(sub => (
                     <div key={sub.id} style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #e2e8f0', padding: 16, display: 'flex', flexDirection: 'column' }}>
                       <div style={{ height: 120, background: '#fff', borderRadius: 6, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                        {sub.imageUrl ? <img src={`${UPLOADS_URL}${sub.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 32 }}>📦</span>}
+                        {sub.imageUrl ? <img src={`${UPLOADS_URL}${sub.imageUrl}`} alt={sub.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 32 }}>📦</span>}
                       </div>
                       <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', marginBottom: 4 }}>{sub.name}</h3>
                       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
@@ -135,14 +143,13 @@ export default function AdminProductManager() {
                         {sub.brand && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.brand}</span>}
                       </div>
                       <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 16, fontWeight: 900, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
+                        {/* Safe Price Formatting */}
+                        <span style={{ fontSize: 16, fontWeight: 900, color: '#1E88E5' }}>KSH {Number(sub.price || 0).toLocaleString()}</span>
                         
-                        {/* ADMIN EDIT AND DELETE BUTTONS */}
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>✏️ Edit</button>
                           <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', color: '#B91C1C', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>🗑️</button>
                         </div>
-                        
                       </div>
                     </div>
                   ))}
@@ -153,7 +160,6 @@ export default function AdminProductManager() {
         )}
       </div>
 
-      {/* EDIT/ADD MODAL */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,43,78,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', width: 600, borderRadius: 16, padding: 32, maxHeight: '90vh', overflowY: 'auto' }}>
