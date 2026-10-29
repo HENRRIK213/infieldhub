@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
@@ -8,40 +8,52 @@ const prisma = new PrismaClient();
 
 const generateCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-router.post('/register', async (req, res) => {
+// 1. Customer Requests Code via Email
+router.post('/customer-request-code', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    let user = await prisma.user.findUnique({ where: { email } });
     
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) return res.status(400).json({ error: 'Email already registered' });
+    // If user doesn't exist, create them as a CUSTOMER with a random password
+    if (!user) {
+      const randomPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
+      user = await prisma.user.create({
+        data: {
+          email,
+          password: randomPassword,
+          role: 'CUSTOMER',
+          name: email.split('@')[0], // Default name
+          isVerified: false
+        }
+      });
+    }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationCode = generateCode();
-    const codeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+    const code = generateCode();
+    const codeExpires = new Date(Date.now() + 15 * 60 * 1000);
 
-    const user = await prisma.user.create({
-      data: {
-        name, email, password: hashedPassword, role: 'CUSTOMER',
-        verificationCode, verificationCodeExpires: codeExpires, isVerified: false
-      }
+    await prisma.user.update({
+      where: { email },
+      data: { verificationCode: code, verificationCodeExpires: codeExpires, isVerified: false }
     });
 
-    await sendVerificationEmail(email, verificationCode);
-    res.status(201).json({ message: 'Registration successful. Check your email.', email: user.email });
+    await sendVerificationEmail(email, code);
+    res.json({ message: 'Code sent to email', email });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Server error during registration' });
+    res.status(500).json({ error: 'Server error sending code' });
   }
 });
 
-router.post('/verify', async (req, res) => {
+// 2. Customer Verifies Code (Logs them in)
+router.post('/customer-verify-code', async (req, res) => {
   try {
     const { email, code } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) return res.status(404).json({ error: 'User not found' });
-    if (user.isVerified) return res.status(400).json({ error: 'User already verified' });
-    if (user.verificationCode !== code) return res.status(400).json({ error: 'Invalid verification code' });
+    if (user.verificationCode !== code) return res.status(400).json({ error: 'Invalid code' });
     if (user.verificationCodeExpires < new Date()) return res.status(400).json({ error: 'Code expired' });
 
     await prisma.user.update({
@@ -49,7 +61,6 @@ router.post('/verify', async (req, res) => {
       data: { isVerified: true, verificationCode: null, verificationCodeExpires: null }
     });
 
-    // EXACTLY 6 HOURS EXPIRY
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET || 'fallback_secret_key',
@@ -58,22 +69,22 @@ router.post('/verify', async (req, res) => {
 
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
   } catch (e) {
-    res.status(500).json({ error: 'Server error during verification' });
+    res.status(500).json({ error: 'Server error verifying code' });
   }
 });
 
+// Keep existing login for Admin/Employees
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
     
     if (!user) return res.status(401).json({ error: 'Invalid email or password' });
-    if (!user.isVerified) return res.status(403).json({ error: 'Please verify your email first' });
+    if (user.role === 'CUSTOMER') return res.status(403).json({ error: 'Customers must use email login link' });
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
 
-    // EXACTLY 6 HOURS EXPIRY
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET || 'fallback_secret_key',

@@ -6,9 +6,7 @@ export const metadata: Metadata = {
   title: 'InfieldHub | Integrated Stock',
   description: 'Solar, Electrical, and Water solutions management system.',
   icons: {
-    icon: [
-      { url: '/icon.png' },
-    ],
+    icon: '/icon.png',
     shortcut: '/icon.png',
     apple: '/icon.png',
   },
