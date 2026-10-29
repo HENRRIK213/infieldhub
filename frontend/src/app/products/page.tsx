@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import Layout from '@/components/Layout';
 import { api, UPLOADS_URL } from '@/lib/api';
 import { useEffect, useState } from 'react';
@@ -41,7 +41,6 @@ export default function ProductsPage() {
           <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
           <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0D2B4E', marginBottom: 10 }}>Private Catalog</h1>
           <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>Please use the secure link provided by your sales representative to view our products.</p>
-          <button onClick={() => router.push('/login')} style={{ marginTop: 24, background: '#1E88E5', color: '#fff', padding: '12px 24px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Staff Login</button>
         </div>
       </Layout>
     );

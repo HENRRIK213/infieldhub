@@ -13,7 +13,6 @@ export default function CustomerRegister() {
   const [loading, setLoading] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
 
-  // Simple validation to simulate invalid link
   useEffect(() => {
     if (!token || token.length < 5) setIsExpired(true);
   }, [token]);

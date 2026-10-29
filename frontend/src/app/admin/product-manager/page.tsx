@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 import Layout from '@/components/Layout';
-import { UPLOADS_URL } from '@/lib/api';
+import { api, UPLOADS_URL } from '@/lib/api';
 import { useEffect, useState } from 'react';
 
 export default function AdminProductManager() {
@@ -8,96 +8,117 @@ export default function AdminProductManager() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
-  const [formData, setFormData] = useState({ name: '', description: '', price: '', size: '', brand: '' });
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', type: '', brand: '', size: '', stock: 0 });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const fetchProducts = () => {
     setLoading(true);
-    fetch(`https://infieldhub-backend.onrender.com/api/products?t=${Date.now()}`, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(data => setProducts(data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    api.get('/products').then(r => setProducts(r.data)).catch(() => {}).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchProducts(); }, []);
 
+  const groupedProducts: { [key: string]: any[] } = {};
+  products.forEach(p => {
+    const cat = p.category || 'General Products';
+    if (!groupedProducts[cat]) groupedProducts[cat] = [];
+    groupedProducts[cat].push(p);
+  });
+
+  const openAdd = (categoryName = '') => {
+    setEditProduct(null);
+    setErrorMsg('');
+    setFormData({ name: '', description: '', price: '', category: categoryName, type: '', brand: 'Generic', size: '', stock: 10 });
+    setImageFile(null); setShowModal(true);
+  };
+
   const openEdit = (p: any) => {
     setEditProduct(p);
-    setFormData({ name: p.name, description: p.description || '', price: p.price, size: p.size || '', brand: p.brand || '' });
+    setErrorMsg('');
+    setFormData({ 
+      name: p.name, description: p.description || '', price: String(p.price), 
+      category: p.category || '', type: p.type || '', brand: p.brand || '', size: p.size || '', stock: p.stock || 0 
+    });
     setImageFile(null); setShowModal(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this product permanently?')) return;
+    try { await api.delete(`/products/${id}`); fetchProducts(); } catch { alert('Failed to delete'); }
   };
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editProduct) return;
-
+    setErrorMsg('');
+    setIsSaving(true);
+    
     const fd = new FormData();
-    fd.append('id', editProduct.id);
     fd.append('name', formData.name); 
-    fd.append('description', formData.description || ''); 
+    fd.append('description', formData.description); 
     fd.append('price', formData.price); 
-    fd.append('size', formData.size); 
+    fd.append('category', formData.category);
+    fd.append('type', formData.type);
     fd.append('brand', formData.brand);
+    fd.append('size', formData.size);
+    fd.append('stock', String(formData.stock));
     if (imageFile) fd.append('image', imageFile);
 
-    const token = localStorage.getItem('token');
-    
-    // USING THE BRAND NEW POST ROUTE
-    const url = `https://infieldhub-backend.onrender.com/api/admin/products/update`;
-
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: fd
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || `Status: ${response.status}`);
+      if (editProduct && editProduct.id) {
+        await api.put(`/products/${editProduct.id}`, fd);
+      } else {
+        await api.post('/products', fd);
       }
-
       setShowModal(false); 
+      alert('✅ Saved successfully!');
       fetchProducts();
-      alert('✅ Product saved successfully!');
     } catch (err: any) { 
-      alert('❌ Failed to save: ' + err.message); 
+      setErrorMsg(err.response?.data?.error || 'Failed to save. Please refresh the page.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
     <Layout requireAdmin>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 40 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>Product Manager (New)</h1>
+          {/* Removed the word (New) here */}
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E' }}>Product Manager</h1>
+          <button onClick={() => openAdd()} style={{ background: '#1E88E5', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>+ Add Main Product</button>
         </div>
 
         {loading ? <div>Loading...</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
-            {products.map((main: any) => (
-              <div key={main.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
-                <div style={{ display: 'flex', gap: 20, borderBottom: '1px solid #f1f5f9', paddingBottom: 16, marginBottom: 16 }}>
-                  <div style={{ flex: 1 }}>
-                    <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: '0 0 8px 0' }}>{main.name}</h2>
-                  </div>
+            {Object.keys(groupedProducts).map(mainCategory => (
+              <div key={mainCategory} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: 16, marginBottom: 16 }}>
+                  <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: 0 }}>{mainCategory}</h2>
+                  <button onClick={() => openAdd(mainCategory)} style={{ background: '#E1F5FE', color: '#0277BD', border: 'none', padding: '6px 12px', borderRadius: 6, fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>+ Add Sub-Product</button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
-                  {main.children?.map((sub: any) => (
-                    <div key={sub.id} style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #e2e8f0', padding: 12 }}>
-                      <div style={{ height: 120, background: '#fff', borderRadius: 6, marginBottom: 12 }}>
-                        {sub.imageUrl ? <img src={sub.imageUrl.startsWith('http') ? sub.imageUrl : `${UPLOADS_URL}${sub.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <div style={{textAlign:'center', paddingTop:40, fontSize: 24}}>📦</div>}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                  {groupedProducts[mainCategory].map(sub => (
+                    <div key={sub.id} style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #e2e8f0', padding: 16, display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ height: 120, background: '#fff', borderRadius: 6, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                        {sub.imageUrl ? <img src={`${UPLOADS_URL}${sub.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 32 }}>📦</span>}
                       </div>
-                      <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0D2B4E', margin: '0 0 4px 0' }}>{sub.name}</h3>
-                      <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
-                        {sub.size && <span style={{ fontSize: 10, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4 }}>{sub.size}</span>}
-                        {sub.brand && <span style={{ fontSize: 10, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4 }}>{sub.brand}</span>}
+                      <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', marginBottom: 4 }}>{sub.name}</h3>
+                      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                        {sub.type && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.type}</span>}
+                        {sub.size && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.size}</span>}
+                        {sub.brand && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.brand}</span>}
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 13, fontWeight: 800, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>✏️ Edit</button>
+                      <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 16, fontWeight: 900, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          {/* ADMIN EDIT & DELETE BUTTONS */}
+                          <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Edit</button>
+                          <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', color: '#B91C1C', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>🗑️</button>
                         </div>
                       </div>
                     </div>
@@ -110,29 +131,54 @@ export default function AdminProductManager() {
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', width: 500, borderRadius: 12, padding: 24, maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>Edit Product</h2>
-            <form onSubmit={submitForm} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700 }}>Name</label>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,43,78,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', width: 600, borderRadius: 16, padding: 32, maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 20, color: '#0D2B4E' }}>{editProduct ? 'Edit Product' : 'Add New Product'}</h2>
+            
+            {errorMsg && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', padding: 12, borderRadius: 8, marginBottom: 16 }}>{errorMsg}</div>}
+
+            <form onSubmit={submitForm} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Product Name</label>
                 <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700 }}>Price</label>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Main Category</label>
+                <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Brand</label>
+                <input required value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Type</label>
+                <input value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Size</label>
+                <input value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Price (KSH)</label>
                 <input type="number" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Stock Qty</label>
+                <input type="number" required value={formData.stock} onChange={e => setFormData({...formData, stock: parseInt(e.target.value) || 0})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Description</label>
                 <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, minHeight: 60 }} />
               </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700 }}>Image</label>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: 12, fontWeight: 700 }}>Image {editProduct && '(Leave blank to keep existing)'}</label>
                 <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
-              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-                <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, padding: 12, background: '#f1f5f9', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ flex: 1, padding: 12, background: '#1E88E5', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+              <div style={{ gridColumn: 'span 2', display: 'flex', gap: 12, marginTop: 10 }}>
+                <button type="button" onClick={() => setShowModal(false)} disabled={isSaving} style={{ flex: 1, padding: 14, background: '#F1F5F9', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" disabled={isSaving} style={{ flex: 1, padding: 14, background: isSaving ? '#94a3b8' : '#1E88E5', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: isSaving ? 'not-allowed' : 'pointer' }}>
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
               </div>
             </form>
           </div>
