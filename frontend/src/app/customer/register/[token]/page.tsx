@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
@@ -11,14 +11,6 @@ export default function CustomerRegister() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isExpired, setIsExpired] = useState(false);
-
-  // Simulate token validation check
-  useEffect(() => {
-    if (!token || token.length < 5) {
-      setIsExpired(true);
-    }
-  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,27 +20,15 @@ export default function CustomerRegister() {
       await api.post('/auth/register', { ...formData, token });
       router.push(`/customer/verify?email=${encodeURIComponent(formData.email)}`);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      setError(err.response?.data?.error || 'Registration failed.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (isExpired) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC' }}>
-        <div style={{ background: '#fff', padding: 40, borderRadius: 16, boxShadow: '0 10px 25px rgba(0,0,0,0.05)', width: '100%', maxWidth: 400, textAlign: 'center' }}>
-          <div style={{ fontSize: 50, color: '#EF4444', marginBottom: 20 }}>🚫</div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginBottom: 10 }}>Link Invalid or Expired</h1>
-          <p style={{ color: '#64748b', marginBottom: 24 }}>This invitation link is no longer valid. Please contact your administrator to request a new link.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC' }}>
-      <div style={{ background: '#fff', padding: 40, borderRadius: 16, boxShadow: '0 10px 25px rgba(0,0,0,0.05)', width: '100%', maxWidth: 400 }}>
+      <div style={{ background: '#fff', padding: 40, borderRadius: 16, width: '100%', maxWidth: 400 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginBottom: 20, textAlign: 'center' }}>Create Customer Account</h1>
         {error && <div style={{ background: '#FEF2F2', color: '#B91C1C', padding: 12, borderRadius: 8, marginBottom: 16 }}>{error}</div>}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
