@@ -6,9 +6,9 @@ import { useEffect, useState } from 'react';
 export default function AdminProductManager() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<any>(null);
-  const [errorMsg, setErrorMsg] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   
   const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', type: '', brand: '', size: '', stock: 0 });
@@ -16,7 +16,14 @@ export default function AdminProductManager() {
 
   const fetchProducts = () => {
     setLoading(true);
-    api.get('/products').then(r => setProducts(r.data)).catch(() => {}).finally(() => setLoading(false));
+    setErrorMsg('');
+    api.get('/products')
+      .then(r => setProducts(r.data))
+      .catch((err) => {
+        console.error(err);
+        setErrorMsg('Failed to load products. The server might be waking up. Please wait a minute and refresh.');
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchProducts(); }, []);
@@ -30,14 +37,12 @@ export default function AdminProductManager() {
 
   const openAdd = (categoryName = '') => {
     setEditProduct(null);
-    setErrorMsg('');
     setFormData({ name: '', description: '', price: '', category: categoryName, type: '', brand: 'Generic', size: '', stock: 10 });
     setImageFile(null); setShowModal(true);
   };
 
   const openEdit = (p: any) => {
     setEditProduct(p);
-    setErrorMsg('');
     setFormData({ 
       name: p.name, description: p.description || '', price: String(p.price), 
       category: p.category || '', type: p.type || '', brand: p.brand || '', size: p.size || '', stock: p.stock || 0 
@@ -46,14 +51,19 @@ export default function AdminProductManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this product permanently?')) return;
-    try { await api.delete(`/products/${id}`); fetchProducts(); } catch { alert('Failed to delete'); }
+    if (!confirm('Are you sure you want to permanently delete this product?')) return;
+    try { 
+      await api.delete(`/products/${id}`); 
+      fetchProducts(); 
+    } catch { 
+      alert('Failed to delete product.'); 
+    }
   };
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg('');
     setIsSaving(true);
+    setErrorMsg('');
     
     const fd = new FormData();
     fd.append('name', formData.name); 
@@ -73,10 +83,10 @@ export default function AdminProductManager() {
         await api.post('/products', fd);
       }
       setShowModal(false); 
-      alert('✅ Saved successfully!');
+      alert('✅ Product saved successfully!');
       fetchProducts();
     } catch (err: any) { 
-      setErrorMsg(err.response?.data?.error || 'Failed to save. Please refresh the page.');
+      alert('❌ Failed to save: ' + (err.response?.data?.error || err.message)); 
     } finally {
       setIsSaving(false);
     }
@@ -86,12 +96,23 @@ export default function AdminProductManager() {
     <Layout requireAdmin>
       <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 40 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          {/* Removed the word (New) here */}
+          
+          {/* EXACT FIX: Removed the word (New) */}
           <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E' }}>Product Manager</h1>
+          
           <button onClick={() => openAdd()} style={{ background: '#1E88E5', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>+ Add Main Product</button>
         </div>
 
-        {loading ? <div>Loading...</div> : (
+        {errorMsg && (
+          <div style={{ background: '#FEF2F2', color: '#B91C1C', padding: 16, borderRadius: 8, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{errorMsg}</span>
+            <button onClick={fetchProducts} style={{ background: '#B91C1C', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 4, cursor: 'pointer' }}>Retry</button>
+          </div>
+        )}
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 50, color: '#64748b' }}>Loading products from server...</div>
+        ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
             {Object.keys(groupedProducts).map(mainCategory => (
               <div key={mainCategory} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
@@ -115,11 +136,13 @@ export default function AdminProductManager() {
                       </div>
                       <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 16, fontWeight: 900, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
+                        
+                        {/* ADMIN EDIT AND DELETE BUTTONS */}
                         <div style={{ display: 'flex', gap: 8 }}>
-                          {/* ADMIN EDIT & DELETE BUTTONS */}
-                          <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Edit</button>
+                          <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>✏️ Edit</button>
                           <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', color: '#B91C1C', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>🗑️</button>
                         </div>
+                        
                       </div>
                     </div>
                   ))}
@@ -130,13 +153,12 @@ export default function AdminProductManager() {
         )}
       </div>
 
+      {/* EDIT/ADD MODAL */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,43,78,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', width: 600, borderRadius: 16, padding: 32, maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 20, color: '#0D2B4E' }}>{editProduct ? 'Edit Product' : 'Add New Product'}</h2>
             
-            {errorMsg && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', padding: 12, borderRadius: 8, marginBottom: 16 }}>{errorMsg}</div>}
-
             <form onSubmit={submitForm} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Product Name</label>
@@ -177,7 +199,7 @@ export default function AdminProductManager() {
               <div style={{ gridColumn: 'span 2', display: 'flex', gap: 12, marginTop: 10 }}>
                 <button type="button" onClick={() => setShowModal(false)} disabled={isSaving} style={{ flex: 1, padding: 14, background: '#F1F5F9', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" disabled={isSaving} style={{ flex: 1, padding: 14, background: isSaving ? '#94a3b8' : '#1E88E5', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: isSaving ? 'not-allowed' : 'pointer' }}>
-                  {isSaving ? 'Saving...' : 'Save'}
+                  {isSaving ? 'Saving...' : 'Save Product'}
                 </button>
               </div>
             </form>
