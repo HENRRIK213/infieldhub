@@ -21,3 +21,5 @@ uploads/quotations/*
 *.bak-*
 
 *.backup-*
+.vercel
+.env*

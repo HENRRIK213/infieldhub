@@ -3,18 +3,30 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 const { sendVerificationEmail } = require('../utils/mailer');
+const crypto = require('crypto');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-const generateCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateCode = () => String(crypto.randomInt(100000, 1000000));
 
 // 1. Customer Requests Code via Email
 router.post('/customer-request-code', async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const { token } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
+    if (token) {
+      const link = await prisma.customerLink.findUnique({ where: { token } });
+      if (!link || !link.active || new Date(link.expiresAt).getTime() <= Date.now()) {
+        return res.status(410).json({ error: 'Link invalid or expired' });
+      }
+    }
+
     let user = await prisma.user.findUnique({ where: { email } });
+    if (user && user.role !== 'CUSTOMER') {
+      return res.status(403).json({ error: 'This email is reserved for a staff account' });
+    }
     
     // If user doesn't exist, create them as a CUSTOMER with a random password
     if (!user) {
@@ -49,12 +61,28 @@ router.post('/customer-request-code', async (req, res) => {
 // 2. Customer Verifies Code (Logs them in)
 router.post('/customer-verify-code', async (req, res) => {
   try {
-    const { email, code } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const { code, token: linkToken } = req.body;
+    if (!email || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+      return res.status(400).json({ error: 'Email and a valid 6-digit code are required' });
+    }
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.role !== 'CUSTOMER' || !user.active) {
+      return res.status(403).json({ error: 'Customer access is unavailable for this account' });
+    }
     if (user.verificationCode !== code) return res.status(400).json({ error: 'Invalid code' });
-    if (user.verificationCodeExpires < new Date()) return res.status(400).json({ error: 'Code expired' });
+    if (!user.verificationCodeExpires || user.verificationCodeExpires < new Date()) {
+      return res.status(400).json({ error: 'Code expired' });
+    }
+
+    if (linkToken) {
+      const link = await prisma.customerLink.findUnique({ where: { token: linkToken } });
+      if (!link || !link.active || new Date(link.expiresAt).getTime() <= Date.now()) {
+        return res.status(410).json({ error: 'Link invalid or expired' });
+      }
+    }
 
     await prisma.user.update({
       where: { email },

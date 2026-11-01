@@ -1,6 +1,6 @@
 'use client';
 import Layout from '@/components/Layout';
-import { api, UPLOADS_URL } from '@/lib/api';
+import { api, BACKEND_URL, getImageSrc } from '@/lib/api';
 import { useEffect, useState } from 'react';
 
 export default function QuotationsPage() {
@@ -19,7 +19,18 @@ export default function QuotationsPage() {
   useEffect(() => {
     api
       .get('/products')
-      .then((r) => setProducts(r.data))
+      .then((r) => {
+        setProducts(r.data);
+        const productId = new URLSearchParams(window.location.search).get('product');
+        const selectedProduct = productId && r.data.find((product: any) => product.id === productId);
+        if (selectedProduct) {
+          setCart((current) =>
+            current.some((item) => item.id === selectedProduct.id)
+              ? current
+              : [...current, { ...selectedProduct, quantity: 1 }]
+          );
+        }
+      })
       .catch((e) => setError(e.response?.data?.error || 'Failed to load products'));
   }, []);
 
@@ -192,7 +203,7 @@ export default function QuotationsPage() {
                   >
                     {p.imageUrl ? (
                       <img
-                        src={`${UPLOADS_URL}${p.imageUrl}`}
+                        src={getImageSrc(p.imageUrl)}
                         alt={p.name}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
@@ -521,7 +532,7 @@ export default function QuotationsPage() {
                 </div>
                 {result.pdfUrl && (
                   <a
-                    href={`http://localhost:5000${result.pdfUrl}`}
+                    href={`${BACKEND_URL}${result.pdfUrl}`}
                     target="_blank"
                     rel="noreferrer"
                     style={{

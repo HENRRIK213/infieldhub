@@ -26,7 +26,7 @@ router.post('/link', auth, async (req, res) => {
       data: { token, createdBy: req.user.id, expiresAt, active: true },
     });
 
-    const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/customer/${token}`;
+    const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/customer/register/${token}`;
     console.log(`   ✅ ${url}`);
     console.log(`   Expires: ${expiresAt.toLocaleString()}\n`);
 

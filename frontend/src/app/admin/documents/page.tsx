@@ -1,6 +1,6 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
-import { api, UPLOADS_URL } from '@/lib/api';
+import { api, getImageSrc } from '@/lib/api';
 import { useState, useEffect, useRef } from 'react';
 
 export default function DocumentsPage() {
@@ -26,26 +26,19 @@ export default function DocumentsPage() {
   useEffect(() => {
     api.get('/products').then(r => {
       setProducts(r.data);
-      
-      // Filter for products that HAVE images
-      const withImages = r.data.filter((p: any) => p.imageUrl && p.imageUrl.trim() !== '');
-      
-      if (withImages.length > 0) {
-        const shuffled = [...withImages].sort(() => 0.5 - Math.random());
-        setAdProducts(shuffled.slice(0, 4));
-      } else {
-        // Fallback if no products have images in the DB
-        setAdProducts([
-          { id: '1', imageUrl: 'https://images.unsplash.com/photo-1592833159155-c62df1b65634?auto=format&fit=crop&q=80&w=400' },
-          { id: '2', imageUrl: 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&q=80&w=400' },
-          { id: '3', imageUrl: 'https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&q=80&w=400' }
-        ]);
+      const withImages = r.data.filter((p: any) => p.imageUrl);
+      for (let i = withImages.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [withImages[i], withImages[j]] = [withImages[j], withImages[i]];
       }
-    }).catch(() => {
-      // Catch fallback
-      setAdProducts([
-        { id: '1', imageUrl: 'https://images.unsplash.com/photo-1592833159155-c62df1b65634?auto=format&fit=crop&q=80&w=400' }
-      ]);
+      setAdProducts(
+        withImages.length === 0
+          ? []
+          : Array.from({ length: 3 }, (_, i) => withImages[i % withImages.length])
+      );
+    }).catch((error) => {
+      console.error('Failed to load featured product images:', error);
+      setAdProducts([]);
     });
   }, []);
 
@@ -75,14 +68,16 @@ export default function DocumentsPage() {
     try {
       const html2pdf = (await import('html2pdf.js')).default;
       const element = document.getElementById('print-area');
+      if (!element) throw new Error('Document preview is unavailable');
       const formatMap: any = { 'A4': 'a4', 'A3': 'a3', 'A5': 'a5', 'Letter': 'letter', 'Square': [8, 8] };
 
       const opt: any = {
-        margin: activeTab === 'BUSINESS' ? 0.5 : 0, 
+        margin: activeTab === 'BUSINESS' ? 0.3 : 0,
         filename: `${activeTab === 'BUSINESS' ? type : 'Poster'}-${Date.now()}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'in', format: formatMap[paperSize] || 'a4', orientation: activeTab === 'BUSINESS' ? 'portrait' : orientation }
+        jsPDF: { unit: 'in', format: formatMap[paperSize] || 'a4', orientation: activeTab === 'BUSINESS' ? 'portrait' : orientation },
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'img', '.quote-terms', '.quote-payment'] },
       };
       await html2pdf().set(opt).from(element).save();
       
@@ -199,10 +194,10 @@ export default function DocumentsPage() {
         {/* RIGHT: Preview */}
         <div style={{ background: '#e2e8f0', padding: 20, borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', overflow: 'auto' }}>
           
-          <div id="print-area" style={{ background: activeTab === 'POSTER' ? `url(${posterImage}) center/cover` : '#fff', width: activeTab === 'POSTER' ? finalWidth : '210mm', height: activeTab === 'POSTER' ? finalHeight : 'auto', minHeight: activeTab === 'POSTER' ? finalHeight : '297mm', padding: activeTab === 'POSTER' ? 0 : 40, fontFamily: activeTab === 'POSTER' ? posterFont : 'Arial, sans-serif', fontSize: 11, color: '#000', position: 'relative', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+          <div id="print-area" style={{ background: activeTab === 'POSTER' ? `url(${posterImage}) center/cover` : '#fff', width: activeTab === 'POSTER' ? finalWidth : '210mm', height: activeTab === 'POSTER' ? finalHeight : 'auto', minHeight: activeTab === 'POSTER' ? finalHeight : '297mm', padding: activeTab === 'POSTER' ? 0 : 40, boxSizing: 'border-box', fontFamily: activeTab === 'POSTER' ? posterFont : 'Arial, sans-serif', fontSize: 11, color: '#000', position: 'relative', overflow: activeTab === 'POSTER' ? 'hidden' : 'visible', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
             
             {activeTab === 'BUSINESS' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', minHeight: '297mm' }}>
                 
                 <div>
                   {/* Header with Random Ad Images */}
@@ -217,24 +212,14 @@ export default function DocumentsPage() {
                       </div>
                     </div>
                     
-                    <div style={{ textAlign: 'right' }}>
+                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                       <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{type}</h1>
                       <div style={{ fontSize: 11, color: '#475569', marginTop: 8, lineHeight: 1.6 }}>
                         Date: <strong>{new Date().toLocaleDateString('en-GB')}</strong><br/>
                         Ref: <strong>{type.slice(0,2)}-{Date.now().toString().slice(-6)}</strong>
                       </div>
 
-                      {/* THE AD IMAGES SECTION (Right below the date, matching your sample) */}
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 15 }}>
-                        {adProducts.map((p: any, i: number) => (
-                          <img 
-                            key={i}
-                            src={p.imageUrl.startsWith('http') ? p.imageUrl : `${UPLOADS_URL}${p.imageUrl}`} 
-                            style={{ height: 55, objectFit: 'contain' }} 
-                            crossOrigin="anonymous" 
-                          />
-                        ))}
-                      </div>
+                      <img src="/payment-logos/quotation-solar-panels.png" alt="Solar panels" style={{ width: 160, height: 120, objectFit: 'contain', marginTop: 8 }} />
                     </div>
                   </div>
 
@@ -249,7 +234,7 @@ export default function DocumentsPage() {
                   </div>
 
                   {/* Table */}
-                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 20 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 20, pageBreakInside: 'auto' }}>
                     <thead>
                       <tr style={{ background: '#F8FAFC', borderTop: '1px solid #0D2B4E', borderBottom: '1px solid #0D2B4E', textAlign: 'left', color: '#0D2B4E', fontSize: 11 }}>
                         <th style={{ padding: '10px 8px', fontWeight: 800 }}>DESCRIPTION</th>
@@ -283,8 +268,26 @@ export default function DocumentsPage() {
                 </div>
 
                 <div>
+                  {type === 'QUOTATION' && (
+                    <section style={{ margin: '0 0 18px', pageBreakInside: 'avoid' }}>
+                      <div style={{ color: '#0D2B4E', fontSize: 11, fontWeight: 800, marginBottom: 8 }}>FEATURED PRODUCTS</div>
+                      {adProducts.length > 0 ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                          {adProducts.map((product: any, index: number) => (
+                            <div key={`${product.id}-${index}`} style={{ border: '1px solid #E2E8F0', borderRadius: 8, padding: 8, textAlign: 'center', pageBreakInside: 'avoid' }}>
+                              <img src={getImageSrc(product.imageUrl)} alt={product.name} style={{ width: '100%', height: 76, objectFit: 'contain' }} />
+                              <div style={{ color: '#334155', fontSize: 9, marginTop: 4 }}>{product.name}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ color: '#64748b', fontSize: 9 }}>Add product images in Product Manager to feature them here.</div>
+                      )}
+                    </section>
+                  )}
+
                   {/* Terms */}
-                  <div style={{ borderTop: '1px solid #0D2B4E', paddingTop: 12, fontSize: 10, color: '#475569', marginBottom: 16, lineHeight: 1.5 }}>
+                  <div className="quote-terms" style={{ borderTop: '1px solid #0D2B4E', paddingTop: 12, fontSize: 10, color: '#475569', marginBottom: 16, lineHeight: 1.5, pageBreakInside: 'avoid' }}>
                     <strong style={{ color: '#0D2B4E', fontSize: 11 }}>TERMS & CONDITIONS:</strong><br/>
                     Delivery: EX STOCK SUBJECT TO PRIOR SALES.<br/>
                     Validity: THIS PRICE VALID FOR 1 WEEK.<br/>
@@ -292,27 +295,34 @@ export default function DocumentsPage() {
                   </div>
 
                   {/* Payment Options */}
-                  <div style={{ border: '1px solid #0D2B4E', borderRadius: 8, padding: 12, marginBottom: 24 }}>
-                    <div style={{ fontWeight: 800, marginBottom: 10, textAlign: 'center', fontSize: 11, background: '#F8FAFC', padding: 6, color: '#0D2B4E' }}>PAYMENT OPTIONS</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, fontSize: 9, color: '#475569' }}>
-                      <div>
-                        <strong style={{ color: '#0D2B4E' }}>KINGDOM BANK</strong><br/>
-                        Name: InfieldHub Ltd<br/>
-                        Acc No: 5021964795002<br/>
-                        Bank Code: 01103043639002
+                  {type === 'QUOTATION' && (
+                    <div className="quote-payment" style={{ border: '1px solid #0D2B4E', borderRadius: 8, padding: 12, marginBottom: 24, pageBreakInside: 'avoid' }}>
+                      <div style={{ fontWeight: 800, marginBottom: 10, textAlign: 'center', fontSize: 11, background: '#F8FAFC', padding: 6, color: '#0D2B4E' }}>PAYMENT OPTIONS</div>
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 18, marginBottom: 10 }}>
+                        <img src="/payment-logos/kcb-mobile.png" alt="KCB Mobile" style={{ width: 70, height: 40, objectFit: 'contain' }} />
+                        <img src="/payment-logos/equity-bank.png" alt="Equity Bank" style={{ width: 70, height: 40, objectFit: 'contain' }} />
+                        <img src="/payment-logos/mpesa.png" alt="M-PESA" style={{ width: 105, height: 40, objectFit: 'contain' }} />
                       </div>
-                      <div>
-                        <strong style={{ color: '#0D2B4E' }}>CO-OPERATIVE BANK (CoopTill)</strong><br/>
-                        Business Name: 1170535<br/>
-                        Acc No: 400200
-                      </div>
-                      <div>
-                        <strong style={{ color: '#0D2B4E' }}>M-PESA</strong><br/>
-                        Paybill: 247247<br/>
-                        Acc: 0701243548
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, fontSize: 9, color: '#475569' }}>
+                        <div>
+                          <strong style={{ color: '#0D2B4E' }}>KINGDOM BANK</strong><br/>
+                          Name: InfieldHub Ltd<br/>
+                          Acc No: 5021964795002<br/>
+                          Bank Code: 01103043639002
+                        </div>
+                        <div>
+                          <strong style={{ color: '#0D2B4E' }}>CO-OPERATIVE BANK (CoopTill)</strong><br/>
+                          Business Name: 1170535<br/>
+                          Acc No: 400200
+                        </div>
+                        <div>
+                          <strong style={{ color: '#0D2B4E' }}>M-PESA</strong><br/>
+                          Paybill: 247247<br/>
+                          Acc: 0701243548
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Signatures */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 30, paddingBottom: 20 }}>

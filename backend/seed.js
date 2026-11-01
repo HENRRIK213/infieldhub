@@ -139,17 +139,23 @@ const masterProducts = [
 ];
 
 async function main() {
-  console.log('🧹 Wiping users and products for a clean slate...');
-  await prisma.product.deleteMany({});
-  await prisma.user.deleteMany({});
-  
-  console.log('👤 Creating Admin and Employee accounts...');
-  await prisma.user.create({
-    data: { email: 'admin@infieldhub.com', password: await bcrypt.hash('Admin@InfieldHub2020!', 10), role: 'ADMIN', name: 'Super Admin', active: true }
+  const productCount = await prisma.product.count();
+  if (productCount > 0) {
+    console.log(`Catalog already contains ${productCount} products; preserving products and uploaded images.`);
+    return;
+  }
+
+  console.log('👤 Ensuring Admin and Employee accounts exist...');
+  await prisma.user.upsert({
+    where: { email: 'admin@infieldhub.com' },
+    update: {},
+    create: { email: 'admin@infieldhub.com', password: await bcrypt.hash('Admin@InfieldHub2020!', 10), role: 'ADMIN', name: 'Super Admin', active: true }
   });
 
-  await prisma.user.create({
-    data: { email: 'employee@infieldhub.com', password: await bcrypt.hash('Employee@InfieldHub2020!', 10), role: 'EMPLOYEE', name: 'Sales Employee', active: true }
+  await prisma.user.upsert({
+    where: { email: 'employee@infieldhub.com' },
+    update: {},
+    create: { email: 'employee@infieldhub.com', password: await bcrypt.hash('Employee@InFieldHub2020!', 10), role: 'EMPLOYEE', name: 'Sales Employee', active: true }
   });
 
   console.log(`📦 Adding ${masterProducts.length} exact products...`);

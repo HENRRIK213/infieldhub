@@ -1,6 +1,6 @@
 'use client';
 import Layout from '@/components/Layout';
-import { api, UPLOADS_URL } from '@/lib/api';
+import { api, getImageSrc } from '@/lib/api';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -15,20 +15,24 @@ export default function ProductDetail() {
       .catch(() => router.push('/products'));
   }, [id, router]);
 
+  const openQuotation = () => {
+    router.push(`/quotations?product=${encodeURIComponent(String(id))}`);
+  };
+
   if (!product) return <Layout><div style={{ padding: 100, textAlign: 'center' }}>Loading...</div></Layout>;
 
   return (
     <Layout>
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '40px 16px' }}>
-        <button onClick={() => router.back()} style={{ marginBottom: 24, background: 'none', border: 'none', color: '#1E88E5', fontWeight: 700, cursor: 'pointer' }}>
-          ← Back to Store
+        <button onClick={() => router.push('/products')} style={{ marginBottom: 24, background: 'none', border: 'none', color: '#1E88E5', fontWeight: 700, cursor: 'pointer' }}>
+          ← Back to Main Products
         </button>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40, background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 32 }}>
           {/* Image */}
           <div style={{ background: '#F8FAFC', borderRadius: 12, overflow: 'hidden', height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {product.imageUrl ? (
-              <img src={`${UPLOADS_URL}${product.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <img src={getImageSrc(product.imageUrl)} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             ) : (
               <span style={{ fontSize: 80 }}>📦</span>
             )}
@@ -53,10 +57,10 @@ export default function ProductDetail() {
             </p>
 
             <div style={{ display: 'flex', gap: 16 }}>
-              <button onClick={() => router.push('/quotations')} style={{ flex: 1, padding: 16, background: '#1E88E5', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 12px rgba(30,136,229,0.3)' }}>
+              <button onClick={openQuotation} style={{ flex: 1, padding: 16, background: '#1E88E5', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 12px rgba(30,136,229,0.3)' }}>
                 Add to Quotation
               </button>
-              <button style={{ flex: 1, padding: 16, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 12px rgba(46,125,50,0.3)' }}>
+              <button onClick={openQuotation} style={{ flex: 1, padding: 16, background: '#2E7D32', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 12px rgba(46,125,50,0.3)' }}>
                 Buy Now
               </button>
             </div>

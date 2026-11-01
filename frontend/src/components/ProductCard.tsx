@@ -1,5 +1,5 @@
 'use client';
-import { UPLOADS_URL } from '@/lib/api';
+import { getImageSrc } from '@/lib/api';
 
 export default function ProductCard({ product, onClick, onEdit, isAdmin }: { product: any, onClick: () => void, onEdit?: (e: any) => void, isAdmin: boolean }) {
   return (
@@ -21,7 +21,7 @@ export default function ProductCard({ product, onClick, onEdit, isAdmin }: { pro
       <div className="aspect-square bg-[#F8FAFC] flex items-center justify-center relative overflow-hidden">
         {product.imageUrl ? (
           <img
-            src={product.imageUrl.startsWith('http') ? product.imageUrl : `${UPLOADS_URL}${product.imageUrl}`}
+            src={getImageSrc(product.imageUrl)}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
           />

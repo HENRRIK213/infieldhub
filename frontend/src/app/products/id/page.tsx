@@ -1,6 +1,6 @@
 'use client';
 import Layout from '@/components/Layout';
-import { api, UPLOADS_URL } from '@/lib/api';
+import { api, getImageSrc } from '@/lib/api';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -29,7 +29,7 @@ export default function ProductDetail() {
         <div className="bg-white rounded-2xl p-4 shadow">
           {product.imageUrl ? (
             <img
-              src={`${UPLOADS_URL}${product.imageUrl}`}
+              src={getImageSrc(product.imageUrl)}
               alt={product.name}
               className="w-full rounded-xl"
             />

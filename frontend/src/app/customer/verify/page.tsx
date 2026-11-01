@@ -7,6 +7,7 @@ function VerifyForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
+  const token = searchParams.get('token');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,7 +17,7 @@ function VerifyForm() {
     setLoading(true);
     setError('');
     try {
-      const res = await api.post('/auth/customer-verify-code', { email, code });
+      const res = await api.post('/auth/customer-verify-code', { email, code, token });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       localStorage.setItem('loginTime', Date.now().toString());

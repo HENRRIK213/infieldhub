@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { UPLOADS_URL } from '@/lib/api';
+import { getImageSrc } from '@/lib/api';
 
 export default function ProductModal({
   product,
@@ -23,7 +23,7 @@ export default function ProductModal({
           <div className="bg-gray-100 p-3 md:p-4">
             {product.imageUrl ? (
               <img
-                src={`${UPLOADS_URL}${product.imageUrl}`}
+                src={getImageSrc(product.imageUrl)}
                 alt={product.name}
                 className="w-full h-64 md:h-full object-contain md:max-h-[500px] rounded-lg"
               />

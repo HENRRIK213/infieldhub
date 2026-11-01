@@ -1,8 +1,24 @@
 'use client';
 import Layout from '@/components/Layout';
-import { api, UPLOADS_URL } from '@/lib/api';
+import { api, getImageSrc } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+const mainCategories = [
+  'Water Meters',
+  'Pump Ends',
+  'Sub-Motors',
+  'Submersible Cables',
+  'UPVC Drop Pipes',
+  'Solar Pump Inverters',
+  'Control Panels',
+  'AC Output Reactors',
+  'PV Disconnects',
+  'Surge Protectors',
+  'Non-Return Valves',
+  'Borehole Covers',
+  'Accessories',
+];
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -53,24 +69,27 @@ export default function ProductsPage() {
     groupedProducts[cat].push(p);
   });
 
-  const filteredCategories = Object.keys(groupedProducts).filter(cat => 
-    cat.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    groupedProducts[cat].some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredCategories = mainCategories.filter(cat =>
+    cat.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (groupedProducts[cat] || []).some((p) =>
+      p.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
   );
 
   const availableTypes = selectedCategory 
-    ? [...new Set(groupedProducts[selectedCategory].map(p => p.type).filter(Boolean))] 
+    ? [...new Set((groupedProducts[selectedCategory] || []).map(p => p.type || 'Other'))]
     : [];
 
   const availableSizes = (selectedCategory && selectedType)
-    ? [...new Set(groupedProducts[selectedCategory]
-        .filter(p => p.type === selectedType)
-        .map(p => p.size).filter(Boolean))]
+    ? [...new Set((groupedProducts[selectedCategory] || [])
+        .filter(p => (p.type || 'Other') === selectedType)
+        .map(p => p.size || 'Other'))]
     : [];
 
   const finalProducts = (selectedCategory && selectedType && selectedSize)
-    ? groupedProducts[selectedCategory].filter(p => p.type === selectedType && p.size === selectedSize)
+    ? (groupedProducts[selectedCategory] || []).filter(p => (p.type || 'Other') === selectedType && (p.size || 'Other') === selectedSize)
     : [];
+  const brandProducts = [...new Map(finalProducts.map((product) => [product.brand || 'Generic', product])).values()];
 
   return (
     <Layout>
@@ -98,7 +117,7 @@ export default function ProductsPage() {
               <div key={cat} onClick={() => setSelectedCategory(cat)} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 32, textAlign: 'center', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>📦</div>
                 <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', marginBottom: 8 }}>{cat}</h3>
-                <p style={{ color: '#64748b', fontSize: 14 }}>Click to view types</p>
+              <p style={{ color: '#64748b', fontSize: 14 }}>{(groupedProducts[cat] || []).length} products</p>
                 <button style={{ marginTop: 20, background: '#1E88E5', color: '#fff', padding: '10px 24px', borderRadius: 8, fontWeight: 700, border: 'none', width: '100%' }}>View Types</button>
               </div>
             ))}
@@ -116,6 +135,7 @@ export default function ProductsPage() {
                 </div>
               ))}
             </div>
+            {availableTypes.length === 0 && <p style={{ color: '#64748b' }}>No types are available in this category yet.</p>}
           </div>
         )}
 
@@ -132,6 +152,7 @@ export default function ProductsPage() {
                 </div>
               ))}
             </div>
+            {availableSizes.length === 0 && <p style={{ color: '#64748b' }}>No sizes are available for this type yet.</p>}
           </div>
         )}
 
@@ -141,13 +162,13 @@ export default function ProductsPage() {
               <h2 style={{ fontSize: 28, fontWeight: 800, color: '#0D2B4E' }}>{selectedSize} - Select Brand</h2>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
-              {finalProducts.map(p => (
+              {brandProducts.map(p => (
                 <div key={p.id} onClick={() => router.push(`/products/${p.id}`)} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                   <div style={{ height: 160, background: '#F8FAFC', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {p.imageUrl ? <img src={`${UPLOADS_URL}${p.imageUrl}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 40 }}>📦</span>}
+                    {p.imageUrl ? <img src={getImageSrc(p.imageUrl)} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 40 }}>📦</span>}
                   </div>
                   <div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1E88E5', textTransform: 'uppercase' }}>{p.brand}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1E88E5', textTransform: 'uppercase' }}>{p.brand || 'Generic'}</span>
                     <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0D2B4E', marginTop: 4 }}>{p.name}</h3>
                   </div>
                   <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -157,6 +178,7 @@ export default function ProductsPage() {
                 </div>
               ))}
             </div>
+            {brandProducts.length === 0 && <p style={{ color: '#64748b' }}>No brands are available for this size yet.</p>}
           </div>
         )}
       </div>

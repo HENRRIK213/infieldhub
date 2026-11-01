@@ -1,8 +1,13 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 
-// FORCED HARDCODE: Bypasses all environment variables and Vercel routing
+export const BACKEND_URL = (
+  process.env.NEXT_PUBLIC_BACKEND_URL || 'https://infieldhub-backend.onrender.com'
+).replace(/\/+$/, '');
+
+export const UPLOADS_URL = BACKEND_URL;
+
 export const api = axios.create({
-  baseURL: 'https://infieldhub-backend.onrender.com/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || `${BACKEND_URL}/api`,
   timeout: 30000,
 });
 
@@ -14,5 +19,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export const UPLOADS_URL = 'https://infieldhub-backend.onrender.com';
-export const BACKEND_URL = 'https://infieldhub-backend.onrender.com';
+export function getImageSrc(imageUrl?: string | null): string {
+  if (!imageUrl) return '';
+  if (/^(data:image\/|https?:\/\/|blob:)/i.test(imageUrl)) return imageUrl;
+  return `${UPLOADS_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+}
