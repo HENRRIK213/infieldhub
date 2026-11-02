@@ -76,5 +76,5 @@ setupSockets(io);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ InfieldHub backend running on port ${PORT}`);
+  console.log(`âœ… InfieldHub backend running on port ${PORT}`);
 });
