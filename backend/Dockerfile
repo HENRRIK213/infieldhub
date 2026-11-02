@@ -1,30 +1,28 @@
-FROM node:20-slim
+FROM node:20-alpine
+
+# Limit Node's memory usage to prevent OOM on Render's 512MB free tier
+ENV NODE_OPTIONS="--max-old-space-size=400"
+
+# Install ONLY the essential build tools required for bcrypt
+RUN apk add --no-cache python3 make g++ openssl
 
 WORKDIR /app
-
-# Install system build tools required for native dependencies (sharp, bcrypt)
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
-    openssl \
-    && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install dependencies (this will now compile native modules successfully)
-RUN npm install
+# Use npm ci for a deterministic install and limit memory during install
+RUN npm ci --no-audit --no-fund
 
 COPY . .
 
-# Generate Prisma Client (using a dummy URL just for the build step)
-RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
+# Generate Prisma Client for Alpine
+RUN npx prisma generate
 
 ENV NODE_ENV=production
 ENV PORT=10000
 
 EXPOSE 10000
 
-# Start command: push schema, seed, and start server
+# Push schema, seed, and start server (kept in CMD for free tier)
 CMD ["sh", "-c", "npx prisma db push --accept-data-loss; node seed.js; node src/server.js"]
