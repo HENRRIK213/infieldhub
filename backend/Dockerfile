@@ -21,4 +21,4 @@ ENV PORT=10000
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss || true; node seed.js || true; node src/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node seed.js && node src/server.js"]
