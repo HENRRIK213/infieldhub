@@ -1,6 +1,6 @@
 FROM node:20-slim
 
-# Install system dependencies required for Prisma and native modules (bcrypt/sharp)
+# Install system dependencies for Prisma and native modules (bcrypt/sharp)
 RUN apt-get update && apt-get install -y \
     openssl \
     python3 \
@@ -12,6 +12,9 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY prisma ./prisma/
+
+# Set a memory limit for the build to prevent OOM on Render's free tier
+ENV NODE_OPTIONS="--max-old-space-size=400"
 
 # Install dependencies
 RUN npm install
