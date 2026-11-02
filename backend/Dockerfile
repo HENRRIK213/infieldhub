@@ -1,4 +1,4 @@
-﻿FROM node:20-alpine
+FROM node:20-alpine
 
 RUN apk add --no-cache openssl
 
@@ -11,10 +11,7 @@ RUN npm install --include=dev
 
 COPY . .
 
-# Set a dummy URL for the build phase so Prisma can generate the client
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-
-RUN npx prisma generate
+RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/dummy" npx prisma generate
 
 ENV NODE_ENV=production
 ENV PORT=10000
