@@ -1,16 +1,15 @@
-FROM node:20-alpine
-
-# Install system build tools required for native dependencies like bcrypt and sharp
-RUN apk add --no-cache openssl python3 make g++
+FROM node:20
 
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Use npm ci for a clean, deterministic install
-RUN npm ci --include=dev
+# Install dependencies
+RUN npm install
 
+# Copy source code
 COPY . .
 
 # Generate Prisma Client (using a dummy URL just for the build step)
