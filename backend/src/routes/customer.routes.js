@@ -3,14 +3,12 @@ const { PrismaClient } = require('@prisma/client');
 const { v4: uuid } = require('uuid');
 const router = express.Router();
 const prisma = new PrismaClient();
-const { auth } = require('../middleware/auth');
+const { auth, requireAdmin } = require('../middleware/auth');
 const { sendVerificationCode } = require('../utils/mailer');
 const { logActivity } = require('../utils/security');
 
-const codes = new Map();
-
 const LINK_VALIDITY_MS = 6 * 60 * 60 * 1000;   // 6 hours
-const CODE_TTL_MS      = 30 * 60 * 1000;       // 30 minutes
+const CODE_TTL_MS      = 15 * 60 * 1000;       // 15 minutes
 const SESSION_MS       = 6 * 60 * 60 * 1000;   // 6 hours
 
 // ============================================================
@@ -18,7 +16,6 @@ const SESSION_MS       = 6 * 60 * 60 * 1000;   // 6 hours
 // ============================================================
 router.post('/link', auth, async (req, res) => {
   try {
-    console.log(`\n🔗 Link request from ${req.user.email} (${req.user.role})`);
     const token = uuid();
     const expiresAt = new Date(Date.now() + LINK_VALIDITY_MS);
 
@@ -26,15 +23,12 @@ router.post('/link', auth, async (req, res) => {
       data: { token, createdBy: req.user.id, expiresAt, active: true },
     });
 
-    const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/customer/register/${token}`;
-    console.log(`   ✅ ${url}`);
-    console.log(`   Expires: ${expiresAt.toLocaleString()}\n`);
-
+    const url = `${process.env.FRONTEND_URL || 'https://infieldhub.vercel.app'}/customer/register/${token}`;
     await logActivity({
       userId: req.user.id,
       action: 'CUSTOMER_LINK_GENERATE',
       interface: 'web',
-      details: token,
+      details: 'Customer registration link generated',
       ip: req.ip,
     });
 
@@ -49,29 +43,21 @@ router.post('/link', auth, async (req, res) => {
 // VALIDATE LINK — fast, no auth, always returns quickly
 // ============================================================
 router.get('/link/:token', async (req, res) => {
-  const startTime = Date.now();
   try {
     const token = req.params.token;
-    console.log(`\n🔍 Validating link: ${token.slice(0, 8)}...`);
-
     const link = await prisma.customerLink.findUnique({ where: { token } });
 
     if (!link) {
-      console.log(`   ❌ Not found (${Date.now() - startTime}ms)\n`);
       return res.status(410).json({ error: 'Link not found', code: 'NOT_FOUND' });
     }
     if (!link.active) {
-      console.log(`   ❌ Inactive\n`);
       return res.status(410).json({ error: 'Link inactive', code: 'INACTIVE' });
     }
 
     const remaining = new Date(link.expiresAt).getTime() - Date.now();
     if (remaining <= 0) {
-      console.log(`   ❌ Expired\n`);
       return res.status(410).json({ error: 'Link expired (6-hour limit)', code: 'EXPIRED' });
     }
-
-    console.log(`   ✅ Valid — ${Math.round(remaining / 60000)} min left (${Date.now() - startTime}ms)\n`);
 
     res.json({
       valid: true,
@@ -89,8 +75,9 @@ router.get('/link/:token', async (req, res) => {
 // ============================================================
 router.post('/verify/send', async (req, res) => {
   try {
-    const { email, token } = req.body;
-    if (!email || !token) {
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const token = typeof req.body.token === 'string' ? req.body.token : '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !token) {
       return res.status(400).json({ error: 'Email and token required' });
     }
 
@@ -102,24 +89,27 @@ router.post('/verify/send', async (req, res) => {
       return res.status(410).json({ error: 'Link expired' });
     }
 
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    codes.set(email.toLowerCase(), { code, token, expiresAt: Date.now() + CODE_TTL_MS });
-
-    await prisma.customerSession.create({
+    const code = String(crypto.randomInt(100000, 1000000));
+    const session = await prisma.customerSession.create({
       data: { email, code, linkToken: token, expiresAt: new Date(Date.now() + CODE_TTL_MS) },
     });
 
-    const sent = await sendVerificationCode(email, code);
-    console.log(`📧 Code for ${email}: ${code} (sent=${sent})`);
+    try {
+      await sendVerificationCode(email, code);
+    } catch (error) {
+      await prisma.customerSession.delete({ where: { id: session.id } });
+      console.error('Customer invitation email delivery failed:', error.code || error.name);
+      return res.status(503).json({
+        error: error.code === 'EMAIL_NOT_CONFIGURED'
+          ? 'Email verification is not configured. Please contact the administrator.'
+          : 'We could not deliver your verification email. Please try again later.',
+      });
+    }
 
-    res.json({
-      success: true,
-      emailSent: sent,
-      message: sent ? `Code sent to ${email}` : 'Check backend terminal for code',
-    });
+    res.json({ success: true, emailSent: true, message: `Code sent to ${email}` });
   } catch (err) {
-    console.error('❌ Send code error:', err);
-    res.status(500).json({ error: err.message });
+    console.error('Customer verification email request failed:', err.code || err.name);
+    res.status(503).json({ error: 'Verification is temporarily unavailable. Please try again later.' });
   }
 });
 
@@ -128,19 +118,18 @@ router.post('/verify/send', async (req, res) => {
 // ============================================================
 router.post('/verify/confirm', async (req, res) => {
   try {
-    const { email, code, token } = req.body;
-    if (!email || !code || !token) {
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const code = typeof req.body.code === 'string' ? req.body.code : '';
+    const token = typeof req.body.token === 'string' ? req.body.token : '';
+    if (!email || !/^\d{6}$/.test(code) || !token) {
       return res.status(400).json({ error: 'Email, code, token required' });
     }
 
-    const record = codes.get(email.toLowerCase());
-    if (!record) return res.status(401).json({ error: 'No code found. Request a new one.' });
-    if (record.code !== code) return res.status(401).json({ error: 'Incorrect code' });
-    if (record.expiresAt < Date.now()) {
-      codes.delete(email.toLowerCase());
-      return res.status(401).json({ error: 'Code expired. Request a new one.' });
-    }
-    if (record.token !== token) return res.status(401).json({ error: 'Token mismatch' });
+    const record = await prisma.customerSession.findFirst({
+      where: { email, code, linkToken: token, verified: false, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!record) return res.status(401).json({ error: 'Code is invalid or expired. Request a new one.' });
 
     const link = await prisma.customerLink.findUnique({ where: { token } });
     if (!link || !link.active) return res.status(410).json({ error: 'Link invalid' });
@@ -148,8 +137,8 @@ router.post('/verify/confirm', async (req, res) => {
       return res.status(410).json({ error: 'Link expired' });
     }
 
-    await prisma.customerSession.updateMany({
-      where: { email, linkToken: token, code },
+    await prisma.customerSession.update({
+      where: { id: record.id },
       data: { verified: true },
     });
 
@@ -158,8 +147,6 @@ router.post('/verify/confirm', async (req, res) => {
       update: { lastSeenAt: new Date() },
       create: { email, lastSeenAt: new Date() },
     });
-
-    codes.delete(email.toLowerCase());
 
     const sessionExpiresAt = Math.min(
       Date.now() + SESSION_MS,
@@ -181,17 +168,22 @@ router.post('/verify/confirm', async (req, res) => {
       sessionHours: 6,
     });
   } catch (err) {
-    console.error('❌ Verify error:', err);
-    res.status(500).json({ error: err.message });
+    console.error('Customer verification failed:', err.code || err.name);
+    res.status(500).json({ error: 'Could not verify the code. Please try again.' });
   }
 });
 
 // ============================================================
 // PURGE old links
 // ============================================================
-router.delete('/purge', async (req, res) => {
-  const r = await prisma.customerLink.deleteMany({});
-  res.json({ deleted: r.count });
+router.delete('/purge', auth, requireAdmin, async (req, res) => {
+  try {
+    const result = await prisma.customerLink.deleteMany({});
+    res.json({ deleted: result.count });
+  } catch (error) {
+    console.error('Customer link purge failed:', error.code || error.name);
+    res.status(503).json({ error: 'Could not purge customer links' });
+  }
 });
 
 module.exports = router;

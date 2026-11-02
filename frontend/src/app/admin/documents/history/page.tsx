@@ -5,9 +5,21 @@ import { useEffect, useState } from 'react';
 
 export default function HistoryPage() {
   const [docs, setDocs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const fetchDocs = () => {
-    api.get('/documents').then(r => setDocs(r.data)).catch(() => {});
+  const fetchDocs = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await api.get('/documents');
+      setDocs(response.data);
+    } catch (requestError) {
+      console.error('Failed to load document history:', requestError);
+      setError('Document history could not be loaded. Check the backend connection and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchDocs(); }, []);
@@ -18,20 +30,32 @@ export default function HistoryPage() {
       await api.delete(`/documents/${id}`);
       setDocs(docs.filter(d => d.id !== id));
     } catch (e) {
-      alert('Failed to delete document');
+      setError('Failed to delete this document. Please try again.');
     }
   };
 
-  const handleDownload = (d: any) => {
-    // In a real app, this would call the backend to generate the exact PDF.
-    // For now, it downloads a text representation or triggers a print.
-    alert(`Downloading Document: ${d.serialNo}\nType: ${d.type}\nAmount: ${d.total}`);
+  const handleDownload = async (documentRecord: any) => {
+    try {
+      const response = await api.get(`/documents/${documentRecord.id}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${documentRecord.serialNo}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (downloadError) {
+      console.error('Failed to download document PDF:', downloadError);
+      setError('This document could not be downloaded. Please retry or generate it again.');
+    }
   };
 
   return (
     <Layout requireAdmin>
       <div style={{ maxWidth: 1200, margin: '0 auto', background: '#fff', padding: 24, borderRadius: 16, border: '1px solid #e2e8f0' }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginBottom: 20 }}>All Quotations, Invoices & Reports</h1>
+        {error && <div role="alert" style={{ background: '#FEF2F2', color: '#991B1B', padding: 12, borderRadius: 8, marginBottom: 16 }}>{error}</div>}
         
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
@@ -46,7 +70,8 @@ export default function HistoryPage() {
             </tr>
           </thead>
           <tbody>
-            {docs.length === 0 ? <tr><td colSpan={7} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No documents generated yet.</td></tr> : 
+            {loading ? <tr><td colSpan={7} style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Loading document history...</td></tr> :
+             docs.length === 0 ? <tr><td colSpan={7} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>No documents generated yet.</td></tr> :
              docs.map((d, i) => (
               <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                 <td style={{ padding: 12, fontWeight: 700, fontFamily: 'monospace', color: '#0D2B4E' }}>{d.serialNo}</td>

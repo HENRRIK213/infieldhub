@@ -23,31 +23,50 @@ const mainCategories = [
 export default function ProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsError, setProductsError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [invalidInvitation, setInvalidInvitation] = useState(false);
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      localStorage.removeItem('user');
+    }
     const urlParams = new URLSearchParams(window.location.search);
-    const hasLinkToken = urlParams.has('link');
-
     const isStaff = user && (user.role === 'ADMIN' || user.role === 'EMPLOYEE');
     const isCustomer = user && user.role === 'CUSTOMER';
 
-    if (!isStaff && !isCustomer && !hasLinkToken) {
+    if (!isStaff && !isCustomer) {
+      setInvalidInvitation(urlParams.has('link'));
       setIsAuthorized(false);
       return;
     }
     
     setIsAuthorized(true);
     
+    setProductsLoading(true);
     api.get('/products').then(r => {
+      if (!Array.isArray(r.data)) throw new Error('Unexpected product catalog response');
       setProducts(r.data.filter((p: any) => p.status === 'APPROVED' || !p.status));
-    }).catch(() => {});
+      setProductsError('');
+    }).catch((error) => {
+      console.error('Failed to load product catalog:', error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setIsAuthorized(false);
+      } else {
+        setProductsError('We could not load product details. The catalog service may be unavailable; try again shortly.');
+      }
+    }).finally(() => setProductsLoading(false));
   }, []);
 
   if (!isAuthorized) {
@@ -56,7 +75,11 @@ export default function ProductsPage() {
         <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 20 }}>
           <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
           <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0D2B4E', marginBottom: 10 }}>Private Catalog</h1>
-          <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>Please use the secure link provided by your sales representative to view our products.</p>
+          <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>
+            {invalidInvitation
+              ? 'Link Invalid or Expired. Please contact your administrator to request a new link.'
+              : 'Please use the secure link provided by your sales representative to view our products.'}
+          </p>
         </div>
       </Layout>
     );
@@ -102,6 +125,18 @@ export default function ProductsPage() {
       </div>
 
       <div style={{ maxWidth: 1200, margin: '40px auto', padding: '0 20px' }}>
+        {productsError && (
+          <div role="alert" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B', padding: 14, borderRadius: 8, marginBottom: 20 }}>
+            {productsError}
+            <button onClick={() => { setProductsError(''); setProductsLoading(true); api.get('/products').then(r => {
+              if (!Array.isArray(r.data)) throw new Error('Unexpected product catalog response');
+              setProducts(r.data.filter((p: any) => p.status === 'APPROVED' || !p.status));
+            }).catch((error) => { console.error('Product catalog retry failed:', error); setProductsError('The product catalog is still unavailable. Please try again later.'); }).finally(() => setProductsLoading(false)); }} style={{ marginLeft: 12, color: '#991B1B', textDecoration: 'underline', background: 'none', border: 0, cursor: 'pointer', fontWeight: 700 }}>
+              Retry
+            </button>
+          </div>
+        )}
+        {productsLoading && <p role="status" style={{ color: '#64748b', marginBottom: 16 }}>Loading product catalog…</p>}
         {(selectedCategory || selectedType || selectedSize) && (
           <div style={{ marginBottom: 24, display: 'flex', gap: 8, fontSize: 14, fontWeight: 600, color: '#64748b', flexWrap: 'wrap' }}>
             <span onClick={() => { setSelectedCategory(null); setSelectedType(null); setSelectedSize(null); }} style={{ cursor: 'pointer', color: '#1E88E5' }}>All Main Products</span>
@@ -135,7 +170,7 @@ export default function ProductsPage() {
                 </div>
               ))}
             </div>
-            {availableTypes.length === 0 && <p style={{ color: '#64748b' }}>No types are available in this category yet.</p>}
+            {availableTypes.length === 0 && !productsLoading && !productsError && <p style={{ color: '#64748b' }}>No types are available in this category yet. Please contact an administrator.</p>}
           </div>
         )}
 

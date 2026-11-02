@@ -1,74 +1,120 @@
-﻿const express = require('express');
-const router = express.Router();
+const express = require('express');
+const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const { auth } = require('../middleware/auth');
-const { notifyAdmin } = require('../utils/notify');
+const { auth, requireAdmin } = require('../middleware/auth');
+const { generateDocumentPDF } = require('../utils/pdf');
 
-// GET STATS (For the Dashboard Tracker)
-router.get('/stats', auth, async (req, res) => {
+const router = express.Router();
+const prisma = new PrismaClient();
+const documentTypes = new Set(['QUOTATION', 'INVOICE', 'REPORT', 'POSTER']);
+
+router.get('/stats', auth, requireAdmin, async (req, res) => {
   try {
-    const allDocs = await prisma.document.findMany();
-    const quotes = allDocs.filter(d => d.type === 'QUOTATION');
-    const invoices = allDocs.filter(d => d.type === 'INVOICE');
-    
+    const allDocs = await prisma.document.findMany({ orderBy: { createdAt: 'desc' } });
+    const quotes = allDocs.filter((document) => document.type === 'QUOTATION');
+    const invoices = allDocs.filter((document) => document.type === 'INVOICE');
     res.json({
       totalQuotes: quotes.length,
       totalInvoices: invoices.length,
-      approvedQuotes: quotes.filter(d => d.status === 'APPROVED').length,
-      pendingQuotes: quotes.filter(d => d.status === 'DRAFT' || d.status === 'SENT').length,
-      recentDocs: allDocs.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5)
+      approvedQuotes: quotes.filter((document) => document.status === 'APPROVED').length,
+      pendingQuotes: quotes.filter((document) => ['DRAFT', 'SENT'].includes(document.status)).length,
+      recentDocs: allDocs.slice(0, 5),
     });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+  } catch (error) {
+    console.error('Document statistics failed:', error.code || error.name);
+    res.status(503).json({ error: 'Could not load document statistics' });
   }
 });
 
-router.post('/', auth, async (req, res) => {
+router.get('/', auth, requireAdmin, async (req, res) => {
   try {
-    const { type, title, clientName, clientPhone, content, total } = req.body;
-    const prefix = type === 'QUOTATION' ? 'QT' : type === 'INVOICE' ? 'INV' : type === 'REPORT' ? 'RPT' : 'PSTR';
-    const serialNo = prefix + '-' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 10);
+    const documents = await prisma.document.findMany({ orderBy: { createdAt: 'desc' } });
+    res.json(documents);
+  } catch (error) {
+    console.error('Document list failed:', error.code || error.name);
+    res.status(503).json({ error: 'Could not load document history' });
+  }
+});
 
-    const doc = await prisma.document.create({
-      data: { type, title, clientName, clientPhone, content: JSON.stringify(content), total, serialNo, status: 'SENT' }
+router.post('/', auth, requireAdmin, async (req, res) => {
+  try {
+    const { type, title, clientName, clientPhone, content, total = 0 } = req.body;
+    if (!documentTypes.has(type)) {
+      return res.status(400).json({ error: 'Choose a valid document type' });
+    }
+    if (typeof title !== 'string' || !title.trim()) {
+      return res.status(400).json({ error: 'Document title is required' });
+    }
+    const numericTotal = Number(total);
+    if (!Number.isFinite(numericTotal) || numericTotal < 0) {
+      return res.status(400).json({ error: 'Document total must be a non-negative number' });
+    }
+    const serializedContent = JSON.stringify(content ?? {});
+    if (Buffer.byteLength(serializedContent, 'utf8') > 1024 * 1024) {
+      return res.status(413).json({ error: 'Document content must be smaller than 1 MB' });
+    }
+
+    const prefix = { QUOTATION: 'QT', INVOICE: 'INV', REPORT: 'RPT', POSTER: 'PSTR' }[type];
+    const document = await prisma.document.create({
+      data: {
+        type,
+        title: title.trim(),
+        clientName: typeof clientName === 'string' ? clientName.trim() : null,
+        clientPhone: typeof clientPhone === 'string' ? clientPhone.trim() : null,
+        content: serializedContent,
+        total: numericTotal,
+        serialNo: `${prefix}-${new Date().getFullYear()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
+        status: 'GENERATED',
+      },
     });
-
-    notifyAdmin(prisma, type.toLowerCase() + '.created', 'New ' + type + ' ' + serialNo + ' generated for ' + (clientName || 'Client') + ' (KES ' + (total || 0).toLocaleString() + ')', {
-      serialNo, title, clientName, total
-    }).catch(() => {});
-
-    res.json(doc);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(201).json(document);
+  } catch (error) {
+    console.error('Document save failed:', error.code || error.name);
+    res.status(503).json({ error: 'Could not save this document to history' });
   }
 });
 
-router.get('/', auth, async (req, res) => {
+router.get('/:id/pdf', auth, requireAdmin, async (req, res) => {
   try {
-    const docs = await prisma.document.findMany({ orderBy: { createdAt: 'desc' } });
-    res.json(docs);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    const document = await prisma.document.findUnique({ where: { id: req.params.id } });
+    if (!document) return res.status(404).json({ error: 'Document not found' });
+
+    let content;
+    try {
+      content = JSON.parse(document.content || '{}');
+    } catch (error) {
+      console.error('Stored document content is invalid:', document.id);
+      return res.status(422).json({ error: 'This document cannot be regenerated because its saved content is invalid' });
+    }
+
+    const ids = Array.isArray(content.featuredProductIds)
+      ? [...new Set(content.featuredProductIds.filter((id) => typeof id === 'string'))].slice(0, 3)
+      : [];
+    const featuredProducts = ids.length
+      ? await prisma.product.findMany({ where: { id: { in: ids } } })
+      : [];
+    const pdfPath = await generateDocumentPDF(document, featuredProducts);
+    const filename = `${document.serialNo.replace(/[^a-zA-Z0-9_-]/g, '')}.pdf`;
+    res.download(pdfPath, filename, (error) => {
+      if (error && !res.headersSent) {
+        console.error('Document PDF download failed:', error.code || error.name);
+        res.status(500).json({ error: 'Could not download this document' });
+      }
+    });
+  } catch (error) {
+    console.error('Document PDF generation failed:', error.code || error.name);
+    res.status(500).json({ error: 'Could not generate this document PDF' });
   }
 });
 
-module.exports = router;
-const express = require('express');
-const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const { auth, requireAdmin } = require('../middleware/auth');
-const { notifyAdmin } = require('../utils/notify');
-
-// DELETE DOCUMENT
 router.delete('/:id', auth, requireAdmin, async (req, res) => {
   try {
-    const doc = await prisma.document.delete({ where: { id: req.params.id } });
-    notifyAdmin(prisma, 'document.deleted', `Document ${doc.serialNo} was deleted by admin`, { serialNo: doc.serialNo }).catch(()=>{});
+    await prisma.document.delete({ where: { id: req.params.id } });
     res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+  } catch (error) {
+    if (error.code === 'P2025') return res.status(404).json({ error: 'Document not found' });
+    console.error('Document delete failed:', error.code || error.name);
+    res.status(503).json({ error: 'Could not delete this document' });
   }
 });
 

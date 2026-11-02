@@ -7,10 +7,18 @@ export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<'BUSINESS' | 'POSTER'>('BUSINESS');
   const [type, setType] = useState('QUOTATION');
   const [clientName, setClientName] = useState('THE CLIENT');
+  const [documentRef, setDocumentRef] = useState('');
+  const [reportSubject, setReportSubject] = useState('');
+  const [reportSummary, setReportSummary] = useState('');
+  const [reportWork, setReportWork] = useState('');
+  const [reportRecommendations, setReportRecommendations] = useState('');
+  const [pdfStatus, setPdfStatus] = useState('');
   
   const [products, setProducts] = useState<any[]>([]);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [adProducts, setAdProducts] = useState<any[]>([]);
+  const [featuredImagesLoading, setFeaturedImagesLoading] = useState(true);
+  const [featuredImagesError, setFeaturedImagesError] = useState('');
   
   const [posterTitle, setPosterTitle] = useState('Power Your Home\nThe Smart Way');
   const [posterSub, setPosterSub] = useState('Clean Solar Energy • Zero Noise • Zero Stress');
@@ -24,6 +32,11 @@ export default function DocumentsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const prefix = type === 'QUOTATION' ? 'QT' : type === 'INVOICE' ? 'INV' : 'RPT';
+    setDocumentRef(`${prefix}-${Date.now().toString().slice(-8)}`);
+  }, [type]);
+
+  useEffect(() => {
     api.get('/products').then(r => {
       setProducts(r.data);
       const withImages = r.data.filter((p: any) => p.imageUrl);
@@ -32,20 +45,23 @@ export default function DocumentsPage() {
         [withImages[i], withImages[j]] = [withImages[j], withImages[i]];
       }
       setAdProducts(
-        withImages.length === 0
-          ? []
-          : Array.from({ length: 3 }, (_, i) => withImages[i % withImages.length])
+        withImages.slice(0, 3)
       );
     }).catch((error) => {
       console.error('Failed to load featured product images:', error);
       setAdProducts([]);
+      setFeaturedImagesError('Featured product images could not be loaded. Check the backend connection.');
+    }).finally(() => {
+      setFeaturedImagesLoading(false);
     });
   }, []);
 
-  const addItem = (prod: any) => setSelectedItems([...selectedItems, { ...prod, qty: 1 }]);
+  const addItem = (prod: any) => {
+    setSelectedItems([...selectedItems, { ...prod, qty: 1 }]);
+  };
   const updateQty = (index: number, qty: number) => {
     const newItems = [...selectedItems];
-    newItems[index].qty = qty;
+    newItems[index].qty = Math.max(1, Math.floor(qty) || 1);
     setSelectedItems(newItems);
   };
   const removeItem = (index: number) => setSelectedItems(selectedItems.filter((_, i) => i !== index));
@@ -64,31 +80,61 @@ export default function DocumentsPage() {
   const grandTotal = subtotal + vatTotal;
 
   const handleDownloadPDF = async () => {
+    if (activeTab === 'BUSINESS' && type === 'REPORT' && !reportSubject.trim()) {
+      setPdfStatus('Enter a report subject before downloading.');
+      return;
+    }
+    if (activeTab === 'BUSINESS' && type !== 'REPORT' && selectedItems.length === 0) {
+      setPdfStatus(`Add at least one product before downloading this ${type.toLowerCase()}.`);
+      return;
+    }
     setIsGenerating(true);
+    setPdfStatus('');
     try {
       const html2pdf = (await import('html2pdf.js')).default;
       const element = document.getElementById('print-area');
       if (!element) throw new Error('Document preview is unavailable');
       const formatMap: any = { 'A4': 'a4', 'A3': 'a3', 'A5': 'a5', 'Letter': 'letter', 'Square': [8, 8] };
+      await document.fonts.ready;
+      await Promise.all(Array.from(element.querySelectorAll('img')).map((image) => image.decode()));
 
       const opt: any = {
-        margin: activeTab === 'BUSINESS' ? 0.3 : 0,
+        margin: 0,
         filename: `${activeTab === 'BUSINESS' ? type : 'Poster'}-${Date.now()}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
         jsPDF: { unit: 'in', format: formatMap[paperSize] || 'a4', orientation: activeTab === 'BUSINESS' ? 'portrait' : orientation },
-        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'img', '.quote-terms', '.quote-payment'] },
+        pagebreak: { mode: ['css'], avoid: ['tr', 'img', '.quote-terms', '.quote-payment'] },
       };
       await html2pdf().set(opt).from(element).save();
-      
+    } catch (error) {
+      setPdfStatus(error instanceof Error ? `PDF download failed: ${error.message}` : 'PDF download failed. Please try again.');
+      setIsGenerating(false);
+      return;
+    }
+
+    try {
+      const savedItems = selectedItems.map(({ id, name, price, vat, qty }) => ({ id, name, price, vat, qty }));
       await api.post('/documents', {
         type: activeTab === 'BUSINESS' ? type : 'POSTER',
         title: activeTab === 'BUSINESS' ? `${type} for ${clientName}` : posterTitle,
-        clientName, content: activeTab === 'BUSINESS' ? selectedItems : { posterTitle, posterSub, posterImage },
-        total: activeTab === 'BUSINESS' ? grandTotal : 0
+        clientName,
+        content: activeTab === 'BUSINESS'
+          ? {
+              documentRef,
+              items: savedItems,
+              featuredProductIds: type === 'QUOTATION' ? adProducts.map((product) => product.id) : [],
+              reportSubject,
+              reportSummary,
+              reportWork,
+              reportRecommendations,
+            }
+          : { posterTitle, posterSub, posterTheme, paperSize, orientation },
+        total: activeTab === 'BUSINESS' && type !== 'REPORT' ? grandTotal : 0,
       });
-    } catch (err) {
-      alert('Error generating PDF');
+      setPdfStatus('PDF downloaded and saved to document history.');
+    } catch (error) {
+      setPdfStatus('PDF downloaded, but it could not be saved to document history. Check the backend connection.');
     } finally {
       setIsGenerating(false);
     }
@@ -99,6 +145,12 @@ export default function DocumentsPage() {
   const isLandscape = orientation === 'landscape' && paperSize !== 'Square';
   const finalWidth = isLandscape ? previewDimensions.height : previewDimensions.width;
   const finalHeight = isLandscape ? previewDimensions.width : previewDimensions.height;
+  const reportFields: { label: string; value: string; setValue: (value: string) => void; placeholder: string }[] = [
+    { label: 'Report Subject', value: reportSubject, setValue: setReportSubject, placeholder: 'Example: Solar pump installation inspection' },
+    { label: 'Executive Summary', value: reportSummary, setValue: setReportSummary, placeholder: 'Summarize the purpose and outcome of the visit.' },
+    { label: 'Work Completed / Findings', value: reportWork, setValue: setReportWork, placeholder: 'Record the work performed, measurements, and findings.' },
+    { label: 'Recommendations / Next Steps', value: reportRecommendations, setValue: setReportRecommendations, placeholder: 'List the recommended actions and follow-up.' },
+  ];
 
   return (
     <Layout requireAdmin>
@@ -124,21 +176,39 @@ export default function DocumentsPage() {
               <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Client Name</label>
               <input value={clientName} onChange={e => setClientName(e.target.value)} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, marginBottom: 16 }} />
 
-              <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Add Product</label>
-              <select onChange={e => { const p = products.find(x => x.id === e.target.value); if (p) addItem(p); }} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, marginBottom: 16 }}>
-                <option value="">-- Select a product --</option>
-                {products.map(p => <option key={p.id} value={p.id}>{p.name} - KSH {p.price.toLocaleString()}</option>)}
-              </select>
+              {type === 'REPORT' ? (
+                <>
+                  {reportFields.map(({ label, value, setValue, placeholder }) => (
+                    <label key={label} style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 12 }}>
+                      {label}
+                      <textarea
+                        value={value}
+                        onChange={(event) => setValue(event.target.value)}
+                        placeholder={placeholder}
+                        style={{ display: 'block', width: '100%', minHeight: 72, resize: 'vertical', marginTop: 6, padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, font: 'inherit', fontWeight: 400 }}
+                      />
+                    </label>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <label style={{ fontSize: 12, fontWeight: 700, marginBottom: 4, display: 'block' }}>Add Product</label>
+                  <select onChange={e => { const p = products.find(x => x.id === e.target.value); if (p) addItem(p); e.target.value = ''; }} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, marginBottom: 16 }}>
+                    <option value="">-- Select a product --</option>
+                    {products.map(p => <option key={p.id} value={p.id}>{p.name} - KSH {p.price.toLocaleString()}</option>)}
+                  </select>
 
-              <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Selected Items</h3>
-              {selectedItems.length === 0 && <div style={{ color: '#94a3b8', fontSize: 12 }}>No items selected</div>}
-              {selectedItems.map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, background: '#f8fafc', padding: 8, borderRadius: 6 }}>
-                  <div style={{ flex: 1, fontSize: 12, fontWeight: 600 }}>{item.name}</div>
-                  <input type="number" min="1" value={item.qty} onChange={e => updateQty(idx, Number(e.target.value))} style={{ width: 50, padding: 4, border: '1px solid #cbd5e1', borderRadius: 4 }} />
-                  <button onClick={() => removeItem(idx)} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer' }}>X</button>
-                </div>
-              ))}
+                  <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Selected Items</h3>
+                  {selectedItems.length === 0 && <div style={{ color: '#94a3b8', fontSize: 12 }}>No items selected</div>}
+                  {selectedItems.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, background: '#f8fafc', padding: 8, borderRadius: 6 }}>
+                      <div style={{ flex: 1, fontSize: 12, fontWeight: 600 }}>{item.name}</div>
+                      <input type="number" min="1" step="1" value={item.qty} onChange={e => updateQty(idx, Number(e.target.value))} style={{ width: 50, padding: 4, border: '1px solid #cbd5e1', borderRadius: 4 }} />
+                      <button onClick={() => removeItem(idx)} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer' }}>Remove</button>
+                    </div>
+                  ))}
+                </>
+              )}
             </>
           ) : (
             <>
@@ -189,18 +259,25 @@ export default function DocumentsPage() {
           <button onClick={handleDownloadPDF} disabled={isGenerating} style={{ width: '100%', background: '#0D2B4E', color: '#fff', padding: 14, borderRadius: 8, border: 'none', fontWeight: 700, cursor: 'pointer' }}>
             {isGenerating ? 'Generating...' : '⬇ Download PDF'}
           </button>
+          {type === 'QUOTATION' && !featuredImagesLoading && (
+            <p role={featuredImagesError || adProducts.length < 3 ? 'alert' : 'status'} style={{ color: featuredImagesError || adProducts.length < 3 ? '#b45309' : '#166534', fontSize: 12, lineHeight: 1.5, marginTop: 10 }}>
+              {featuredImagesError || (adProducts.length < 3
+                ? `Only ${adProducts.length} approved products have images. Add images to at least 3 products to feature three unique products on quotations.`
+                : 'Three unique product images are ready for this quotation.')}
+            </p>
+          )}
+          {pdfStatus && <p role="status" style={{ color: pdfStatus.startsWith('PDF downloaded') ? '#166534' : '#b91c1c', fontSize: 12, lineHeight: 1.5, marginTop: 10 }}>{pdfStatus}</p>}
         </div>
 
         {/* RIGHT: Preview */}
         <div style={{ background: '#e2e8f0', padding: 20, borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', overflow: 'auto' }}>
           
-          <div id="print-area" style={{ background: activeTab === 'POSTER' ? `url(${posterImage}) center/cover` : '#fff', width: activeTab === 'POSTER' ? finalWidth : '210mm', height: activeTab === 'POSTER' ? finalHeight : 'auto', minHeight: activeTab === 'POSTER' ? finalHeight : '297mm', padding: activeTab === 'POSTER' ? 0 : 40, boxSizing: 'border-box', fontFamily: activeTab === 'POSTER' ? posterFont : 'Arial, sans-serif', fontSize: 11, color: '#000', position: 'relative', overflow: activeTab === 'POSTER' ? 'hidden' : 'visible', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+          <div id="print-area" style={{ background: activeTab === 'POSTER' ? `url(${posterImage}) center/cover` : '#fff', width: activeTab === 'POSTER' ? finalWidth : '210mm', height: activeTab === 'POSTER' ? finalHeight : 'auto', minHeight: activeTab === 'POSTER' ? finalHeight : '297mm', padding: activeTab === 'POSTER' ? 0 : 40, margin: '0 auto', flexShrink: 0, boxSizing: 'border-box', fontFamily: activeTab === 'POSTER' ? posterFont : 'Arial, sans-serif', fontSize: 11, color: '#000', position: 'relative', overflow: activeTab === 'POSTER' ? 'hidden' : 'visible', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
             
             {activeTab === 'BUSINESS' ? (
               <div style={{ display: 'flex', flexDirection: 'column', minHeight: '297mm' }}>
                 
                 <div>
-                  {/* Header with Random Ad Images */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                     <div>
                       <img src={logoSrc} alt="Logo" style={{ height: 60 }} crossOrigin="anonymous" />
@@ -212,28 +289,51 @@ export default function DocumentsPage() {
                       </div>
                     </div>
                     
-                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                      <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{type}</h1>
-                      <div style={{ fontSize: 11, color: '#475569', marginTop: 8, lineHeight: 1.6 }}>
+                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', maxWidth: 180 }}>
+                      <div style={{ fontSize: 10, color: '#475569', lineHeight: 1.6 }}>
                         Date: <strong>{new Date().toLocaleDateString('en-GB')}</strong><br/>
-                        Ref: <strong>{type.slice(0,2)}-{Date.now().toString().slice(-6)}</strong>
+                        Ref: <strong>{documentRef || 'Preparing...'}</strong>
                       </div>
-
-                      <img src="/payment-logos/quotation-solar-panels.png" alt="Solar panels" style={{ width: 160, height: 120, objectFit: 'contain', marginTop: 8 }} />
+                      <img src="/payment-logos/quotation-solar-panels.png" alt="Solar panels" style={{ width: 132, height: 78, objectFit: 'contain', marginTop: 6 }} />
                     </div>
                   </div>
 
+                  <h1 style={{ width: '100%', textAlign: 'center', fontSize: 22, lineHeight: 1.2, fontWeight: 800, color: '#0D2B4E', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.04em', overflowWrap: 'anywhere' }}>
+                    {type === 'REPORT' ? 'SERVICE REPORT' : type}
+                  </h1>
+
                   {/* Divider */}
-                  <div style={{ borderBottom: '2px solid #0D2B4E', marginBottom: 20 }}></div>
+                  <div style={{ borderBottom: '2px solid #0D2B4E', marginBottom: 16 }}></div>
 
                   {/* Client Info */}
                   <div style={{ marginBottom: 24, fontSize: 12, lineHeight: 1.6 }}>
                     <strong>To: {clientName || 'THE CLIENT'}</strong><br/>
                     Dear Sir/Madam,<br/>
-                    <span style={{ display: 'inline-block', marginTop: 8 }}>We are grateful for your inquiry concerning the above subject matter. We are now pleased to forward our quote, terms & conditions to you.</span>
+                    <span style={{ display: 'inline-block', marginTop: 8 }}>
+                      {type === 'QUOTATION'
+                        ? 'We are pleased to submit our quotation for the products and services listed below.'
+                        : type === 'INVOICE'
+                          ? 'Please find the itemized invoice for the products and services listed below.'
+                          : 'Please find below the service report prepared for your reference.'}
+                    </span>
                   </div>
 
-                  {/* Table */}
+                  {type === 'REPORT' ? (
+                    <div style={{ fontSize: 11, lineHeight: 1.6, color: '#334155' }}>
+                      {[
+                        ['REPORT SUBJECT', reportSubject],
+                        ['EXECUTIVE SUMMARY', reportSummary],
+                        ['WORK COMPLETED / FINDINGS', reportWork],
+                        ['RECOMMENDATIONS / NEXT STEPS', reportRecommendations],
+                      ].map(([heading, value]) => value.trim() && (
+                        <section key={heading} style={{ marginBottom: 18, pageBreakInside: 'avoid' }}>
+                          <h2 style={{ color: '#0D2B4E', fontSize: 11, margin: '0 0 6px', borderBottom: '1px solid #D9E2EC', paddingBottom: 4 }}>{heading}</h2>
+                          <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{value}</p>
+                        </section>
+                      ))}
+                    </div>
+                  ) : (
+                    <>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 20, pageBreakInside: 'auto' }}>
                     <thead>
                       <tr style={{ background: '#F8FAFC', borderTop: '1px solid #0D2B4E', borderBottom: '1px solid #0D2B4E', textAlign: 'left', color: '#0D2B4E', fontSize: 11 }}>
@@ -265,6 +365,8 @@ export default function DocumentsPage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: '2px solid #0D2B4E', marginTop: 4, fontSize: 14, color: '#0D2B4E' }}><strong>Total KES</strong> <strong>{grandTotal.toLocaleString()}</strong></div>
                     </div>
                   </div>
+                    </>
+                  )}
                 </div>
 
                 <div>
@@ -286,36 +388,41 @@ export default function DocumentsPage() {
                     </section>
                   )}
 
-                  {/* Terms */}
-                  <div className="quote-terms" style={{ borderTop: '1px solid #0D2B4E', paddingTop: 12, fontSize: 10, color: '#475569', marginBottom: 16, lineHeight: 1.5, pageBreakInside: 'avoid' }}>
-                    <strong style={{ color: '#0D2B4E', fontSize: 11 }}>TERMS & CONDITIONS:</strong><br/>
-                    Delivery: EX STOCK SUBJECT TO PRIOR SALES.<br/>
-                    Validity: THIS PRICE VALID FOR 1 WEEK.<br/>
-                    Payment: IN FULL PRIOR TO SUPPLY.
-                  </div>
+                  {type === 'QUOTATION' && (
+                    <div className="quote-terms" style={{ borderTop: '1px solid #0D2B4E', paddingTop: 12, fontSize: 10, color: '#475569', marginBottom: 16, lineHeight: 1.5, pageBreakInside: 'avoid' }}>
+                      <strong style={{ color: '#0D2B4E', fontSize: 11 }}>TERMS & CONDITIONS:</strong><br/>
+                      Delivery: EX STOCK SUBJECT TO PRIOR SALES.<br/>
+                      Validity: THIS PRICE VALID FOR 1 WEEK.<br/>
+                      Payment: IN FULL PRIOR TO SUPPLY.
+                    </div>
+                  )}
+                  {type === 'INVOICE' && (
+                    <div style={{ borderTop: '1px solid #0D2B4E', paddingTop: 12, fontSize: 10, color: '#475569', marginBottom: 16, lineHeight: 1.5, pageBreakInside: 'avoid' }}>
+                      <strong style={{ color: '#0D2B4E', fontSize: 11 }}>PAYMENT TERMS</strong><br/>
+                      Payment is due upon receipt of this invoice. Please use the invoice reference when making payment.
+                    </div>
+                  )}
 
                   {/* Payment Options */}
                   {type === 'QUOTATION' && (
                     <div className="quote-payment" style={{ border: '1px solid #0D2B4E', borderRadius: 8, padding: 12, marginBottom: 24, pageBreakInside: 'avoid' }}>
                       <div style={{ fontWeight: 800, marginBottom: 10, textAlign: 'center', fontSize: 11, background: '#F8FAFC', padding: 6, color: '#0D2B4E' }}>PAYMENT OPTIONS</div>
-                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 18, marginBottom: 10 }}>
-                        <img src="/payment-logos/kcb-mobile.png" alt="KCB Mobile" style={{ width: 70, height: 40, objectFit: 'contain' }} />
-                        <img src="/payment-logos/equity-bank.png" alt="Equity Bank" style={{ width: 70, height: 40, objectFit: 'contain' }} />
-                        <img src="/payment-logos/mpesa.png" alt="M-PESA" style={{ width: 105, height: 40, objectFit: 'contain' }} />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, fontSize: 9, color: '#475569' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, fontSize: 9, color: '#475569' }}>
                         <div>
+                          <img src="/payment-logos/kcb-mobile.png" alt="Kingdom Bank KCB Mobile" style={{ width: '100%', height: 42, objectFit: 'contain', marginBottom: 8 }} />
                           <strong style={{ color: '#0D2B4E' }}>KINGDOM BANK</strong><br/>
                           Name: InfieldHub Ltd<br/>
                           Acc No: 5021964795002<br/>
                           Bank Code: 01103043639002
                         </div>
                         <div>
+                          <img src="/payment-logos/co-operative-bank.png" alt="Co-operative Bank" style={{ width: '100%', height: 42, objectFit: 'contain', marginBottom: 8 }} />
                           <strong style={{ color: '#0D2B4E' }}>CO-OPERATIVE BANK (CoopTill)</strong><br/>
                           Business Name: 1170535<br/>
                           Acc No: 400200
                         </div>
                         <div>
+                          <img src="/payment-logos/mpesa.png" alt="M-PESA Paybill" style={{ width: '100%', height: 42, objectFit: 'contain', marginBottom: 8 }} />
                           <strong style={{ color: '#0D2B4E' }}>M-PESA</strong><br/>
                           Paybill: 247247<br/>
                           Acc: 0701243548

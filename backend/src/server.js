@@ -7,6 +7,8 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const { Server } = require('socket.io');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 const { setupSockets } = require('./sockets/monitor.socket');
 const authRoutes = require('./routes/auth.routes');
@@ -17,6 +19,8 @@ const paymentRoutes = require('./routes/payment.routes');
 const logRoutes = require('./routes/log.routes');
 const userRoutes = require('./routes/user.routes');
 const reportRoutes = require('./routes/report.routes');
+const documentRoutes = require('./routes/document.routes');
+const inviteRoutes = require('./routes/invite.routes');
 
 ['uploads/tmp', 'uploads/products', 'uploads/quotations'].forEach((p) => {
   const full = path.join(__dirname, '..', p);
@@ -46,8 +50,27 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/invites', inviteRoutes);
 
 app.get('/', (req, res) => res.json({ service: 'InfieldHub API', status: 'ok' }));
+app.get('/api/health', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({
+      status: 'ok',
+      database: 'connected',
+      emailConfigured: Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+    });
+  } catch (error) {
+    console.error('Health check database query failed:', error.code || error.name);
+    res.status(503).json({
+      status: 'unavailable',
+      database: 'unavailable',
+      emailConfigured: Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+    });
+  }
+});
 
 setupSockets(io);
 

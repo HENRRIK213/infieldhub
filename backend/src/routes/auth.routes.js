@@ -13,8 +13,10 @@ const generateCode = () => String(crypto.randomInt(100000, 1000000));
 router.post('/customer-request-code', async (req, res) => {
   try {
     const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-    const { token } = req.body;
-    if (!email) return res.status(400).json({ error: 'Email is required' });
+    const token = typeof req.body.token === 'string' ? req.body.token : '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Enter a valid email address' });
+    }
 
     if (token) {
       const link = await prisma.customerLink.findUnique({ where: { token } });
@@ -47,14 +49,30 @@ router.post('/customer-request-code', async (req, res) => {
 
     await prisma.user.update({
       where: { email },
-      data: { verificationCode: code, verificationCodeExpires: codeExpires, isVerified: false }
+      data: { verificationCode: code, verificationCodeExpires: codeExpires }
     });
 
-    await sendVerificationEmail(email, code);
+    try {
+      await sendVerificationEmail(email, code);
+    } catch (error) {
+      await prisma.user.update({
+        where: { email },
+        data: { verificationCode: null, verificationCodeExpires: null },
+      });
+      console.error('Verification email delivery failed:', error.code || error.name);
+      if (error.code === 'EMAIL_NOT_CONFIGURED') {
+        return res.status(503).json({
+          error: 'Email verification is not configured. Please contact the administrator.',
+        });
+      }
+      return res.status(503).json({
+        error: 'We could not deliver your verification email. Please try again later.',
+      });
+    }
     res.json({ message: 'Code sent to email', email });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Server error sending code' });
+    console.error('Customer verification request failed:', e.code || e.name);
+    res.status(503).json({ error: 'Verification is temporarily unavailable. Please try again later.' });
   }
 });
 
@@ -97,6 +115,7 @@ router.post('/customer-verify-code', async (req, res) => {
 
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
   } catch (e) {
+    console.error('Customer code verification failed:', e.code || e.name);
     res.status(500).json({ error: 'Server error verifying code' });
   }
 });

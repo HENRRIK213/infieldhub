@@ -2,14 +2,13 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 const { v4: uuid } = require('uuid');
+const crypto = require('crypto');
 const router = express.Router();
 const prisma = new PrismaClient();
 const { auth, requireAdmin } = require('../middleware/auth');
 const { sendVerificationCode } = require('../utils/mailer');
 const { logActivity } = require('../utils/security');
 const { validatePassword } = require('../middleware/passwordPolicy');
-
-const pending = new Map();
 
 // ⏱️ Employee link = 7 days
 const INVITE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -20,8 +19,6 @@ const CODE_MS = 30 * 60 * 1000;
 // ============================================================
 router.post('/employee/generate', auth, requireAdmin, async (req, res) => {
   try {
-    console.log(`\n👥 Employee invite request from ${req.user.email}`);
-
     const token = uuid();
     const expiresAt = new Date(Date.now() + INVITE_MS);
 
@@ -29,23 +26,20 @@ router.post('/employee/generate', auth, requireAdmin, async (req, res) => {
       data: { token, createdBy: req.user.id, expiresAt, active: true },
     });
 
-    const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/employee/register/${token}`;
-
-    console.log(`   ✅ Created: ${url}`);
-    console.log(`   Expires: ${expiresAt.toLocaleString()} (7 days)\n`);
+    const url = `${process.env.FRONTEND_URL || 'https://infieldhub.vercel.app'}/employee/register/${token}`;
 
     await logActivity({
       userId: req.user.id,
       action: 'EMPLOYEE_INVITE_GENERATE',
       interface: 'web',
-      details: token,
+      details: 'Employee registration link generated',
       ip: req.ip,
     });
 
     res.json({ token, url, expiresAt, validDays: 7 });
   } catch (err) {
-    console.error('❌ Employee invite error:', err.message);
-    res.status(500).json({ error: err.message });
+    console.error('Employee invite creation failed:', err.code || err.name);
+    res.status(503).json({ error: 'Could not create an employee invitation' });
   }
 });
 
@@ -53,13 +47,18 @@ router.post('/employee/generate', auth, requireAdmin, async (req, res) => {
 // Verify link
 // ============================================================
 router.get('/employee/verify/:token', async (req, res) => {
-  const invite = await prisma.employeeInvite.findUnique({
-    where: { token: req.params.token },
-  });
-  if (!invite || !invite.active || invite.expiresAt < new Date()) {
-    return res.status(410).json({ error: 'Registration link expired or used' });
+  try {
+    const invite = await prisma.employeeInvite.findUnique({
+      where: { token: req.params.token },
+    });
+    if (!invite || !invite.active || invite.expiresAt < new Date()) {
+      return res.status(410).json({ error: 'Registration link expired or used' });
+    }
+    res.json({ valid: true, expiresAt: invite.expiresAt });
+  } catch (error) {
+    console.error('Employee invite validation failed:', error.code || error.name);
+    res.status(503).json({ error: 'Could not validate this registration link' });
   }
-  res.json({ valid: true, expiresAt: invite.expiresAt });
 });
 
 // ============================================================
@@ -67,8 +66,11 @@ router.get('/employee/verify/:token', async (req, res) => {
 // ============================================================
 router.post('/employee/send-code', async (req, res) => {
   try {
-    const { email, token } = req.body;
-    if (!email || !token) return res.status(400).json({ error: 'Email and token required' });
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const token = typeof req.body.token === 'string' ? req.body.token : '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !token) {
+      return res.status(400).json({ error: 'A valid email and invitation token are required' });
+    }
 
     const invite = await prisma.employeeInvite.findUnique({ where: { token } });
     if (!invite || !invite.active || invite.expiresAt < new Date()) {
@@ -78,15 +80,24 @@ router.post('/employee/send-code', async (req, res) => {
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) return res.status(400).json({ error: 'Email already registered' });
 
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    pending.set(email.toLowerCase(), { code, token, expiresAt: Date.now() + CODE_MS });
-
-    const sent = await sendVerificationCode(email, code);
-    console.log(`📧 Employee code for ${email}: ${code} (sent=${sent})`);
-
-    res.json({ success: true, emailSent: sent });
+    const code = String(crypto.randomInt(100000, 1000000));
+    const session = await prisma.customerSession.create({
+      data: { email, code, linkToken: token, expiresAt: new Date(Date.now() + CODE_MS) },
+    });
+    try {
+      await sendVerificationCode(email, code);
+    } catch (error) {
+      await prisma.customerSession.delete({ where: { id: session.id } });
+      throw error;
+    }
+    res.json({ success: true, emailSent: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Employee verification email request failed:', err.code || err.name);
+    res.status(503).json({
+      error: err.code === 'EMAIL_NOT_CONFIGURED'
+        ? 'Email verification is not configured. Please contact the administrator.'
+        : 'We could not deliver your verification email. Please try again later.',
+    });
   }
 });
 
@@ -95,16 +106,27 @@ router.post('/employee/send-code', async (req, res) => {
 // ============================================================
 router.post('/employee/register', async (req, res) => {
   try {
-    const { email, code, name, phone, password, token } = req.body;
-
-    const record = pending.get(email.toLowerCase());
-    if (!record) return res.status(401).json({ error: 'No code found' });
-    if (record.code !== code) return res.status(401).json({ error: 'Incorrect code' });
-    if (record.expiresAt < Date.now()) {
-      pending.delete(email.toLowerCase());
-      return res.status(401).json({ error: 'Code expired' });
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const code = typeof req.body.code === 'string' ? req.body.code : '';
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+    const phone = typeof req.body.phone === 'string' ? req.body.phone.trim() : '';
+    const password = typeof req.body.password === 'string' ? req.body.password : '';
+    const token = typeof req.body.token === 'string' ? req.body.token : '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(code) || !token || !name) {
+      return res.status(400).json({ error: 'Name, valid email, 6-digit code, and invitation are required' });
     }
-    if (record.token !== token) return res.status(401).json({ error: 'Token mismatch' });
+
+    const record = await prisma.customerSession.findFirst({
+      where: {
+        email,
+        code,
+        linkToken: token,
+        verified: false,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!record) return res.status(401).json({ error: 'Code is invalid or expired. Request a new one.' });
 
     const errors = validatePassword(password);
     if (errors.length) return res.status(400).json({ error: 'Password policy', details: errors });
@@ -127,7 +149,7 @@ router.post('/employee/register', async (req, res) => {
       data: { usedBy: user.id, active: false },
     });
 
-    pending.delete(email.toLowerCase());
+    await prisma.customerSession.deleteMany({ where: { email, linkToken: token } });
 
     await logActivity({
       userId: user.id,
@@ -139,7 +161,8 @@ router.post('/employee/register', async (req, res) => {
 
     res.json({ success: true, userId: user.id, email: user.email });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Employee registration failed:', err.code || err.name);
+    res.status(503).json({ error: 'Could not complete employee registration' });
   }
 });
 

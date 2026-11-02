@@ -68,9 +68,12 @@ function readProductFields(body, imageUrl) {
   };
 }
 
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
-    const products = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
+    const products = await prisma.product.findMany({
+      where: req.user.role === 'ADMIN' ? undefined : { status: 'APPROVED' },
+      orderBy: { createdAt: 'desc' },
+    });
     res.json(products);
   } catch (error) {
     console.error('Product list failed:', error);
@@ -78,10 +81,13 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
     const product = await prisma.product.findUnique({ where: { id: req.params.id } });
     if (!product) return res.status(404).json({ error: 'Product not found' });
+    if (req.user.role !== 'ADMIN' && product.status !== 'APPROVED') {
+      return res.status(404).json({ error: 'Product not found' });
+    }
     res.json(product);
   } catch (error) {
     console.error('Product lookup failed:', error);

@@ -11,11 +11,14 @@ RUN npm install --include=dev
 
 COPY . .
 
-RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/dummy" npx prisma generate
+# Generate Prisma Client (does not require a live database connection)
+RUN npx prisma generate
 
 ENV NODE_ENV=production
 ENV PORT=10000
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node seed.js && node src/server.js"]
+# Push schema, seed, and start the server. 
+# NOTE: RENDER MUST HAVE DATABASE_URL SET IN ITS ENVIRONMENT VARIABLES FOR THIS TO WORK.
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss; node seed.js; node src/server.js"]
