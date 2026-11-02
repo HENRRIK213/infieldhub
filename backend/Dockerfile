@@ -1,15 +1,21 @@
-FROM node:20
+FROM node:20-slim
 
 WORKDIR /app
 
-# Copy package files
+# Install system build tools required for native dependencies (sharp, bcrypt)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install dependencies
+# Install dependencies (this will now compile native modules successfully)
 RUN npm install
 
-# Copy source code
 COPY . .
 
 # Generate Prisma Client (using a dummy URL just for the build step)
