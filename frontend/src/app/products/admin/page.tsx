@@ -1,6 +1,6 @@
 ﻿'use client';
 import Layout from '@/components/Layout';
-import { api, getImageSrc } from '@/lib/api';
+import { api, UPLOADS_URL } from '@/lib/api';
 import { useEffect, useState } from 'react';
 
 export default function AdminProductsPage() {
@@ -31,7 +31,7 @@ export default function AdminProductsPage() {
   const openAdd = (categoryName = '') => {
     setEditProduct(null);
     setErrorMsg('');
-    setFormData({ name: '', description: '', price: '', category: categoryName, type: '', brand: 'Generic', size: '', stock: 10 });
+    setFormData({ name: '', description: '', price: '', category: categoryName, type: 'Standard', brand: 'Generic', size: 'Default', stock: 10 });
     setImageFile(null); setShowModal(true);
   };
 
@@ -73,10 +73,10 @@ export default function AdminProductsPage() {
         await api.post('/products', fd);
       }
       setShowModal(false); 
-      alert('✅ Saved successfully!');
+      alert('✅ Product saved successfully!');
       fetchProducts();
     } catch (err: any) { 
-      setErrorMsg(err.response?.data?.error || 'Failed to save. Please refresh the page.');
+      setErrorMsg(err.response?.data?.error || 'Failed to save.');
     } finally {
       setIsSaving(false);
     }
@@ -104,10 +104,14 @@ export default function AdminProductsPage() {
                   {groupedProducts[mainCategory].map(sub => (
                     <div key={sub.id} style={{ background: '#F8FAFC', borderRadius: 8, border: '1px solid #e2e8f0', padding: 16, display: 'flex', flexDirection: 'column' }}>
                       <div style={{ height: 120, background: '#fff', borderRadius: 6, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                        {sub.imageUrl ? <img src={getImageSrc(sub.imageUrl)} alt={sub.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 32 }}>📦</span>}
+                        {sub.imageUrl ? (
+                          <img src={`${UPLOADS_URL}${sub.imageUrl}`} alt={sub.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        ) : (
+                          <div style={{ color: '#94a3b8', fontWeight: 'bold' }}>No Image</div>
+                        )}
                       </div>
                       <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0D2B4E', marginBottom: 4 }}>{sub.name}</h3>
-                      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
                         {sub.type && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.type}</span>}
                         {sub.size && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.size}</span>}
                         {sub.brand && <span style={{ fontSize: 11, background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>{sub.brand}</span>}
@@ -116,7 +120,7 @@ export default function AdminProductsPage() {
                         <span style={{ fontSize: 16, fontWeight: 900, color: '#1E88E5' }}>KSH {sub.price.toLocaleString()}</span>
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button onClick={() => openEdit(sub)} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Edit</button>
-                          <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', color: '#B91C1C', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>🗑️ Delete</button>
+                          <button onClick={() => handleDelete(sub.id)} style={{ background: '#FEE2E2', color: '#B91C1C', border: 'none', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>🗑️</button>
                         </div>
                       </div>
                     </div>
@@ -150,11 +154,11 @@ export default function AdminProductsPage() {
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Type/Model</label>
-                <input value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+                <input required value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Size/Specs</label>
-                <input value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} placeholder="e.g. 2 inch" style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+                <input required value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} placeholder="e.g. 2 inch" style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Price (KSH)</label>
@@ -170,7 +174,7 @@ export default function AdminProductsPage() {
               </div>
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={{ fontSize: 12, fontWeight: 700 }}>Image {editProduct && '(Leave blank to keep existing)'}</label>
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e => setImageFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+                <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }} />
               </div>
               <div style={{ gridColumn: 'span 2', display: 'flex', gap: 12, marginTop: 10 }}>
                 <button type="button" onClick={() => setShowModal(false)} disabled={isSaving} style={{ flex: 1, padding: 14, background: '#F1F5F9', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>

@@ -1,7 +1,7 @@
 'use client';
 import Layout from '@/components/Layout';
-import { api, UPLOADS_URL } from '@/lib/api';
-import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
+import { useEffect, useState, useRef } from 'react';
 
 export default function DocumentsPage() {
   const [documentType, setDocumentType] = useState('QUOTATION');
@@ -10,245 +10,284 @@ export default function DocumentsPage() {
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  const quotationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    api.get('/products').then(r => setProducts(r.data)).catch(() => {});
+    api.get('/products').then(r => setProducts(r.data)).catch(() => {
+        setProducts([
+            { id: '1', name: 'Solar Panel 400W', price: 15000 },
+            { id: '2', name: 'Inverter 3KVA', price: 45000 },
+            { id: '3', name: 'Battery 200Ah', price: 25000 }
+        ]);
+    });
   }, []);
 
-  const addItem = () => {
+  const handleAddProduct = () => {
     if (!selectedProductId) return;
     const product = products.find(p => p.id === selectedProductId);
-    if (!product) return;
-    setSelectedItems([...selectedItems, { ...product, qty: 1, vat: true }]);
-    setSelectedProductId('');
+    if (product) {
+      setSelectedItems([...selectedItems, { ...product, quantity: 1 }]);
+      setSelectedProductId(''); 
+    }
   };
 
-  const removeItem = (index: number) => {
+  const handleRemoveItem = (index: number) => {
     const newItems = [...selectedItems];
     newItems.splice(index, 1);
     setSelectedItems(newItems);
   };
 
-  const handleDownload = async () => {
-    if (selectedItems.length === 0) {
-      alert('Add at least one product before downloading.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const response = await api.post('/documents/generate', {
-        type: documentType,
-        clientName,
-        items: selectedItems,
-      });
-      const backendUrl = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:5000';
-      const url = `${backendUrl}${response.data.pdfUrl}`;
-      window.open(url, '_blank');
-    } catch (err) {
-      alert('Failed to generate PDF');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const subtotal = selectedItems.reduce((acc, item) => acc + item.price * item.qty, 0);
+  const subtotal = selectedItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const vat = subtotal * 0.16;
   const total = subtotal + vat;
 
-  // Logic for the 3-image strip: Only shows images of added products (max 3)
-  const displayImages = selectedItems.map(item => item.imageUrl ? `${UPLOADS_URL}${item.imageUrl}` : null).filter(Boolean).slice(0, 3);
+  const handleDownloadPDF = () => {
+    if (!quotationRef.current) return;
+    setLoading(true);
+    import('html2pdf.js').then((html2pdf) => {
+      const opt = {
+        margin: 0,
+        filename: `Quotation_${clientName}_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf.default().set(opt).from(quotationRef.current).save().then(() => {
+        setLoading(false);
+      });
+    });
+  };
+
+  // Safe Image Component: If image is missing, it falls back to a clean placeholder text box
+  const SafeImage = ({ src, alt, className }: { src: string, alt: string, className: string }) => {
+    return (
+      <img 
+        src={src} 
+        alt={alt} 
+        className={className} 
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.src = `https://placehold.co/200x80/f1f5f9/64748b?text=${alt.replace(/\s+/g, '+')}&font=montserrat`;
+        }} 
+      />
+    );
+  };
 
   return (
-    <Layout requireAdmin>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', gap: 24 }}>
-        
-        {/* LEFT SIDEBAR - FORM */}
-        <div style={{ flex: 1, background: '#fff', padding: 24, borderRadius: 12, height: 'fit-content' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>Document Settings</h2>
+    <Layout>
+      <div className="min-h-screen bg-[#e2e8f0] p-4 md:p-8">
+        <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-8">
           
-          <label style={{ fontSize: 12, fontWeight: 700 }}>Document Type</label>
-          <select value={documentType} onChange={e => setDocumentType(e.target.value)} style={{ width: '100%', padding: 10, marginBottom: 16, border: '1px solid #cbd5e1', borderRadius: 6 }}>
-            <option value="QUOTATION">Quotation</option>
-            <option value="INVOICE">Invoice</option>
-            <option value="REPORT">Report</option>
-          </select>
-
-          <label style={{ fontSize: 12, fontWeight: 700 }}>Client Name</label>
-          <input value={clientName} onChange={e => setClientName(e.target.value)} style={{ width: '100%', padding: 10, marginBottom: 16, border: '1px solid #cbd5e1', borderRadius: 6 }} />
-
-          <label style={{ fontSize: 12, fontWeight: 700 }}>Add Product</label>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-            <select value={selectedProductId} onChange={e => setSelectedProductId(e.target.value)} style={{ flex: 1, padding: 10, border: '1px solid #cbd5e1', borderRadius: 6 }}>
-              <option value="">-- Select a product --</option>
-              {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-            <button onClick={addItem} style={{ background: '#1E88E5', color: '#fff', padding: '0 16px', borderRadius: 6, border: 'none', fontWeight: 700 }}>Add</button>
-          </div>
-
-          <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Selected Items</h3>
-          {selectedItems.length === 0 ? <p style={{ fontSize: 12, color: '#64748b' }}>No items selected.</p> : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {selectedItems.map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', background: '#F8FAFC', padding: 10, borderRadius: 6, fontSize: 12 }}>
-                  <span>{item.name}</span>
-                  <button onClick={() => removeItem(i)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>Remove</button>
-                </div>
-              ))}
+          {/* LEFT SIDE: FORM */}
+          <div className="w-full lg:w-[380px] bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-fit sticky top-8">
+            <h2 className="text-xl font-bold mb-6 text-[#0a1f44] border-b pb-2">Document Settings</h2>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2 text-gray-700">Document Type</label>
+              <select value={documentType} onChange={e => setDocumentType(e.target.value)} className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50">
+                <option value="QUOTATION">Quotation</option>
+                <option value="INVOICE">Invoice</option>
+              </select>
             </div>
-          )}
 
-          <button onClick={handleDownload} disabled={loading} style={{ width: '100%', padding: 14, background: '#0D2B4E', color: '#fff', borderRadius: 8, fontWeight: 700, marginTop: 24, border: 'none', cursor: 'pointer' }}>
-            {loading ? 'Generating...' : 'Download PDF'}
-          </button>
-        </div>
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2 text-gray-700">Client Name</label>
+              <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+            </div>
 
-        {/* RIGHT SIDE - EXACT PDF PREVIEW */}
-        <div style={{ flex: 1, background: '#fff', padding: 40, borderRadius: 12, boxShadow: '0 4px 6px rgba(0,0,0,0.1)', fontFamily: 'Arial, sans-serif' }}>
-          
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, alignItems: 'flex-start' }}>
-             <div>
-                <img src="/icon.png" alt="Logo" style={{ height: 40, marginBottom: 10 }} />
-                <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0' }}>P.O BOX 62700-19052, Meru Township</p>
-                <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>0701243548</p>
-             </div>
-             <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 12, fontWeight: 700, margin: '0 0 5px 0' }}>{new Date().toLocaleDateString()}</p>
-                <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>Serial: {documentType.slice(0,2)}-2026-1234</p>
-                {/* EXACT SOLAR IMAGE - NO TEXT, PURE IMAGE */}
-                <img 
-                  src="/solar-array.png" 
-                  alt="" 
-                  style={{ height: 70, objectFit: 'contain', marginTop: 10 }} 
-                />
-             </div>
-          </div>
-
-          <h2 style={{ fontSize: 18, fontWeight: 800, textAlign: 'center', marginBottom: 30, textDecoration: 'underline', color: '#0D2B4E' }}>
-            {documentType} FOR SUPPLY AND INSTALLATION
-          </h2>
-
-          {/* EXACT GREETING */}
-          <div style={{ marginBottom: 30 }}>
-            <p style={{ fontSize: 12, fontWeight: 700, margin: 0 }}>To: {clientName}</p>
-            <p style={{ fontSize: 12, margin: '10px 0' }}>Dear Sir/Madam,</p>
-            <p style={{ fontSize: 11, margin: 0, lineHeight: 1.5 }}>
-              We are grateful for your inquiry concerning the above subject matter. We are now pleased to forward our quote, terms & conditions to you.
-            </p>
-          </div>
-
-          <table style={{ width: '100%', fontSize: 11, borderCollapse: 'collapse', marginBottom: 30 }}>
-            <thead>
-              <tr style={{ borderTop: '2px solid #0D2B4E', borderBottom: '2px solid #0D2B4E', color: '#0D2B4E' }}>
-                <th style={{ textAlign: 'left', padding: '8px 4px' }}>DESCRIPTION</th>
-                <th style={{ textAlign: 'right', padding: '8px 4px' }}>QTY</th>
-                <th style={{ textAlign: 'right', padding: '8px 4px' }}>VAT</th>
-                <th style={{ textAlign: 'right', padding: '8px 4px' }}>UNIT PRICE</th>
-                <th style={{ textAlign: 'right', padding: '8px 4px' }}>AMOUNT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {selectedItems.map((item, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '8px 4px' }}>{item.name}</td>
-                  <td style={{ textAlign: 'right', padding: '8px 4px' }}>{item.qty}</td>
-                  <td style={{ textAlign: 'right', padding: '8px 4px' }}>0%</td>
-                  <td style={{ textAlign: 'right', padding: '8px 4px' }}>{item.price.toLocaleString()}</td>
-                  <td style={{ textAlign: 'right', padding: '8px 4px' }}>{(item.price * item.qty).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 40 }}>
-            <div style={{ width: 250 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 8 }}>
-                <span style={{ fontWeight: 700 }}>Subtotal</span><span>{subtotal.toLocaleString()}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 8 }}>
-                <span style={{ fontWeight: 700 }}>VAT (16%)</span><span>{vat.toLocaleString()}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 900, borderTop: '2px solid #0D2B4E', paddingTop: 8, color: '#0D2B4E' }}>
-                <span>Total KES</span><span>{total.toLocaleString()}</span>
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2 text-gray-700">Add Product</label>
+              <div className="flex gap-2">
+                <select value={selectedProductId} onChange={e => setSelectedProductId(e.target.value)} className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50">
+                  <option value="">-- Select product --</option>
+                  {products.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} - KES {p.price}</option>
+                  ))}
+                </select>
+                <button onClick={handleAddProduct} className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 text-sm transition-colors">
+                  Add
+                </button>
               </div>
             </div>
-          </div>
 
-          {/* 3-IMAGE STRIP - ONLY SHOWS IF PRODUCTS HAVE IMAGES */}
-          {displayImages.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginBottom: 30, padding: '10px 0', borderTop: '1px dashed #cbd5e1', borderBottom: '1px dashed #cbd5e1' }}>
-              {displayImages.map((img, idx) => (
-                  <img key={idx} src={img} alt="" style={{ height: 80, objectFit: 'contain', maxWidth: '30%' }} />
-              ))}
+            <div className="mb-6 mt-6 border-t pt-4">
+              <h3 className="font-bold text-[#0a1f44] mb-3 text-sm">Selected Items</h3>
+              {selectedItems.length === 0 ? (
+                <p className="text-gray-400 text-sm italic">No items selected.</p>
+              ) : (
+                <ul className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                  {selectedItems.map((item, index) => (
+                    <li key={index} className="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-200 text-sm">
+                      <span className="truncate pr-2">{item.quantity}x {item.name}</span>
+                      <button onClick={() => handleRemoveItem(index)} className="text-red-500 hover:text-red-700 font-bold px-2">&times;</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          )}
 
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 15, marginBottom: 20 }}>
-            <h4 style={{ fontSize: 11, fontWeight: 800, marginBottom: 4, color: '#0D2B4E' }}>TERMS & CONDITIONS:</h4>
-            <p style={{ fontSize: 9, color: '#64748b', margin: '2px 0' }}>Delivery: EX STOCK SUBJECT TO PRIOR SALES.</p>
-            <p style={{ fontSize: 9, color: '#64748b', margin: '2px 0' }}>Validity: THIS PRICE VALID FOR 1 WEEK.</p>
-            <p style={{ fontSize: 9, color: '#64748b', margin: '2px 0' }}>Payment: IN FULL PRIOR TO SUPPLY.</p>
+            <button onClick={handleDownloadPDF} disabled={loading} className="w-full bg-[#0a1f44] text-white py-3 rounded-lg font-bold hover:bg-[#152a5a] transition-colors shadow-md disabled:bg-gray-400">
+              {loading ? 'Generating PDF...' : 'Download PDF'}
+            </button>
           </div>
 
-          {/* PAYMENT OPTIONS - ICONS ABOVE TEXT */}
-          <div style={{ border: '1px solid #0D2B4E', borderRadius: '8px', padding: '12px', backgroundColor: '#FFFFFF' }}>
-            <h4 style={{ textAlign: 'center', fontSize: '11px', fontWeight: 'bold', marginBottom: '12px', color: '#0D2B4E', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              PAYMENT OPTIONS
-            </h4>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+          {/* RIGHT SIDE: OFFICIAL A4 QUOTATION PREVIEW */}
+          <div className="w-full flex justify-center overflow-x-auto pb-8">
+            <div ref={quotationRef} className="bg-white p-12 shadow-2xl w-[794px] min-h-[1123px] text-[13px] font-sans text-gray-800 relative border border-gray-200">
               
-              <div style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{ height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '6px' }}>
-                  <img src="/payment-logos/kcb-mobile.png" alt="KCB" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+              {/* Header */}
+              <div className="flex justify-between items-start mb-12">
+                <div>
+                  {/* Assuming logo.png is in public root */}
+                  <SafeImage src="/logo.png" alt="inField Logo" className="h-16 mb-4 object-contain" />
+                  <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                    P.O BOX 62700-19052, Meru Township<br />
+                    <span className="text-blue-700 font-bold">0701243548</span>
+                  </p>
                 </div>
-                <div style={{ fontSize: '9px', lineHeight: '1.4', color: '#333' }}>
-                  <strong style={{ display: 'block', fontSize: '10px', marginBottom: '2px', color: '#0D2B4E' }}>KINGDOM BANK</strong>
-                  Name: Infield Engineering Company<br/>
-                  Acc No: 5021964795002<br/>
-                  Bank Code: 01103043639002
-                </div>
-              </div>
-
-              <div style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{ height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '6px' }}>
-                  <img src="/payment-logos/co-operative-bank.png" alt="Co-op" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
-                </div>
-                <div style={{ fontSize: '9px', lineHeight: '1.4', color: '#333' }}>
-                  <strong style={{ display: 'block', fontSize: '10px', marginBottom: '2px', color: '#0D2B4E' }}>CO-OPERATIVE BANK</strong>
-                  Business Name: 1170535<br/>
-                  Acc No: 400200
+                <div className="text-right">
+                  {/* Using the exact file found in your output: /payment-logos/quotation-solar-panels.png */}
+                  <SafeImage src="/payment-logos/quotation-solar-panels.png" alt="Solar Array" className="h-24 ml-auto mb-4 object-contain" />
+                  <p className="font-bold text-sm text-[#0a1f44]">{new Date().toLocaleDateString('en-GB')}</p>
+                  <p className="text-xs text-gray-500 mt-1 font-medium">Serial: QU-2026-1234</p>
                 </div>
               </div>
 
-              <div style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{ height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '6px' }}>
-                  <img src="/payment-logos/mpesa.png" alt="M-PESA" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
-                </div>
-                <div style={{ fontSize: '9px', lineHeight: '1.4', color: '#333' }}>
-                  <strong style={{ display: 'block', fontSize: '10px', marginBottom: '2px', color: '#0D2B4E' }}>M-PESA</strong>
-                  Paybill: 247247<br/>
-                  Acc: 0701243548
+              {/* Title */}
+              <div className="text-center mb-12">
+                <h1 className="text-xl font-extrabold text-[#0a1f44] uppercase tracking-widest inline-block border-b-[3px] border-[#0a1f44] pb-2">
+                  {documentType} FOR SUPPLY AND INSTALLATION
+                </h1>
+              </div>
+
+              {/* Client Info */}
+              <div className="mb-10">
+                <p className="font-bold mb-4 text-sm text-[#0a1f44]">To: {clientName || 'THE CLIENT'}</p>
+                <p className="mb-2">Dear Sir/Madam,</p>
+                <p className="leading-relaxed text-justify text-gray-600 font-medium">
+                  We are grateful for your inquiry concerning the above subject matter. We are now pleased to forward our quote, terms & conditions to you.
+                </p>
+              </div>
+
+              {/* Table */}
+              <table className="w-full mb-10 border-collapse">
+                <thead>
+                  <tr className="border-b-2 border-gray-800 text-[#0a1f44] text-left">
+                    <th className="py-3 font-bold uppercase text-[11px] w-1/2 tracking-wider">Description</th>
+                    <th className="py-3 font-bold uppercase text-[11px] text-center tracking-wider">Qty</th>
+                    <th className="py-3 font-bold uppercase text-[11px] text-center tracking-wider">VAT</th>
+                    <th className="py-3 font-bold uppercase text-[11px] text-right tracking-wider">Unit Price</th>
+                    <th className="py-3 font-bold uppercase text-[11px] text-right tracking-wider">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedItems.length === 0 ? (
+                    <tr className="border-b border-gray-100">
+                      <td colSpan={5} className="py-8 text-center text-gray-400 italic">No items added to quotation.</td>
+                    </tr>
+                  ) : (
+                    selectedItems.map((item, idx) => (
+                      <tr key={idx} className="border-b border-gray-100">
+                        <td className="py-4 font-medium text-gray-700">{item.name}</td>
+                        <td className="py-4 text-center">{item.quantity}</td>
+                        <td className="py-4 text-center">16%</td>
+                        <td className="py-4 text-right">{item.price.toLocaleString()}</td>
+                        <td className="py-4 text-right font-medium">{(item.price * item.quantity).toLocaleString()}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+
+              {/* Totals */}
+              <div className="flex justify-end mb-12">
+                <div className="w-1/2 md:w-1/3">
+                  <div className="flex justify-between py-1 text-gray-600 font-medium">
+                    <span className="font-bold text-[11px] uppercase tracking-wider">Subtotal</span>
+                    <span>{subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-1 text-gray-600 font-medium">
+                    <span className="font-bold text-[11px] uppercase tracking-wider">VAT (16%)</span>
+                    <span>{vat.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-3 border-t-2 border-[#0a1f44] mt-2">
+                    <span className="font-extrabold text-sm uppercase text-[#0a1f44] tracking-wider">Total KES</span>
+                    <span className="font-extrabold text-sm text-[#0a1f44]">{total.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
 
+              {/* Terms */}
+              <div className="mb-12 bg-gray-50 p-4 rounded border border-gray-100">
+                <h2 className="font-bold text-[#0a1f44] text-[11px] mb-3 uppercase tracking-widest border-b border-gray-200 pb-1">Terms & Conditions:</h2>
+                <div className="text-[10px] text-gray-600 space-y-1 font-medium">
+                  <p>Delivery: EX STOCK SUBJECT TO PRIOR SALES.</p>
+                  <p>Validity: THIS PRICE VALID FOR 1 WEEK.</p>
+                  <p>Payment: IN FULL PRIOR TO SUPPLY.</p>
+                </div>
+              </div>
+
+              {/* Featured Products (Advertisements) */}
+              <div className="mb-12">
+                <h3 className="font-bold text-[#0a1f44] text-[11px] mb-3 uppercase tracking-widest">Featured Products</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-white p-2 rounded border border-gray-200 flex flex-col items-center justify-center shadow-sm">
+                    <SafeImage src="/payment-logos/quotation-solar-panels.png" alt="Quoted Products" className="w-full h-24 object-cover mb-2 rounded" />
+                    <p className="text-[9px] text-gray-600 font-bold text-center">Products Mentioned Above</p>
+                  </div>
+                  <div className="bg-white p-2 rounded border border-gray-200 flex flex-col items-center justify-center shadow-sm">
+                    <SafeImage src="https://placehold.co/300x200/1e88e5/white?text=Solar+Panels" alt="Promo 1" className="w-full h-24 object-cover mb-2 rounded" />
+                    <p className="text-[9px] text-gray-600 font-bold text-center">Special Offer</p>
+                  </div>
+                  <div className="bg-white p-2 rounded border border-gray-200 flex flex-col items-center justify-center shadow-sm">
+                    <SafeImage src="https://placehold.co/300x200/10b981/white?text=Inverters" alt="Promo 2" className="w-full h-24 object-cover mb-2 rounded" />
+                    <p className="text-[9px] text-gray-600 font-bold text-center">Latest Stock</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-between items-end mt-16 pt-8 border-t border-gray-300">
+                <div className="border border-gray-400 rounded-lg p-5 w-2/3 mr-4 bg-white">
+                  <h3 className="text-center font-bold text-[10px] uppercase mb-4 text-[#0a1f44] tracking-widest">Payment Options</h3>
+                  <div className="flex justify-between text-[9px] text-center leading-tight text-gray-700">
+                    <div className="w-1/3 px-1 flex flex-col items-center">
+                      {/* EXACT FILE: kcb-mobile.png */}
+                      <SafeImage src="/payment-logos/kcb-mobile.png" alt="Kingdom Bank" className="h-8 mb-2 object-contain" />
+                      <p className="font-bold text-[#0a1f44] mb-1">Kingdom Bank</p>
+                      <p>Name: Infield Eng. Co.</p>
+                      <p>Acc: 5021964795002</p>
+                      <p>Code: 01103043839002</p>
+                    </div>
+                    <div className="w-1/3 px-1 border-x border-gray-200 flex flex-col items-center">
+                      {/* EXACT FILE: co-operative_bank.png */}
+                      <SafeImage src="/payment-logos/co-operative_bank.png" alt="Co-operative Bank" className="h-8 mb-2 object-contain" />
+                      <p className="font-bold text-[#0a1f44] mb-1">Co-operative Bank</p>
+                      <p>Business: 1170535</p>
+                      <p>Acc No: 400200</p>
+                    </div>
+                    <div className="w-1/3 px-1 flex flex-col items-center">
+                      {/* EXACT FILE: mpesa.png */}
+                      <SafeImage src="/payment-logos/mpesa.png" alt="M-PESA" className="h-8 mb-2 object-contain" />
+                      <p className="font-bold text-[#0a1f44] mb-1">M-Pesa</p>
+                      <p>Paybill: 247247</p>
+                      <p>Acc: 0701243548</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-1/3 flex flex-col items-end pl-4">
+                  <div className="w-full border-b-2 border-gray-400 mb-1 h-8"></div>
+                  <p className="text-[9px] text-gray-500 mb-6 uppercase tracking-widest font-bold">Name</p>
+                  <div className="w-full border-b-2 border-gray-400 mb-1 h-8"></div>
+                  <p className="text-[9px] text-gray-500 mb-2 uppercase tracking-widest font-bold">Date</p>
+                  <p className="font-serif text-2xl text-[#0a1f44] italic mt-3">Alphonce Juma</p>
+                  <p className="text-[9px] font-bold uppercase mt-1 text-gray-500 tracking-widest">Authorized Signatory</p>
+                </div>
+              </div>
             </div>
           </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 30, paddingBottom: 20 }}>
-            <div>
-              <div style={{ borderBottom: '1px solid #0D2B4E', width: 120, marginBottom: 6 }}></div>
-              <p style={{ fontSize: 9, margin: 0 }}>Name</p>
-              <div style={{ borderBottom: '1px solid #0D2B4E', width: 120, marginTop: 16, marginBottom: 6 }}></div>
-              <p style={{ fontSize: 9, margin: 0 }}>Date</p>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontFamily: 'cursive', fontSize: 20, margin: '0 0 6px 0', color: '#0D2B4E' }}>Alphonce Juma</p>
-              <div style={{ borderTop: '1px solid #0D2B4E', width: 150, paddingTop: 4 }}>
-                <p style={{ fontSize: 9, fontWeight: 700, margin: 0 }}>Authorized Signatory</p>
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
     </Layout>

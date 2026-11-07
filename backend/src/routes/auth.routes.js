@@ -15,8 +15,12 @@ router.post('/login', async (req, res) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
     
+    // STRICT ADMIN CHECK
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    if (user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Access denied. Only Administrators can log in here. Employees must use their invite link.' });
     }
     
     const valid = await bcrypt.compare(password, user.password);
@@ -32,14 +36,7 @@ router.post('/login', async (req, res) => {
 
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
   } catch (error) {
-    // CRITICAL: This will print the exact error to Render's logs
     console.error('LOGIN ERROR:', error); 
-    
-    // Handle Prisma connection errors specifically
-    if (error.code === 'P1001' || error.code === 'P1017') {
-      return res.status(503).json({ error: 'Database connection failed. Please check DATABASE_URL.' });
-    }
-    
     res.status(500).json({ error: 'Server error during login' });
   }
 });
