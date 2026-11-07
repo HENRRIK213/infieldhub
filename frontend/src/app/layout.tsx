@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import ClientLayout from './ClientLayout';
 
 export const metadata: Metadata = {
-  title: 'InfieldHub | Integrated Stock',
+  title: 'Infield Engineering Company',
   description: 'Solar, Electrical, and Water solutions management system.',
   icons: {
     icon: '/icon.png',
@@ -12,11 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>

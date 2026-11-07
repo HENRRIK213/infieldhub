@@ -78,7 +78,7 @@ export default function Login() {
       <div style={{ width: '100%', maxWidth: '420px' }}>
 
         {/* ============================================================
-            LOGO AT TOP — 60px (25% of previous size)
+            LOGO AT TOP â€” 60px (25% of previous size)
             ============================================================ */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <div
@@ -137,12 +137,12 @@ export default function Login() {
               margin: 0,
             }}
           >
-            SOLAR • ELECTRICAL • WATER
+            SOLAR â€¢ ELECTRICAL â€¢ WATER
           </p>
         </div>
 
         {/* ============================================================
-            LOGIN FORM CARD — centered
+            LOGIN FORM CARD â€” centered
             ============================================================ */}
         <div
           style={{
@@ -310,7 +310,7 @@ export default function Login() {
                     if (!loading) e.currentTarget.style.background = '#0D2B4E';
                   }}
                 >
-                  {loading ? 'Signing in…' : 'Sign In'}
+                  {loading ? 'Signing inâ€¦' : 'Sign In'}
                 </button>
               </form>
 
@@ -384,7 +384,7 @@ export default function Login() {
                     boxShadow: '0 8px 20px rgba(30, 136, 229, 0.35)',
                   }}
                 >
-                  🔐
+                  ðŸ”
                 </div>
                 <h2
                   style={{
@@ -482,7 +482,7 @@ export default function Login() {
                     fontFamily: 'inherit',
                   }}
                 >
-                  {loading ? 'Verifying…' : 'Verify & Sign In'}
+                  {loading ? 'Verifyingâ€¦' : 'Verify & Sign In'}
                 </button>
 
                 <button
@@ -504,7 +504,7 @@ export default function Login() {
                     fontFamily: 'inherit',
                   }}
                 >
-                  ← Back to login
+                  â† Back to login
                 </button>
               </form>
             </>
@@ -521,7 +521,7 @@ export default function Login() {
             letterSpacing: '0.05em',
           }}
         >
-          © {new Date().getFullYear()} Infield Engineering · All rights reserved
+          Â© {new Date().getFullYear()} Infield Engineering Â· All rights reserved
         </p>
       </div>
     </div>

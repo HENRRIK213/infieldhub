@@ -73,7 +73,7 @@ export default function ProductsPage() {
     return (
       <Layout>
         <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 20 }}>
-          <div style={{ fontSize: 60, marginBottom: 20 }}>🔒</div>
+          <div style={{ fontSize: 60, marginBottom: 20 }}>ðŸ”’</div>
           <h1 style={{ fontSize: 28, fontWeight: 900, color: '#0D2B4E', marginBottom: 10 }}>Private Catalog</h1>
           <p style={{ color: '#64748b', fontSize: 16, maxWidth: 400 }}>
             {invalidInvitation
@@ -120,7 +120,7 @@ export default function ProductsPage() {
         <h1 style={{ fontSize: 36, fontWeight: 900, marginBottom: 16 }}>Premium Energy Solutions</h1>
         <div style={{ maxWidth: 600, margin: '0 auto', position: 'relative' }}>
           <input type="text" placeholder="Search main categories..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: '100%', padding: '16px 24px', borderRadius: 30, border: 'none', fontSize: 16, outline: 'none' }} />
-          <span style={{ position: 'absolute', right: 24, top: 16, fontSize: 20 }}>🔍</span>
+          <span style={{ position: 'absolute', right: 24, top: 16, fontSize: 20 }}>ðŸ”</span>
         </div>
       </div>
 
@@ -136,7 +136,7 @@ export default function ProductsPage() {
             </button>
           </div>
         )}
-        {productsLoading && <p role="status" style={{ color: '#64748b', marginBottom: 16 }}>Loading product catalog…</p>}
+        {productsLoading && <p role="status" style={{ color: '#64748b', marginBottom: 16 }}>Loading product catalogâ€¦</p>}
         {(selectedCategory || selectedType || selectedSize) && (
           <div style={{ marginBottom: 24, display: 'flex', gap: 8, fontSize: 14, fontWeight: 600, color: '#64748b', flexWrap: 'wrap' }}>
             <span onClick={() => { setSelectedCategory(null); setSelectedType(null); setSelectedSize(null); }} style={{ cursor: 'pointer', color: '#1E88E5' }}>All Main Products</span>
@@ -150,7 +150,7 @@ export default function ProductsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
             {filteredCategories.map(cat => (
               <div key={cat} onClick={() => setSelectedCategory(cat)} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 32, textAlign: 'center', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>📦</div>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>ðŸ“¦</div>
                 <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0D2B4E', marginBottom: 8 }}>{cat}</h3>
               <p style={{ color: '#64748b', fontSize: 14 }}>{(groupedProducts[cat] || []).length} products</p>
                 <button style={{ marginTop: 20, background: '#1E88E5', color: '#fff', padding: '10px 24px', borderRadius: 8, fontWeight: 700, border: 'none', width: '100%' }}>View Types</button>
@@ -200,7 +200,7 @@ export default function ProductsPage() {
               {brandProducts.map(p => (
                 <div key={p.id} onClick={() => router.push(`/products/${p.id}`)} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                   <div style={{ height: 160, background: '#F8FAFC', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {p.imageUrl ? <img src={getImageSrc(p.imageUrl)} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 40 }}>📦</span>}
+                    {p.imageUrl ? <img src={getImageSrc(p.imageUrl)} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 40 }}>ðŸ“¦</span>}
                   </div>
                   <div>
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#1E88E5', textTransform: 'uppercase' }}>{p.brand || 'Generic'}</span>
