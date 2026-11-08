@@ -14,7 +14,7 @@ export default function ProductsPage() {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   
   useEffect(() => {
-    // Fetch everything from the database. No hardcoded categories.
+    // Dynamically fetch products from your backend API
     api.get('/products').then(r => {
       setProducts(r.data.filter((p: any) => p.status === 'APPROVED' || !p.status));
     }).catch(() => {});

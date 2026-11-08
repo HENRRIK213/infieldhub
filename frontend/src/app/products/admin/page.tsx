@@ -21,9 +21,10 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, []);
 
+  // Dynamically group by Category
   const groupedProducts: { [key: string]: any[] } = {};
   products.forEach(p => {
-    const cat = p.category || 'General Products';
+    const cat = p.category || 'Uncategorized';
     if (!groupedProducts[cat]) groupedProducts[cat] = [];
     groupedProducts[cat].push(p);
   });
@@ -31,7 +32,7 @@ export default function AdminProductsPage() {
   const openAdd = (categoryName = '') => {
     setEditProduct(null);
     setErrorMsg('');
-    setFormData({ name: '', description: '', price: '', category: categoryName, type: 'Standard', brand: 'Generic', size: 'Default', stock: 10 });
+    setFormData({ name: '', description: '', price: '', category: categoryName, type: '', brand: 'Generic', size: '', stock: 10 });
     setImageFile(null); setShowModal(true);
   };
 
@@ -86,7 +87,7 @@ export default function AdminProductsPage() {
     <Layout requireAdmin>
       <div style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: 40 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E' }}>Product Management</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E' }}>Product Manager</h1>
           <button onClick={() => openAdd()} style={{ background: '#1E88E5', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>+ Add Main Product</button>
         </div>
 

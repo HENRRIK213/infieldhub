@@ -1,6 +1,6 @@
 'use client';
 import Layout from '@/components/Layout';
-import { api } from '@/lib/api';
+import { api, UPLOADS_URL } from '@/lib/api';
 import { useEffect, useState, useRef } from 'react';
 
 export default function DocumentsPage() {
@@ -57,21 +57,6 @@ export default function DocumentsPage() {
         setLoading(false);
       });
     });
-  };
-
-  // Safe Image Component: If image is missing, it falls back to a clean placeholder text box
-  const SafeImage = ({ src, alt, className }: { src: string, alt: string, className: string }) => {
-    return (
-      <img 
-        src={src} 
-        alt={alt} 
-        className={className} 
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          target.src = `https://placehold.co/200x80/f1f5f9/64748b?text=${alt.replace(/\s+/g, '+')}&font=montserrat`;
-        }} 
-      />
-    );
   };
 
   return (
@@ -139,16 +124,14 @@ export default function DocumentsPage() {
               {/* Header */}
               <div className="flex justify-between items-start mb-12">
                 <div>
-                  {/* Assuming logo.png is in public root */}
-                  <SafeImage src="/logo.png" alt="inField Logo" className="h-16 mb-4 object-contain" />
+                  <img src="/logo.png" alt="inField Logo" className="h-16 mb-4 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
                   <p className="text-xs text-gray-600 leading-relaxed font-medium">
                     P.O BOX 62700-19052, Meru Township<br />
                     <span className="text-blue-700 font-bold">0701243548</span>
                   </p>
                 </div>
                 <div className="text-right">
-                  {/* Using the exact file found in your output: /payment-logos/quotation-solar-panels.png */}
-                  <SafeImage src="/payment-logos/quotation-solar-panels.png" alt="Solar Array" className="h-24 ml-auto mb-4 object-contain" />
+                  <img src="/solar-default.png" alt="Solar Array" className="h-24 ml-auto mb-4 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
                   <p className="font-bold text-sm text-[#0a1f44]">{new Date().toLocaleDateString('en-GB')}</p>
                   <p className="text-xs text-gray-500 mt-1 font-medium">Serial: QU-2026-1234</p>
                 </div>
@@ -228,24 +211,33 @@ export default function DocumentsPage() {
                 </div>
               </div>
 
-              {/* Featured Products (Advertisements) */}
-              <div className="mb-12">
-                <h3 className="font-bold text-[#0a1f44] text-[11px] mb-3 uppercase tracking-widest">Featured Products</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-white p-2 rounded border border-gray-200 flex flex-col items-center justify-center shadow-sm">
-                    <SafeImage src="/payment-logos/quotation-solar-panels.png" alt="Quoted Products" className="w-full h-24 object-cover mb-2 rounded" />
-                    <p className="text-[9px] text-gray-600 font-bold text-center">Products Mentioned Above</p>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-gray-200 flex flex-col items-center justify-center shadow-sm">
-                    <SafeImage src="https://placehold.co/300x200/1e88e5/white?text=Solar+Panels" alt="Promo 1" className="w-full h-24 object-cover mb-2 rounded" />
-                    <p className="text-[9px] text-gray-600 font-bold text-center">Special Offer</p>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-gray-200 flex flex-col items-center justify-center shadow-sm">
-                    <SafeImage src="https://placehold.co/300x200/10b981/white?text=Inverters" alt="Promo 2" className="w-full h-24 object-cover mb-2 rounded" />
-                    <p className="text-[9px] text-gray-600 font-bold text-center">Latest Stock</p>
+              {/* DYNAMIC Featured Products (Advertisements) */}
+              {selectedItems.length > 0 && (
+                <div className="mb-12">
+                  <h3 className="font-bold text-[#0a1f44] text-[11px] mb-3 uppercase tracking-widest">Featured Products</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    {selectedItems.slice(0, 3).map((item, idx) => (
+                      <div key={idx} className="bg-white p-2 rounded border border-gray-200 flex flex-col items-center justify-center shadow-sm">
+                        {item.imageUrl ? (
+                          <img 
+                            src={`${UPLOADS_URL}${item.imageUrl}`} 
+                            alt={item.name} 
+                            className="w-full h-24 object-cover mb-2 rounded" 
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-full h-24 bg-gray-50 flex items-center justify-center mb-2 rounded text-gray-500 text-[10px] text-center p-2 font-medium ${item.imageUrl ? 'hidden' : ''}`}>
+                          {item.name}
+                        </div>
+                        <p className="text-[9px] text-gray-600 font-bold text-center truncate w-full">{item.name}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Footer */}
               <div className="flex justify-between items-end mt-16 pt-8 border-t border-gray-300">
@@ -253,23 +245,20 @@ export default function DocumentsPage() {
                   <h3 className="text-center font-bold text-[10px] uppercase mb-4 text-[#0a1f44] tracking-widest">Payment Options</h3>
                   <div className="flex justify-between text-[9px] text-center leading-tight text-gray-700">
                     <div className="w-1/3 px-1 flex flex-col items-center">
-                      {/* EXACT FILE: kcb-mobile.png */}
-                      <SafeImage src="/payment-logos/kcb-mobile.png" alt="Kingdom Bank" className="h-8 mb-2 object-contain" />
+                      <img src="/payment-logos/kcb-mobile.png" alt="Kingdom Bank" className="h-8 mb-2 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
                       <p className="font-bold text-[#0a1f44] mb-1">Kingdom Bank</p>
                       <p>Name: Infield Eng. Co.</p>
                       <p>Acc: 5021964795002</p>
                       <p>Code: 01103043839002</p>
                     </div>
                     <div className="w-1/3 px-1 border-x border-gray-200 flex flex-col items-center">
-                      {/* EXACT FILE: co-operative_bank.png */}
-                      <SafeImage src="/payment-logos/co-operative_bank.png" alt="Co-operative Bank" className="h-8 mb-2 object-contain" />
+                      <img src="/payment-logos/co-operative_bank.png" alt="Co-operative Bank" className="h-8 mb-2 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
                       <p className="font-bold text-[#0a1f44] mb-1">Co-operative Bank</p>
                       <p>Business: 1170535</p>
                       <p>Acc No: 400200</p>
                     </div>
                     <div className="w-1/3 px-1 flex flex-col items-center">
-                      {/* EXACT FILE: mpesa.png */}
-                      <SafeImage src="/payment-logos/mpesa.png" alt="M-PESA" className="h-8 mb-2 object-contain" />
+                      <img src="/payment-logos/mpesa.png" alt="M-PESA" className="h-8 mb-2 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
                       <p className="font-bold text-[#0a1f44] mb-1">M-Pesa</p>
                       <p>Paybill: 247247</p>
                       <p>Acc: 0701243548</p>
