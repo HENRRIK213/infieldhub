@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -21,6 +21,7 @@ const userRoutes = require('./routes/user.routes');
 const reportRoutes = require('./routes/report.routes');
 const documentRoutes = require('./routes/document.routes');
 const inviteRoutes = require('./routes/invite.routes');
+const smsRoutes = require('./routes/sms.routes');
 
 ['uploads/tmp', 'uploads/products', 'uploads/quotations'].forEach((p) => {
   const full = path.join(__dirname, '..', p);
@@ -39,6 +40,7 @@ app.set('trust proxy', 1);
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 1000 }));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
@@ -52,6 +54,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/invites', inviteRoutes);
+app.use('/api/sms', smsRoutes);
 
 app.get('/', (req, res) => res.json({ service: 'InfieldHub API', status: 'ok' }));
 app.get('/api/health', async (req, res) => {
@@ -76,5 +79,5 @@ setupSockets(io);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`âœ… InfieldHub backend running on port ${PORT}`);
+  console.log(`Ã¢Å“â€¦ InfieldHub backend running on port ${PORT}`);
 });

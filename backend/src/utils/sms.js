@@ -1,48 +1,31 @@
-﻿function normalizePhone(phone) {
-  const cleaned = String(phone || '').replace(/[^\d]/g, '');
-  if (cleaned.startsWith('254')) return cleaned;
-  if (cleaned.startsWith('0')) return '254' + cleaned.slice(1);
-  if (cleaned.startsWith('7') || cleaned.startsWith('1')) return '254' + cleaned;
-  return cleaned;
-}
+﻿const AfricasTalking = require('africastalking');
 
-async function sendSMS(to, message) {
-  const apiKey = process.env.LOOPING_API_KEY;
-  const senderId = process.env.LOOPING_SENDER_ID || 'INFIELDHUB';
-  const apiUrl = process.env.LOOPING_API_URL || 'https://api.looping.co.ke/v1/sms/send';
-  const formatted = normalizePhone(to);
+// Initialize Africa's Talking with keys from .env
+const africastalking = AfricasTalking({
+  apiKey: process.env.AT_API_KEY,
+  username: process.env.AT_USERNAME,
+});
 
-  if (!apiKey) {
-    console.log('[SMS] (no LOOPING_API_KEY) would send to ' + formatted + ': ' + message);
-    return { ok: false, reason: 'no-api-key' };
-  }
+const sms = africastalking.SMS;
 
+/**
+ * Send an SMS to the Admin
+ * @param {string} message - The text message to send
+ */
+const sendAdminAlert = async (message) => {
   try {
-    const res = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + apiKey,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({ to: formatted, message: message, sender_id: senderId }),
-    });
-    const text = await res.text();
-    if (!res.ok) {
-      console.error('[SMS] Looping HTTP ' + res.status + ': ' + text);
-      return { ok: false, status: res.status, body: text };
-    }
-    console.log('[SMS] Sent to ' + formatted);
-    return { ok: true };
-  } catch (err) {
-    console.error('[SMS] Error: ' + err.message);
-    return { ok: false, error: err.message };
+    const options = {
+      to: [process.env.ADMIN_PHONE_NUMBER],
+      message: message,
+      // from: 'INFIELD' // Uncomment if you register a Sender ID on AT
+    };
+    
+    const response = await sms.send(options);
+    console.log('✅ SMS Sent to Admin:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Failed to send SMS:', error);
   }
-}
+};
 
-async function sendAdminSMS(message) {
-  const adminPhone = process.env.ADMIN_PHONE || '0701243548';
-  return sendSMS(adminPhone, message);
-}
-
-module.exports = { sendSMS, sendAdminSMS, normalizePhone };
+module.exports = { sendAdminAlert };

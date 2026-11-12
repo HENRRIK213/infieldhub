@@ -8,3 +8,6 @@ uploads/quotations/*
 !uploads/**/.gitkeep
 *.log
 .DS_Store
+node_modules/
+.env
+uploads/
