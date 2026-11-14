@@ -1,7 +1,6 @@
 ﻿const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Real, high-quality images for each specific category
 const IMG = {
   pump: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=600&q=80',
   motor: 'https://images.unsplash.com/photo-1558449028-b53a39d100fc?w=600&q=80',
@@ -12,69 +11,68 @@ const IMG = {
   solar: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=600&q=80',
   inverter: 'https://images.unsplash.com/photo-1592833159155-c62df1b65634?w=600&q=80',
   breaker: 'https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?w=600&q=80',
-  pipe: 'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&q=80'
+  pipe: 'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&q=80',
+  desk: 'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&q=80' 
 };
 
 const allProducts = [
-  // --- PUMP ENDS (1-56) ---
-  { name: 'BENAX 4SP 1/42 1.1KW PUMP END', price: 96600, category: 'Pump Ends', type: '4SP', size: '1.1KW', brand: 'BENAX', imageUrl: IMG.pump },
-  { name: 'BENAX 4SP 1/57 1.5KW PUMP END', price: 124600, category: 'Pump Ends', type: '4SP', size: '1.5KW', brand: 'BENAX', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 02/18 0.75KW PUMP END', price: 44000, category: 'Pump Ends', type: 'DP4RFF', size: '0.75KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 02/23 1.1KW PUMP END', price: 56000, category: 'Pump Ends', type: 'DP4RFF', size: '1.1KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 02/33 1.5KW PUMP END', price: 72000, category: 'Pump Ends', type: 'DP4RFF', size: '1.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 02/48 2.2KW PUMP END', price: 102000, category: 'Pump Ends', type: 'DP4RFF', size: '2.2KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 02/65 3KW PUMP END', price: 142000, category: 'Pump Ends', type: 'DP4RFF', size: '3KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 03/18 1.1KW PUMP END', price: 44000, category: 'Pump Ends', type: 'DP4RFF', size: '1.1KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 03/25 1.5KW PUMP END', price: 56000, category: 'Pump Ends', type: 'DP4RFF', size: '1.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 03/33 2.2KW PUMP END', price: 80000, category: 'Pump Ends', type: 'DP4RFF', size: '2.2KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 03/45 3KW PUMP END', price: 100000, category: 'Pump Ends', type: 'DP4RFF', size: '3KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 03/60 4KW PUMP END', price: 126600, category: 'Pump Ends', type: 'DP4RFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 05/12 1.1KW PUMP END', price: 36000, category: 'Pump Ends', type: 'DP4RFF', size: '1.1KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 05/17 1.5KW PUMP END', price: 41000, category: 'Pump Ends', type: 'DP4RFF', size: '1.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 05/25 2.2KW PUMP END', price: 60500, category: 'Pump Ends', type: 'DP4RFF', size: '2.2KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 05/33 3KW PUMP END', price: 80000, category: 'Pump Ends', type: 'DP4RFF', size: '3KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 05/44 4KW PUMP END', price: 98000, category: 'Pump Ends', type: 'DP4RFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 05/50 5.5KW PUMP END', price: 120000, category: 'Pump Ends', type: 'DP4RFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 05/75 7.5KW PUMP END', price: 194000, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 05/85 7.5KW PUMP END', price: 208000, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 08/10 1.5KW PUMP END', price: 52000, category: 'Pump Ends', type: 'DP4RFF', size: '1.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 08/15 2.2KW PUMP END', price: 72000, category: 'Pump Ends', type: 'DP4RFF', size: '2.2KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 08/25 4KW PUMP END', price: 100000, category: 'Pump Ends', type: 'DP4RFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 08/30 5.5KW PUMP END', price: 120000, category: 'Pump Ends', type: 'DP4RFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 08/37 5.5KW PUMP END', price: 141000, category: 'Pump Ends', type: 'DP4RFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 08/44 7.5KW PUMP END', price: 156600, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 08/50 4" 7.5KW PUMP END', price: 208000, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 08/50 6" 7.5KW PUMP END', price: 224000, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 08/66 11KW PUMP END (4" x 6")', price: 340000, category: 'Pump Ends', type: 'DP4RFF', size: '11KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 08/73 11KW PUMP END (4" x 6")', price: 364000, category: 'Pump Ends', type: 'DP4RFF', size: '11KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 14/13 4KW PUMP END', price: 90000, category: 'Pump Ends', type: 'DP4RFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 14/15 5.5KW PUMP END', price: 104000, category: 'Pump Ends', type: 'DP4RFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP4RFF 14/25 7.5KW PUMP END', price: 150000, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/7 4KW PUMP END (6"4)', price: 92000, category: 'Pump Ends', type: 'DP6MFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/7 4KW PUMP END (6"6)', price: 92000, category: 'Pump Ends', type: 'DP6MFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/10 5.5KW PUMP END (6"4)', price: 80000, category: 'Pump Ends', type: 'DP6MFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/10 5.5KW PUMP END (6"6)', price: 80000, category: 'Pump Ends', type: 'DP6MFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/13 7.5KW PUMP END (6"4)', price: 114600, category: 'Pump Ends', type: 'DP6MFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/13 7.5KW PUMP END (6"6)', price: 114600, category: 'Pump Ends', type: 'DP6MFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/19 9.2KW PUMP END', price: 154600, category: 'Pump Ends', type: 'DP6MFF', size: '9.2KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/20 6" 11KW PUMP END', price: 202000, category: 'Pump Ends', type: 'DP6MFF', size: '11KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/24 6" 13KW PUMP END', price: 210000, category: 'Pump Ends', type: 'DP6MFF', size: '13KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/27 6" 15KW PUMP END', price: 220000, category: 'Pump Ends', type: 'DP6MFF', size: '15KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/33 18.5KW PUMP END', price: 260000, category: 'Pump Ends', type: 'DP6MFF', size: '18.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 17/40 22KW PUMP END', price: 270000, category: 'Pump Ends', type: 'DP6MFF', size: '22KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 30/8 7.5KW PUMP END (6"4)', price: 132000, category: 'Pump Ends', type: 'DP6MFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 30/8 7.5KW PUMP END (6"6)', price: 132000, category: 'Pump Ends', type: 'DP6MFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 30/13 11KW PUMP END', price: 180000, category: 'Pump Ends', type: 'DP6MFF', size: '11KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 30/17 15KW PUMP END', price: 225000, category: 'Pump Ends', type: 'DP6MFF', size: '15KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 30/21 18.5KW PUMP END', price: 280000, category: 'Pump Ends', type: 'DP6MFF', size: '18.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 30/26 22KW PUMP END', price: 290000, category: 'Pump Ends', type: 'DP6MFF', size: '22KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 46/5 7.5KW PUMP END (6"4)', price: 140000, category: 'Pump Ends', type: 'DP6MFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 46/7 11KW PUMP END', price: 170000, category: 'Pump Ends', type: 'DP6MFF', size: '11KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 46/10 15KW PUMP END', price: 200000, category: 'Pump Ends', type: 'DP6MFF', size: '15KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 46/15 22KW PUMP END', price: 220000, category: 'Pump Ends', type: 'DP6MFF', size: '22KW', brand: 'EMPOWER', imageUrl: IMG.pump },
-  { name: 'EMPOWER DP6MFF 46/19 30KW PUMP END', price: 280000, category: 'Pump Ends', type: 'DP6MFF', size: '30KW', brand: 'EMPOWER', imageUrl: IMG.pump },
+  { name: 'BENAX 4SP 1/42 1.1KW PUMP END', price: 96600, category: 'Pump Ends', type: '4SP', size: '1.1KW', brand: 'BENAX', imageUrl: IMG.desk },
+  { name: 'BENAX 4SP 1/57 1.5KW PUMP END', price: 124600, category: 'Pump Ends', type: '4SP', size: '1.5KW', brand: 'BENAX', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 02/18 0.75KW PUMP END', price: 44000, category: 'Pump Ends', type: 'DP4RFF', size: '0.75KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 02/23 1.1KW PUMP END', price: 56000, category: 'Pump Ends', type: 'DP4RFF', size: '1.1KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 02/33 1.5KW PUMP END', price: 72000, category: 'Pump Ends', type: 'DP4RFF', size: '1.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 02/48 2.2KW PUMP END', price: 102000, category: 'Pump Ends', type: 'DP4RFF', size: '2.2KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 02/65 3KW PUMP END', price: 142000, category: 'Pump Ends', type: 'DP4RFF', size: '3KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 03/18 1.1KW PUMP END', price: 44000, category: 'Pump Ends', type: 'DP4RFF', size: '1.1KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 03/25 1.5KW PUMP END', price: 56000, category: 'Pump Ends', type: 'DP4RFF', size: '1.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 03/33 2.2KW PUMP END', price: 80000, category: 'Pump Ends', type: 'DP4RFF', size: '2.2KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 03/45 3KW PUMP END', price: 100000, category: 'Pump Ends', type: 'DP4RFF', size: '3KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 03/60 4KW PUMP END', price: 126600, category: 'Pump Ends', type: 'DP4RFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 05/12 1.1KW PUMP END', price: 36000, category: 'Pump Ends', type: 'DP4RFF', size: '1.1KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 05/17 1.5KW PUMP END', price: 41000, category: 'Pump Ends', type: 'DP4RFF', size: '1.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 05/25 2.2KW PUMP END', price: 60500, category: 'Pump Ends', type: 'DP4RFF', size: '2.2KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 05/33 3KW PUMP END', price: 80000, category: 'Pump Ends', type: 'DP4RFF', size: '3KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 05/44 4KW PUMP END', price: 98000, category: 'Pump Ends', type: 'DP4RFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 05/50 5.5KW PUMP END', price: 120000, category: 'Pump Ends', type: 'DP4RFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 05/75 7.5KW PUMP END', price: 194000, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 05/85 7.5KW PUMP END', price: 208000, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 08/10 1.5KW PUMP END', price: 52000, category: 'Pump Ends', type: 'DP4RFF', size: '1.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 08/15 2.2KW PUMP END', price: 72000, category: 'Pump Ends', type: 'DP4RFF', size: '2.2KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 08/25 4KW PUMP END', price: 100000, category: 'Pump Ends', type: 'DP4RFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 08/30 5.5KW PUMP END', price: 120000, category: 'Pump Ends', type: 'DP4RFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 08/37 5.5KW PUMP END', price: 141000, category: 'Pump Ends', type: 'DP4RFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 08/44 7.5KW PUMP END', price: 156600, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 08/50 4" 7.5KW PUMP END', price: 208000, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 08/50 6" 7.5KW PUMP END', price: 224000, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 08/66 11KW PUMP END (4" x 6")', price: 340000, category: 'Pump Ends', type: 'DP4RFF', size: '11KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 08/73 11KW PUMP END (4" x 6")', price: 364000, category: 'Pump Ends', type: 'DP4RFF', size: '11KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 14/13 4KW PUMP END', price: 90000, category: 'Pump Ends', type: 'DP4RFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 14/15 5.5KW PUMP END', price: 104000, category: 'Pump Ends', type: 'DP4RFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP4RFF 14/25 7.5KW PUMP END', price: 150000, category: 'Pump Ends', type: 'DP4RFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/7 4KW PUMP END (6"4)', price: 92000, category: 'Pump Ends', type: 'DP6MFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/7 4KW PUMP END (6"6)', price: 92000, category: 'Pump Ends', type: 'DP6MFF', size: '4KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/10 5.5KW PUMP END (6"4)', price: 80000, category: 'Pump Ends', type: 'DP6MFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/10 5.5KW PUMP END (6"6)', price: 80000, category: 'Pump Ends', type: 'DP6MFF', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/13 7.5KW PUMP END (6"4)', price: 114600, category: 'Pump Ends', type: 'DP6MFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/13 7.5KW PUMP END (6"6)', price: 114600, category: 'Pump Ends', type: 'DP6MFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/19 9.2KW PUMP END', price: 154600, category: 'Pump Ends', type: 'DP6MFF', size: '9.2KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/20 6" 11KW PUMP END', price: 202000, category: 'Pump Ends', type: 'DP6MFF', size: '11KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/24 6" 13KW PUMP END', price: 210000, category: 'Pump Ends', type: 'DP6MFF', size: '13KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/27 6" 15KW PUMP END', price: 220000, category: 'Pump Ends', type: 'DP6MFF', size: '15KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/33 18.5KW PUMP END', price: 260000, category: 'Pump Ends', type: 'DP6MFF', size: '18.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 17/40 22KW PUMP END', price: 270000, category: 'Pump Ends', type: 'DP6MFF', size: '22KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 30/8 7.5KW PUMP END (6"4)', price: 132000, category: 'Pump Ends', type: 'DP6MFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 30/8 7.5KW PUMP END (6"6)', price: 132000, category: 'Pump Ends', type: 'DP6MFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 30/13 11KW PUMP END', price: 180000, category: 'Pump Ends', type: 'DP6MFF', size: '11KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 30/17 15KW PUMP END', price: 225000, category: 'Pump Ends', type: 'DP6MFF', size: '15KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 30/21 18.5KW PUMP END', price: 280000, category: 'Pump Ends', type: 'DP6MFF', size: '18.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 30/26 22KW PUMP END', price: 290000, category: 'Pump Ends', type: 'DP6MFF', size: '22KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 46/5 7.5KW PUMP END (6"4)', price: 140000, category: 'Pump Ends', type: 'DP6MFF', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 46/7 11KW PUMP END', price: 170000, category: 'Pump Ends', type: 'DP6MFF', size: '11KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 46/10 15KW PUMP END', price: 200000, category: 'Pump Ends', type: 'DP6MFF', size: '15KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 46/15 22KW PUMP END', price: 220000, category: 'Pump Ends', type: 'DP6MFF', size: '22KW', brand: 'EMPOWER', imageUrl: IMG.desk },
+  { name: 'EMPOWER DP6MFF 46/19 30KW PUMP END', price: 280000, category: 'Pump Ends', type: 'DP6MFF', size: '30KW', brand: 'EMPOWER', imageUrl: IMG.desk },
 
-  // --- SUB-MOTORS (57-97) ---
   { name: 'EMPOWER DSMO4 1.1KW 1PH O/F SUB-MOTOR', price: 44000, category: 'Sub-Motors', type: '1PH O/F', size: '1.1KW', brand: 'EMPOWER', imageUrl: IMG.motor },
   { name: 'EMPOWER DSMO4 1.5KW 1PH O/F SUB-MOTOR', price: 50000, category: 'Sub-Motors', type: '1PH O/F', size: '1.5KW', brand: 'EMPOWER', imageUrl: IMG.motor },
   { name: 'EMPOWER DSMO4 2.2KW 1PH O/F SUB-MOTOR', price: 62000, category: 'Sub-Motors', type: '1PH O/F', size: '2.2KW', brand: 'EMPOWER', imageUrl: IMG.motor },
@@ -112,13 +110,11 @@ const allProducts = [
   { name: 'VINCO 7.5KW 4" 3PH SUB-MOTOR', price: 108000, category: 'Sub-Motors', type: '3PH 4"', size: '7.5KW', brand: 'VINCO', imageUrl: IMG.motor },
   { name: 'VINCO 7.5KW 6" 3PH SUB-MOTOR', price: 130000, category: 'Sub-Motors', type: '3PH 6"', size: '7.5KW', brand: 'VINCO', imageUrl: IMG.motor },
 
-  // --- CONTROL PANELS (94-97) ---
   { name: 'EMPOWER EMP3SP 2.2KW DIGITAL CONTROL PANEL', price: 36000, category: 'Control Panels', type: 'Digital', size: '2.2KW', brand: 'EMPOWER', imageUrl: IMG.panel },
   { name: 'EMPOWER EMP7.5DOL 5.5KW DIGITAL CONTROL PANEL', price: 44000, category: 'Control Panels', type: 'Digital', size: '5.5KW', brand: 'EMPOWER', imageUrl: IMG.panel },
   { name: 'EMPOWER EMP10DOL 7.5KW DIGITAL CONTROL PANEL', price: 50000, category: 'Control Panels', type: 'Digital', size: '7.5KW', brand: 'EMPOWER', imageUrl: IMG.panel },
   { name: 'EMPOWER EMP20DOL 15KW DIGITAL CONTROL PANEL', price: 64000, category: 'Control Panels', type: 'Digital', size: '15KW', brand: 'EMPOWER', imageUrl: IMG.panel },
 
-  // --- UPVC DROP PIPES (98-105) ---
   { name: '1.25" UPVC 3M DROP PIPES - 26BAR', price: 2000, category: 'UPVC Drop Pipes', type: '26BAR', size: '1.25"', brand: 'Astore', imageUrl: IMG.pipe },
   { name: '1.5" UPVC 3M DROP PIPES - 26BAR', price: 2400, category: 'UPVC Drop Pipes', type: '26BAR', size: '1.5"', brand: 'Astore', imageUrl: IMG.pipe },
   { name: '2" UPVC 3M DROP PIPES - 21 BAR', price: 3600, category: 'UPVC Drop Pipes', type: '21 BAR', size: '2"', brand: 'Kenbro', imageUrl: IMG.pipe },
@@ -128,7 +124,6 @@ const allProducts = [
   { name: '3" UPVC 3M DROP PIPES - 18 BAR', price: 5800, category: 'UPVC Drop Pipes', type: '18 BAR', size: '3"', brand: 'Plasson', imageUrl: IMG.pipe },
   { name: '3" UPVC 3M DROP PIPES - 35 BAR', price: 7600, category: 'UPVC Drop Pipes', type: '35 BAR', size: '3"', brand: 'Plasson', imageUrl: IMG.pipe },
 
-  // --- ADAPTER SETS (106-109) ---
   { name: 'HEAVY DUTY C.I TOP AND BOTTOM ADAPTER SETS 1.25"', price: 3200, category: 'Adapter Sets', type: 'Heavy Duty C.I', size: '1.25"', brand: 'Georg Fischer', imageUrl: IMG.valve },
   { name: 'HEAVY DUTY C.I TOP AND BOTTOM ADAPTER SETS 1.5"', price: 4000, category: 'Adapter Sets', type: 'Heavy Duty C.I', size: '1.5"', brand: 'Georg Fischer', imageUrl: IMG.valve },
   { name: 'HEAVY DUTY C.I TOP AND BOTTOM ADAPTER SETS 2"', price: 5600, category: 'Adapter Sets', type: 'Heavy Duty C.I', size: '2"', brand: 'Nibco', imageUrl: IMG.valve },
@@ -142,9 +137,8 @@ const allProducts = [
   { name: 'SUPER HEAVY DUTY TOP MS / CI BOTTOM ADAPTER SETS 3"', price: 19600, category: 'Adapter Sets', type: 'Super Heavy Duty MS/CI', size: '3"', brand: 'Kitz', imageUrl: IMG.valve },
   { name: 'SUPER HEAVY DUTY TOP MS / SS BOTTOM ADAPTER SETS 3"', price: 28400, category: 'Adapter Sets', type: 'Super Heavy Duty MS/SS', size: '3"', brand: 'Kitz', imageUrl: IMG.valve },
 
-  // --- ACCESSORIES (110-111, 129, 149) ---
-  { name: 'SPLICING KIT - CELL PACK MM11 FAST DRY', price: 2000, category: 'Accessories', type: 'Splicing Kit', size: 'MM11', brand: '3M', imageUrl: IMG.cable },
-  { name: 'SPLICING KIT - CELL PACK MM12 FAST DRY', price: 4000, category: 'Accessories', type: 'Splicing Kit', size: 'MM12', brand: '3M', imageUrl: IMG.cable },
+  { name: 'SPLICING KIT - CELL PACK MM11 FAST DRY', price: 2000, category: 'Accessories', type: 'Splicing Kit', size: 'MM11', brand: '3M', imageUrl: IMG.breaker },
+  { name: 'SPLICING KIT - CELL PACK MM12 FAST DRY', price: 4000, category: 'Accessories', type: 'Splicing Kit', size: 'MM12', brand: '3M', imageUrl: IMG.breaker },
   { name: 'GPRS DONGLE', price: 32000, category: 'Accessories', type: 'Smart', size: 'Standard', brand: 'Huawei', imageUrl: IMG.inverter },
   { name: 'EARTH ROD 1M C/W CLAMP', price: 1600, category: 'Accessories', type: 'Earthing', size: '1M', brand: 'Erico', imageUrl: IMG.breaker },
   { name: 'LIGHTNING ARRESTOR - 2FT', price: 4400, category: 'Accessories', type: 'Lightning Arrestor', size: '2FT', brand: 'ABB', imageUrl: IMG.breaker },
@@ -153,7 +147,6 @@ const allProducts = [
   { name: 'WELL PROBE SENSORS (SWITCH-TYPE)', price: 6000, category: 'Accessories', type: 'Sensor', size: 'Switch-Type', brand: 'Xylem', imageUrl: IMG.meter },
   { name: 'FLOAT SWITCH', price: 3000, category: 'Accessories', type: 'Switch', size: 'Standard', brand: 'Flygt', imageUrl: IMG.meter },
 
-  // --- PV DISCONNECTS (112-117) ---
   { name: 'PV DISCONNECT SISO SWITCH 32A', price: 12000, category: 'PV Disconnects', type: 'SISO Switch', size: '32A', brand: 'Schneider', imageUrl: IMG.breaker },
   { name: 'PV DISCONNECT C/W BREAKER & SURGE PROTECTOR 16A/1000VDC', price: 24000, category: 'PV Disconnects', type: 'C/W Breaker & SPD', size: '16A', brand: 'ABB', imageUrl: IMG.breaker },
   { name: 'PV DISCONNECT C/W BREAKER & SURGE PROTECTOR 20A/1000VDC', price: 25000, category: 'PV Disconnects', type: 'C/W Breaker & SPD', size: '20A', brand: 'ABB', imageUrl: IMG.breaker },
@@ -161,7 +154,6 @@ const allProducts = [
   { name: 'PV DISCONNECT C/W BREAKER & SURGE PROTECTOR 40A/1000VDC', price: 27000, category: 'PV Disconnects', type: 'C/W Breaker & SPD', size: '40A', brand: 'Siemens', imageUrl: IMG.breaker },
   { name: 'PV DISCONNECT C/W BREAKER & SURGE PROTECTOR 63A/1000VDC', price: 30000, category: 'PV Disconnects', type: 'C/W Breaker & SPD', size: '63A', brand: 'Legrand', imageUrl: IMG.breaker },
 
-  // --- SURGE PROTECTORS & DC BREAKERS (118-124) ---
   { name: 'AC SURGE PROTECTOR - 1PH/275V 20-40KA 2P', price: 6000, category: 'Surge Protectors', type: 'AC', size: '1PH/275V', brand: 'Schneider', imageUrl: IMG.breaker },
   { name: 'AC SURGE PROTECTOR - 3PH/415V 20-40KA 3P', price: 8000, category: 'Surge Protectors', type: 'AC', size: '3PH/415V', brand: 'Siemens', imageUrl: IMG.breaker },
   { name: 'DC SURGE PROTECTOR - 3POLE 20-40KA', price: 8000, category: 'Surge Protectors', type: 'DC', size: '3POLE', brand: 'Legrand', imageUrl: IMG.breaker },
@@ -170,12 +162,10 @@ const allProducts = [
   { name: 'DC BREAKER 63A/1000VDC - 4P', price: 8000, category: 'DC Breakers', type: 'DC Breaker', size: '63A', brand: 'ABB', imageUrl: IMG.breaker },
   { name: 'DC BREAKER 100A/1000VDC - 2POLE', price: 19000, category: 'DC Breakers', type: 'DC Breaker', size: '100A', brand: 'Siemens', imageUrl: IMG.breaker },
 
-  // --- INVERTER ENCLOSURES (131-133) ---
   { name: 'INVERTER ENCLOSURE BOX C/W DC SPD & 16A/20A DC BREAKER', price: 44000, category: 'Inverter Enclosures', type: 'C/W DC SPD', size: '16A/20A', brand: 'Schneider', imageUrl: IMG.inverter },
   { name: 'INVERTER ENCLOSURE BOX C/W DC SPD & 32A DC', price: 50000, category: 'Inverter Enclosures', type: 'C/W DC SPD', size: '32A', brand: 'ABB', imageUrl: IMG.inverter },
   { name: 'INVERTER ENCLOSURE BOX C/W DC SPD & 63A DC', price: 54000, category: 'Inverter Enclosures', type: 'C/W DC SPD', size: '63A', brand: 'Siemens', imageUrl: IMG.inverter },
 
-  // --- SOLAR INVERTERS (134-141) ---
   { name: 'VEIKONG 2.2KW 1PH PUMPING INVERTER', price: 68000, category: 'Solar Inverters', type: '1PH', size: '2.2KW', brand: 'VEIKONG', imageUrl: IMG.inverter },
   { name: 'VEIKONG 4KW 1PH PUMPING INVERTER', price: 84000, category: 'Solar Inverters', type: '1PH', size: '4KW', brand: 'VEIKONG', imageUrl: IMG.inverter },
   { name: 'VEIKONG 2.2KW 3PH PUMPING INVERTER', price: 68000, category: 'Solar Inverters', type: '3PH', size: '2.2KW', brand: 'VEIKONG', imageUrl: IMG.inverter },
@@ -186,7 +176,6 @@ const allProducts = [
   { name: 'VEIKONG 15KW 3PH LCD PUMPING INVERTER', price: 144000, category: 'Solar Inverters', type: '3PH LCD', size: '15KW', brand: 'VEIKONG', imageUrl: IMG.inverter },
   { name: 'VEIKONG 22KW 3PH LCD PUMPING INVERTER', price: 210000, category: 'Solar Inverters', type: '3PH LCD', size: '22KW', brand: 'VEIKONG', imageUrl: IMG.inverter },
 
-  // --- AC OUTPUT REACTORS (142-148) ---
   { name: 'AC OUTPUT REACTOR 4KW 1PH', price: 20000, category: 'AC Output Reactors', type: '1PH', size: '4KW', brand: 'VEIKONG', imageUrl: IMG.inverter },
   { name: 'AC OUTPUT REACTOR 4KW 3PH', price: 20000, category: 'AC Output Reactors', type: '3PH', size: '4KW', brand: 'VEIKONG', imageUrl: IMG.inverter },
   { name: 'AC OUTPUT REACTOR 5.5KW 3PH', price: 22000, category: 'AC Output Reactors', type: '3PH', size: '5.5KW', brand: 'VEIKONG', imageUrl: IMG.inverter },
@@ -195,7 +184,6 @@ const allProducts = [
   { name: 'AC OUTPUT REACTOR 15KW 3PH', price: 32000, category: 'AC Output Reactors', type: '3PH', size: '15KW', brand: 'VEIKONG', imageUrl: IMG.inverter },
   { name: 'AC OUTPUT REACTOR 22KW 3PH', price: 36000, category: 'AC Output Reactors', type: '3PH', size: '22KW', brand: 'VEIKONG', imageUrl: IMG.inverter },
 
-  // --- CABLES (150-160) ---
   { name: '1.5MM2 4 CORE SUBMERSIBLE CABLE', price: 380, category: 'Cables', type: 'Submersible', size: '1.5MM2', brand: 'Nexans', imageUrl: IMG.cable },
   { name: '2.5MM2 4 CORE SUBMERSIBLE CABLE', price: 560, category: 'Cables', type: 'Submersible', size: '2.5MM2', brand: 'Prysmian', imageUrl: IMG.cable },
   { name: '4MM2 4 CORE SUBMERSIBLE CABLE', price: 760, category: 'Cables', type: 'Submersible', size: '4MM2', brand: 'Kenya Cables', imageUrl: IMG.cable },
@@ -207,27 +195,23 @@ const allProducts = [
   { name: '6.0MM2 4 CORE U/G CABLE', price: 1340, category: 'Cables', type: 'Armoured U/G', size: '6.0MM2', brand: 'Prysmian', imageUrl: IMG.cable },
   { name: '10.0MM2 4 CORE U/G CABLE', price: 2200, category: 'Cables', type: 'Armoured U/G', size: '10.0MM2', brand: 'Kenya Cables', imageUrl: IMG.cable },
 
-  // --- WATER METERS (161-165) ---
   { name: '1.25" SUPER WATER METER', price: 9000, category: 'Water Meters', type: 'Super Water Meter', size: '1.25"', brand: 'Itron', imageUrl: IMG.meter },
   { name: '1.5" SUPER WATER METER', price: 11000, category: 'Water Meters', type: 'Super Water Meter', size: '1.5"', brand: 'Sensus', imageUrl: IMG.meter },
   { name: '2" SUPER WATER METER', price: 16000, category: 'Water Meters', type: 'Super Water Meter', size: '2"', brand: 'Diehl', imageUrl: IMG.meter },
   { name: '2.5" SUPER WATER METER', price: 35000, category: 'Water Meters', type: 'Super Water Meter', size: '2.5"', brand: 'Itron', imageUrl: IMG.meter },
   { name: '3" SUPER WATER METER', price: 38000, category: 'Water Meters', type: 'Super Water Meter', size: '3"', brand: 'Sensus', imageUrl: IMG.meter },
 
-  // --- BOREHOLE COVERS (166-170) ---
   { name: '1.25" BOREHOLE COVER WITH SUNDRIES', price: 14000, category: 'Borehole Covers', type: 'With Sundries', size: '1.25"', brand: 'Generic', imageUrl: IMG.valve },
   { name: '1.5" BOREHOLE COVER WITH SUNDRIES', price: 15000, category: 'Borehole Covers', type: 'With Sundries', size: '1.5"', brand: 'Generic', imageUrl: IMG.valve },
   { name: '2" BOREHOLE COVER WITH SUNDRIES', price: 17200, category: 'Borehole Covers', type: 'With Sundries', size: '2"', brand: 'Generic', imageUrl: IMG.valve },
   { name: '2.5" BOREHOLE COVER WITH SUNDRIES', price: 25600, category: 'Borehole Covers', type: 'With Sundries', size: '2.5"', brand: 'Generic', imageUrl: IMG.valve },
   { name: '3" BOREHOLE COVER WITH SUNDRIES', price: 31400, category: 'Borehole Covers', type: 'With Sundries', size: '3"', brand: 'Generic', imageUrl: IMG.valve },
 
-  // --- NON-RETURN VALVES (171-175) ---
   { name: '1.25" NRV', price: 3400, category: 'Non-Return Valves', type: 'Standard', size: '1.25"', brand: 'Georg Fischer', imageUrl: IMG.valve },
   { name: '1.5" NRV', price: 4000, category: 'Non-Return Valves', type: 'Standard', size: '1.5"', brand: 'Nibco', imageUrl: IMG.valve },
   { name: '2.5" NRV', price: 5000, category: 'Non-Return Valves', type: 'Standard', size: '2.5"', brand: 'Kitz', imageUrl: IMG.valve },
   { name: '3" NRV', price: 11000, category: 'Non-Return Valves', type: 'Standard', size: '3"', brand: 'Georg Fischer', imageUrl: IMG.valve },
 
-  // --- SOLAR SOLUTIONS (Added for completeness) ---
   { name: 'Jinko Solar Panel 400W', price: 28000, category: 'Solar Solutions', type: 'Solar Panel', size: '400W', brand: 'JINKOSOLAR', imageUrl: IMG.solar },
   { name: 'LONGi Solar Panel 400W', price: 27500, category: 'Solar Solutions', type: 'Solar Panel', size: '400W', brand: 'LONGi', imageUrl: IMG.solar },
   { name: 'Canadian Solar Panel 400W', price: 27000, category: 'Solar Solutions', type: 'Solar Panel', size: '400W', brand: 'CANADIAN SOLAR', imageUrl: IMG.solar },
@@ -240,6 +224,7 @@ async function main() {
   for (const item of allProducts) {
     await prisma.product.create({ data: { ...item, description: 'High quality product', stock: 10, status: 'APPROVED' } });
   }
-  console.log(`✅ Database seeded with ALL ${allProducts.length} products, real brands, and real images!`);
+  const count = await prisma.product.count();
+  console.log(`✅ SUCCESS: ${count} products successfully restored!`);
 }
 main().finally(() => prisma.$disconnect());

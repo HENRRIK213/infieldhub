@@ -1,148 +1,243 @@
-﻿'use client';
-import Layout from '@/components/Layout';
-import { useState } from 'react';
+﻿"use client";
 
-const initialTasks = [
-  { id: '001', task: 'Mobilisation & Layout', dur: 2, start: 1, span: 1, color: '#3b82f6' },
-  { id: '002', task: 'Trenching Works', dur: 9, start: 2, span: 2, color: '#f97316' },
-  { id: '003', task: 'Pipe Position & Jointing', dur: 11, start: 3, span: 2, color: '#a855f7' },
-];
-const weeks = [1,2,3,4,5,6,7,8,9,10,11,12];
+import { useState } from "react";
+import Link from "next/link";
+import { Download, Plus, Calendar, Clock, AlignLeft, ArrowLeft } from "lucide-react";
 
-export default function GanttPage() {
-  const [projectTitle, setProjectTitle] = useState('NEW PROJECT WORK PLAN');
-  const [tasks, setTasks] = useState(initialTasks);
+export default function GanttChartPage() {
+  const [projectTitle, setProjectTitle] = useState("New Project Work Plan");
+  const [taskName, setTaskName] = useState("");
+  const [startWeek, setStartWeek] = useState(1);
+  const [duration, setDuration] = useState(1);
+  const [color, setColor] = useState("#3B82F6"); // Default Tailwind Blue
+  
+  const [tasks, setTasks] = useState([
+    { id: "001", name: "Mobilisation & Layout", start: 1, duration: 2, color: "#3B82F6" },
+    { id: "002", name: "Trenching Works", start: 2, duration: 9, color: "#F59E0B" },
+    { id: "003", name: "Pipe Position & Jointing", start: 4, duration: 11, color: "#8B5CF6" },
+  ]);
 
-  // New Task State
-  const [newTask, setNewTask] = useState({ task: '', dur: 1, start: 1, color: '#3b82f6' });
-
-  const handleAddTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTask.task) return;
+  const handleAddTask = () => {
+    if (!taskName) return alert("Please enter a task name");
     
-    // Calculate span (duration in weeks, rounded up)
-    const spanWeeks = Math.max(1, Math.ceil(newTask.dur / 5)); 
-    
-    const taskToAdd = {
+    const newTask = {
       id: String(tasks.length + 1).padStart(3, '0'),
-      task: newTask.task,
-      dur: newTask.dur,
-      start: newTask.start,
-      span: spanWeeks,
-      color: newTask.color
+      name: taskName,
+      start: Number(startWeek),
+      duration: Number(duration),
+      color: color
     };
     
-    setTasks([...tasks, taskToAdd]);
-    setNewTask({ task: '', dur: 1, start: 1, color: '#3b82f6' }); // reset form
+    setTasks([...tasks, newTask]);
+    setTaskName("");
+    setStartWeek(1);
+    setDuration(1);
   };
 
-  const removeTask = (id: string) => setTasks(tasks.filter(t => t.id !== id));
+  const predefinedColors = [
+    "#3B82F6", // Blue
+    "#10B981", // Green
+    "#F59E0B", // Orange
+    "#EF4444", // Red
+    "#8B5CF6", // Purple
+    "#64748B"  // Slate
+  ];
 
-  const handlePrint = async () => {
-    try {
-      const html2pdf = (await import('html2pdf.js')).default;
-      const element = document.getElementById('print-area');
-      const opt: any = {
-        margin: 0.5, filename: `${projectTitle}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'a3', orientation: 'landscape' } // A3 for Gantt
-      };
-      await html2pdf().set(opt).from(element).save();
-    } catch (e) {
-      alert('Error generating PDF');
-    }
-  };
+  const weeks = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
-    <Layout requireAdmin>
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 20 }}>
-        
-        {/* LEFT: Builder Tools */}
-        <div style={{ background: '#fff', padding: 20, borderRadius: 12, border: '1px solid #e2e8f0', height: 'fit-content' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>Gantt Builder</h2>
-          
-          <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Project Title</label>
-          <input value={projectTitle} onChange={e => setProjectTitle(e.target.value)} style={{ width: '100%', padding: 8, border: '1px solid #cbd5e1', borderRadius: 6, marginBottom: 16, fontWeight: 700 }} />
-
-          <form onSubmit={handleAddTask} style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', marginBottom: 20 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Add New Task</h3>
-            
-            <label style={{ fontSize: 11, fontWeight: 600, display: 'block', marginBottom: 4 }}>Task Name</label>
-            <input required value={newTask.task} onChange={e => setNewTask({...newTask, task: e.target.value})} style={{ width: '100%', padding: 6, border: '1px solid #cbd5e1', borderRadius: 4, marginBottom: 8, fontSize: 12 }} />
-
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 11, fontWeight: 600, display: 'block', marginBottom: 4 }}>Start Week (1-12)</label>
-                <input type="number" min="1" max="12" value={newTask.start} onChange={e => setNewTask({...newTask, start: Number(e.target.value)})} style={{ width: '100%', padding: 6, border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 11, fontWeight: 600, display: 'block', marginBottom: 4 }}>Duration (Days)</label>
-                <input type="number" min="1" value={newTask.dur} onChange={e => setNewTask({...newTask, dur: Number(e.target.value)})} style={{ width: '100%', padding: 6, border: '1px solid #cbd5e1', borderRadius: 4, fontSize: 12 }} />
-              </div>
-            </div>
-
-            <label style={{ fontSize: 11, fontWeight: 600, display: 'block', marginBottom: 4 }}>Color</label>
-            <input type="color" value={newTask.color} onChange={e => setNewTask({...newTask, color: e.target.value})} style={{ width: '100%', height: 32, padding: 2, border: '1px solid #cbd5e1', borderRadius: 4, marginBottom: 12 }} />
-
-            <button type="submit" style={{ width: '100%', background: '#1E88E5', color: '#fff', padding: 8, borderRadius: 6, border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>+ Add Task</button>
-          </form>
-
-          <button onClick={handlePrint} style={{ width: '100%', background: '#0D2B4E', color: '#fff', padding: 12, borderRadius: 8, border: 'none', fontWeight: 700, cursor: 'pointer' }}>
-            ⬇ Download PDF
-          </button>
+    <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
+      
+      {/* LEFT SIDEBAR - BUILDER */}
+      <div className="w-80 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10">
+        <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+          <h2 className="text-xl font-bold text-gray-800">Gantt Builder</h2>
+          <p className="text-xs text-gray-500 mt-1">Add and customize your project timeline.</p>
         </div>
 
-        {/* RIGHT: Preview */}
-        <div style={{ background: '#e2e8f0', padding: 20, borderRadius: 12, overflowX: 'auto' }}>
-          <div id="print-area" style={{ background: '#fff', padding: 24, borderRadius: 8, minWidth: 1000, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 12, color: '#64748b' }}>1. P.O BOX62700-19052 Meru Township 0701243548</div>
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0D2B4E', marginTop: 16, textTransform: 'uppercase' }}>{projectTitle}</h1>
+        <div className="p-6 flex-1 overflow-y-auto space-y-6">
+          {/* Project Title */}
+          <div>
+            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Project Title</label>
+            <div className="relative">
+              <AlignLeft className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <input 
+                type="text" 
+                value={projectTitle}
+                onChange={(e) => setProjectTitle(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              />
             </div>
+          </div>
+
+          <hr className="border-gray-100" />
+
+          {/* Add New Task Form */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-gray-800 flex items-center">
+              <Plus className="w-4 h-4 mr-2 text-blue-600" /> Add New Task
+            </h3>
             
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
-                  <th style={{ padding: 10, width: 50, color: '#64748b' }}>ID</th>
-                  <th style={{ padding: 10, width: 250, color: '#64748b' }}>TASK</th>
-                  <th style={{ padding: 10, width: 60, color: '#64748b' }}>DUR</th>
-                  {weeks.map(w => <th key={w} style={{ padding: 10, textAlign: 'center', color: '#64748b', width: 50 }}>WEEK {w}</th>)}
-                  <th className="no-print" style={{ padding: 10, width: 40 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.length === 0 && <tr><td colSpan={15} style={{ padding: 20, textAlign: 'center', color: '#94a3b8' }}>No tasks added yet.</td></tr>}
-                {tasks.map((t, idx) => {
-                  return (
-                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
-                      <td style={{ padding: 10, color: '#94a3b8' }}>{t.id}</td>
-                      <td style={{ padding: 10, fontWeight: 600, color: '#0D2B4E' }}>{t.task}</td>
-                      <td style={{ padding: 10, color: '#64748b' }}>{t.dur} d</td>
-                      {weeks.map(w => {
-                        const active = w >= t.start && w < t.start + t.span;
-                        const isFirst = w === t.start;
-                        const isLast = w === t.start + t.span - 1;
-                        return (
-                          <td key={w} style={{ padding: '10px 2px', position: 'relative' }}>
-                            {active && (
-                              <div style={{ background: t.color, height: 16, borderRadius: 8, borderTopLeftRadius: isFirst ? 8 : 0, borderBottomLeftRadius: isFirst ? 8 : 0, borderTopRightRadius: isLast ? 8 : 0, borderBottomRightRadius: isLast ? 8 : 0, width: '100%' }} />
-                            )}
-                          </td>
-                        );
-                      })}
-                      <td className="no-print" style={{ textAlign: 'center' }}>
-                        <button onClick={() => removeTask(t.id)} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 4, width: 24, height: 24, cursor: 'pointer' }}>X</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Task Name</label>
+              <input 
+                type="text" 
+                placeholder="e.g. Site Excavation"
+                value={taskName}
+                onChange={(e) => setTaskName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Start Week</label>
+                <div className="relative">
+                  <Calendar className="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400" />
+                  <input 
+                    type="number" 
+                    min="1" max="12"
+                    value={startWeek}
+                    onChange={(e) => setStartWeek(Number(e.target.value))}
+                    className="w-full pl-8 pr-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Duration (Days)</label>
+                <div className="relative">
+                  <Clock className="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400" />
+                  <input 
+                    type="number" 
+                    min="1"
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                    className="w-full pl-8 pr-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-2">Task Color</label>
+              <div className="flex space-x-2">
+                {predefinedColors.map(c => (
+                  <button
+                    key={c}
+                    onClick={() => setColor(c)}
+                    className={`w-8 h-8 rounded-full border-2 transition-transform ${color === c ? 'border-gray-800 scale-110 shadow-sm' : 'border-transparent hover:scale-105'}`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <button 
+              onClick={handleAddTask}
+              className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-lg transition shadow-sm mt-2 flex justify-center items-center"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Task to Timeline
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT SIDE - GANTT CHART PREVIEW */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        
+        {/* Top Header Bar */}
+        <div className="bg-white border-b border-gray-200 p-4 px-8 flex justify-between items-center shadow-sm z-10">
+          <div>
+            <h1 className="text-lg font-bold text-gray-800">Timeline Preview</h1>
+            <p className="text-xs text-gray-500">Live rendering of your project schedule.</p>
+          </div>
+          
+          {/* BUTTONS */}
+          <div className="flex items-center space-x-3">
+            <Link 
+              href="/admin" 
+              className="px-4 py-2.5 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition flex items-center text-sm shadow-sm"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+            </Link>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition flex items-center text-sm">
+              <Download className="w-4 h-4 mr-2" /> Download PDF
+            </button>
           </div>
         </div>
 
+        {/* Scrollable Chart Area */}
+        <div className="flex-1 overflow-auto p-8">
+          
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 min-w-[1000px] overflow-hidden">
+            
+            {/* Document Header inside chart */}
+            <div className="p-8 border-b border-gray-200">
+              <p className="text-xs text-gray-500 font-medium mb-4">P.O BOX 62700-19052 Meru Township • 0701243548</p>
+              <h2 className="text-2xl font-extrabold text-[#0D2B4E] uppercase tracking-wide">{projectTitle}</h2>
+            </div>
+
+            {/* Gantt Grid Header */}
+            <div className="grid grid-cols-[60px_250px_60px_repeat(12,1fr)] bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <div className="p-3 border-r border-gray-200 text-center">ID</div>
+              <div className="p-3 border-r border-gray-200">Task Description</div>
+              <div className="p-3 border-r border-gray-200 text-center">Dur</div>
+              {weeks.map(w => (
+                <div key={w} className="p-3 text-center border-r border-gray-200 last:border-0">Wk {w}</div>
+              ))}
+            </div>
+
+            {/* Gantt Rows */}
+            <div className="divide-y divide-gray-100">
+              {tasks.map((task) => (
+                <div key={task.id} className="grid grid-cols-[60px_250px_60px_repeat(12,1fr)] hover:bg-blue-50/30 transition group">
+                  
+                  <div className="p-3 border-r border-gray-100 text-center text-sm font-medium text-gray-500">
+                    {task.id}
+                  </div>
+                  
+                  <div className="p-3 border-r border-gray-100 text-sm font-semibold text-gray-800">
+                    {task.name}
+                  </div>
+                  
+                  <div className="p-3 border-r border-gray-100 text-center text-sm text-gray-600">
+                    {task.duration} d
+                  </div>
+                  
+                  <div className="col-span-12 relative py-3 px-1 flex items-center">
+                    <div className="absolute inset-0 grid grid-cols-12 pointer-events-none">
+                      {weeks.map(w => <div key={w} className="border-r border-gray-100 last:border-0"></div>)}
+                    </div>
+                    
+                    <div 
+                      className="relative h-6 rounded-md shadow-sm opacity-90 group-hover:opacity-100 transition-opacity"
+                      style={{ 
+                        gridColumnStart: task.start, 
+                        gridColumnEnd: task.start + task.duration,
+                        backgroundColor: task.color,
+                        width: '100%',
+                        marginLeft: '2px',
+                        marginRight: '2px'
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 rounded-md transition-opacity"></div>
+                    </div>
+                  </div>
+
+                </div>
+              ))}
+            </div>
+
+            {tasks.length === 0 && (
+              <div className="p-12 text-center text-gray-400">
+                No tasks added to the timeline yet.
+              </div>
+            )}
+
+          </div>
+        </div>
       </div>
-    </Layout>
+    </div>
   );
 }
+

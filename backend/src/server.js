@@ -1,4 +1,12 @@
-﻿require('dotenv').config();
+﻿// --- GLOBAL ERROR HANDLERS (Prevents crashes from Redis/SMS) ---
+process.on('unhandledRejection', (reason, promise) => {
+  console.log('⚠️ Unhandled Rejection (Ignored to keep server running):', reason.message || reason);
+});
+process.on('uncaughtException', (err) => {
+  console.log('⚠️ Uncaught Exception (Ignored to keep server running):', err.message || err);
+});
+// ---------------------------------------------------------------
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -81,3 +89,4 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Ã¢Å“â€¦ InfieldHub backend running on port ${PORT}`);
 });
+

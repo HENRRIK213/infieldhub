@@ -1,25 +1,19 @@
-node_modules
+﻿# Dependencies
+node_modules/
+
+# Environment variables (KEEP THESE SECRET!)
 .env
 .env.local
-.next
-dist
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Next.js build output
+.next/
+out/
+build/
+dist/
+
+# Logs & Misc
 *.log
 .DS_Store
-Thumbs.db
-uploads/tmp/*
-uploads/products/*
-uploads/quotations/*
-!uploads/**/.gitkeep
-.env
-.env.local
-.env.production
-
-.env
-.env.local
-.env.production
-
-*.bak-*
-
-*.backup-*
-.vercel
-.env*
