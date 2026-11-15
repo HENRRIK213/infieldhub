@@ -76,7 +76,7 @@ export default function AdminPaymentsPage() {
         <div className="flex items-center space-x-4">
           {/* PROFESSIONAL BACK TO DASHBOARD BUTTON */}
           <Link 
-            href="/admin/dashboard" 
+            href="/admin" 
             className="p-2.5 text-gray-600 bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition shadow-sm group" 
             title="Return to Admin Dashboard"
           >
@@ -324,3 +324,4 @@ export default function AdminPaymentsPage() {
     </div>
   );
 }
+
